@@ -1,20 +1,24 @@
+#[derive(Debug,PartialEq)]
 pub struct SrcBlock {
-    name: String,
-    src: Vec<SrcKind>
+    pub name: String,
+    pub src: Vec<SrcKind>
 }
 
+#[derive(Debug,PartialEq)]
 pub struct DefBlock {
-    name: String,
-    defs: Vec<(String,VarKind)>
+    pub name: String,
+    pub defs: Vec<(String,VarKind)>
 }
 
+#[derive(Debug,PartialEq)]
 pub enum BlockKind {
     Src(SrcBlock),
     Def(DefBlock),
 }
 
 
-/// delimited by new line 
+/// delimited by new line
+#[derive(Debug,PartialEq)]
 pub enum SrcKind {
     Logic(String, LogicKind), // ex: item_logic has_item
 
@@ -40,7 +44,7 @@ impl SrcKind {
             SrcKind::Return(VarKind::parse(exp[1]))
         }
         else {
-            SrcKind::Logic(exp[1].to_owned(),
+            SrcKind::Logic(exp[0].to_owned(),
                            LogicKind::parse(exp))
         }
     }
@@ -48,6 +52,7 @@ impl SrcKind {
 
 /// delimited by new line
 /// should resolve to boolean
+#[derive(Debug,PartialEq)]
 pub enum LogicKind {
     GT(String,f32), // weight > 1
     LT(String,f32),
@@ -59,11 +64,11 @@ pub enum LogicKind {
 
 impl LogicKind {
     pub fn parse(exp: Vec<&str>) -> LogicKind {
-        let start = 2;
+        let start = 1;
         let len = exp.len() - start;
         
         if len == 1 {
-            if exp[start].split_at(0).0 == "!" {
+            if exp[start].split_at(1).0 == "!" {
                 LogicKind::IsNot(exp[start][1..].to_owned())
             }
             else {
@@ -76,21 +81,24 @@ impl LogicKind {
             match var {
                 VarKind::Num(num) => {
                     let key = exp[start].to_owned();
-                    if exp[start + 1] == ">" {
+                    let sym = exp[start + 1];
+                    
+                    if sym == ">" {
                         LogicKind::GT(key,num)
                     }
-                    else if exp[start + 1] == "<" {
+                    else if sym == "<" {
                         LogicKind::LT(key,num)
                     }
                     else { panic!("ERROR: Invalid LogicKind Syntax") }
                 },
-                _ => { panic!("ERROR: Invalid LogicKind Value") }
+                _ => { panic!("ERROR: Invalid LogicKind Value {:?}",exp) }
             }
         }
-        else { panic!("ERROR: Unbalanced LogicKind Syntax") }
+        else { panic!("ERROR: Unbalanced LogicKind Syntax ({:?})",exp) }
     }
 }
 
+#[derive(Debug,PartialEq)]
 pub enum VarKind {
     String(String),
     Num(f32),
@@ -125,19 +133,21 @@ impl Parser {
 
         for c in src.chars() {
             if c == '\n' && !in_string {
-                let exp: Vec<&str> = exp
+                let exp_ = exp;
+                exp = String::new();
+                let mut exp: Vec<&str> = exp_
                     .split_whitespace()
                     .map(|x| x.trim())
                     .collect();
+
+                if exp.len() < 1 { continue }
                 
                 
                 // determine block type
                 if block.is_none() {
-                    let name = exp[1].to_owned();
-                    
                     if exp[0] == "with" {
                         let b = DefBlock {
-                            name: name,
+                            name: exp[1].to_owned(),
                             defs: vec!()
                         };
                         
@@ -145,7 +155,7 @@ impl Parser {
                     }
                     else {
                         let b = SrcBlock {
-                            name: name,
+                            name: exp[0].to_owned(),
                             src: vec!()
                         };
                         
@@ -166,11 +176,8 @@ impl Parser {
                 }
             }
             else if c == '"' {
-                in_string != in_string;
-                if !in_string {
-                    kind = Some(VarKind::String(exp));
-                    exp = String::new();
-                }
+                in_string = !in_string;
+                if !in_string {}
             }
             else if c == ';' && !in_string {
                 //fail otherwise, block should be built!
