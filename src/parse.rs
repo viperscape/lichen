@@ -41,7 +41,16 @@ impl SrcKind {
             SrcKind::Next(exp[1].to_owned())
         }
         else if exp[0] == "return" {
-            SrcKind::Return(VarKind::parse(exp[1]))
+            if exp.len() > 2 {
+                let mut src = exp[1].to_owned();
+                for n in exp[2..].iter() {
+                    src.push(' '); src.push_str(n);
+                };
+
+                SrcKind::Return(VarKind::String(src))
+            }
+            else { SrcKind::Return(VarKind::parse(exp[1])) }
+            
         }
         else {
             SrcKind::Logic(exp[0].to_owned(),
