@@ -11,7 +11,7 @@ mod tests {
     unequipped !some_item\n
     has_weight some_weight < 5.0\n
 \n
-    return welcome, look around\n
+    return \"welcome, \nlook around\"\n
 ;"
     }
     
@@ -29,7 +29,7 @@ mod tests {
                       SrcKind::Logic("has_weight".to_owned(),
                                      LogicKind::LT("some_weight".to_owned(), 5.0f32)),
                       
-                      SrcKind::Return(VarKind::String("welcome, look around".to_owned()))]
+                      SrcKind::Return(VarKind::String("welcome, \nlook around".to_owned()))]
             })];
 
         for (n,n_) in block.iter().zip(block_.iter()) {

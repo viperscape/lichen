@@ -33,27 +33,37 @@ pub enum SrcKind {
 }
 
 impl SrcKind {
-    pub fn parse(exp: Vec<&str>) -> SrcKind {
+    pub fn parse(mut exp: Vec<String>) -> SrcKind {
         if exp[0] == "if" {
-            SrcKind::If(exp[1].to_owned(), exp[2].to_owned())
+            if exp.len() == 3 {
+                let last = exp.pop().unwrap();
+                SrcKind::If(exp.pop().unwrap(), last)
+            }
+            else { panic!("ERROR: Uneven IF Logic {:?}",exp) }
         }
         else if exp[0] == "next" {
-            SrcKind::Next(exp[1].to_owned())
+            if exp.len() == 2 {
+                SrcKind::Next(exp.pop().unwrap())
+            }
+            else { panic!("ERROR: Uneven NEXT Logic {:?}",exp) }
         }
         else if exp[0] == "return" {
-            if exp.len() > 2 {
-                let mut src = exp[1].to_owned();
+            /*if exp.len() > 2 {
+                let mut src = exp[1];
                 for n in exp[2..].iter() {
                     src.push(' '); src.push_str(n);
                 };
 
                 SrcKind::Return(VarKind::String(src))
+            }*/
+            if exp.len() == 2 {
+                SrcKind::Return(VarKind::parse(&exp.pop().unwrap()))
             }
-            else { SrcKind::Return(VarKind::parse(exp[1])) }
+            else { panic!("ERROR: Uneven RETURN Logic {:?}",exp) }
             
         }
         else {
-            SrcKind::Logic(exp[0].to_owned(),
+            SrcKind::Logic(exp.remove(0),
                            LogicKind::parse(exp))
         }
     }
@@ -72,8 +82,9 @@ pub enum LogicKind {
 }
 
 impl LogicKind {
-    pub fn parse(exp: Vec<&str>) -> LogicKind {
-        let start = 1;
+    // TODO: conv to pop/removals
+    pub fn parse(exp: Vec<String>) -> LogicKind {
+        let start = 0;
         let len = exp.len() - start;
         
         if len == 1 {
@@ -85,12 +96,12 @@ impl LogicKind {
             }
         }
         else if len == 3 {
-            let var = VarKind::parse(exp[start+2]);
+            let var = VarKind::parse(&exp[start+2]);
 
             match var {
                 VarKind::Num(num) => {
                     let key = exp[start].to_owned();
-                    let sym = exp[start + 1];
+                    let sym = exp[start + 1].to_owned();
                     
                     if sym == ">" {
                         LogicKind::GT(key,num)
@@ -135,28 +146,28 @@ impl Parser {
     pub fn parse_blocks (src: &str) -> Vec<BlockKind> {
         let mut v = vec!();
         let mut exp = String::new();
+        let mut exps: Vec<String> = vec!();
         let mut block: Option<BlockKind> = None;
-        let mut kind: Option<VarKind> = None;
 
         let mut in_string = false;
 
         for c in src.chars() {
             if c == '\n' && !in_string {
-                let exp_ = exp;
+                for n in exp.split_whitespace() {
+                    exps.push(n.trim().to_owned());
+                }
                 exp = String::new();
-                let mut exp: Vec<&str> = exp_
-                    .split_whitespace()
-                    .map(|x| x.trim())
-                    .collect();
 
-                if exp.len() < 1 { continue }
+                if exps.len() < 1 { continue }
                 
                 
                 // determine block type
                 if block.is_none() {
-                    if exp[0] == "with" {
+                    let name = exps.pop().unwrap();
+                    
+                    if name == "with" {
                         let b = DefBlock {
-                            name: exp[1].to_owned(),
+                            name: exps.pop().unwrap(),
                             defs: vec!()
                         };
                         
@@ -164,7 +175,7 @@ impl Parser {
                     }
                     else {
                         let b = SrcBlock {
-                            name: exp[0].to_owned(),
+                            name: name,
                             src: vec!()
                         };
                         
@@ -174,19 +185,31 @@ impl Parser {
                 else { // build block type
                     match block {
                         Some(BlockKind::Def(ref mut b)) => {
-                            b.defs.push((exp[0].to_owned(),
-                                        VarKind::parse(&exp[1])));
+                            b.defs.push((exps[0].to_owned(),
+                                        VarKind::parse(&exps[1])));
                         },
                         Some(BlockKind::Src(ref mut b)) => {
-                            b.src.push(SrcKind::parse(exp));
+                            println!("EXPS{:?}",exps);
+                            b.src.push(SrcKind::parse(exps));
                         },
                         _ => {}
                     }
+
+                    exps = vec!();
                 }
             }
             else if c == '"' {
                 in_string = !in_string;
-                if !in_string {}
+                if in_string {
+                    for n in exp.split_whitespace() {
+                        exps.push(n.trim().to_owned());
+                    }
+                    exp = String::new();
+                }
+                else if !in_string {
+                    exps.push(exp);
+                    exp = String::new();
+                }
             }
             else if c == ';' && !in_string {
                 //fail otherwise, block should be built!
