@@ -3,8 +3,8 @@ pub mod parse;
 
 #[cfg(test)]
 mod tests {
-    use :: parse;
-    use ::parse::{Parser,BlockKind,SrcBlock,LogicKind,SrcKind,VarKind};
+    use ::parse::{Parser,BlockKind,SrcBlock,
+                  LogicKind,SrcKind,VarKind,ExpectKind};
     
     fn test_block () -> &'static str {
         "root\n
@@ -20,7 +20,7 @@ mod tests {
     #[test]
     fn parse_block() {
         let src = test_block();
-        let block = parse::Parser::parse_blocks(src);
+        let block = Parser::parse_blocks(src);
 
         let block_ = [BlockKind::Src(
             SrcBlock {
@@ -31,7 +31,10 @@ mod tests {
                           SrcKind::Logic("has_weight".to_owned(),
                                          LogicKind::LT("some_weight".to_owned(), 5.0f32)),
                           
-                          SrcKind::Return(VarKind::String("welcome, \nlook around".to_owned()))]
+                          SrcKind::If(ExpectKind::Ref("unequipped".to_owned()),
+                                      VarKind::String("you're looking for something?".to_owned())),
+                          SrcKind::If(ExpectKind::All,
+                                      VarKind::String("welcome, \nlook around".to_owned()))]
             })];
 
         for (n,n_) in block.iter().zip(block_.iter()) {
