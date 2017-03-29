@@ -3,5 +3,8 @@ name = "lichen"
 version = "0.1.0"
 authors = ["viperscape <chrisfgill@gmail.com>"]
 license = "Apache-2.0"
+repository = "https://github.com/viperscape/lichen"
+description = "Scripting DSL (for Dialogue Graphs, et al)"
+keywords = ["scripting","dsl"]
 
 [dependencies]
