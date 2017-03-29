@@ -10,6 +10,7 @@ mod tests {
         "root\n
     unequipped !some_item\n
     has_weight some_weight < 5.0\n
+    #some_comp(all) unequipped !has_weight\n
 \n
     if unequipped \"you're looking for something?\"\n
 \n

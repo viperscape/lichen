@@ -26,9 +26,8 @@ pub enum SrcKind {
     // logic must resolve to true
     // ex: if item_logic give_quest
     If(ExpectKind, VarKind),
-    Expect(ExpectKind),
 
-    Next(String),
+    Next(String), // ends execution and begins next node
 }
 
 #[derive(Debug,PartialEq)]
@@ -155,9 +154,13 @@ impl Parser {
         let mut block: Option<BlockKind> = None;
 
         let mut in_string = false;
+        let mut in_comment = false;
 
         for c in src.chars() {
-            if c == '\n' && !in_string {
+            if c == '#' && !in_string { in_comment = true; }
+            if  c == '\n' && in_comment && !in_string { in_comment = false; continue; }
+            
+            if (c == '#' || c == '\n') && !in_string {
                 for n in exp.split_whitespace() {
                     exps.push(n.trim().to_owned());
                 }
@@ -203,7 +206,7 @@ impl Parser {
                     exps = vec!();
                 }
             }
-            else if c == '"' {
+            else if c == '"' && !in_comment {
                 in_string = !in_string;
                 if in_string {
                     for n in exp.split_whitespace() {
@@ -216,13 +219,15 @@ impl Parser {
                     exp = String::new();
                 }
             }
-            else if c == ';' && !in_string {
+            else if c == ';' && !in_string && !in_comment {
                 //fail otherwise, block should be built!
                 v.push(block.unwrap());
                 block = None;
             }
             else {
-                exp.push(c);
+                if !in_comment {
+                    exp.push(c);
+                }
             }
         }
         
