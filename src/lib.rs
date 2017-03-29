@@ -11,7 +11,9 @@ mod tests {
     unequipped !some_item\n
     has_weight some_weight < 5.0\n
 \n
-    return \"welcome, \nlook around\"\n
+    if unequipped \"you're looking for something?\"\n
+\n
+    if all return \"welcome, \nlook around\"\n
 ;"
     }
     

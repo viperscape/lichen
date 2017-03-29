@@ -22,13 +22,45 @@ pub enum BlockKind {
 pub enum SrcKind {
     Logic(String, LogicKind), // ex: item_logic has_item
 
+    // references logic in env and emits varkind;
+    // logic must resolve to true
+    // ex: if item_logic give_quest
+    If(String, String),
+    Expect(ExpectKind),
+
     Next(String),
     Return(VarKind),
 }
 
+#[derive(Debug,PartialEq)]
+pub enum ExpectKind {
+    All,
+    Any,
+    None,
+    
+    Ref(String) // references env variable set from logic
+}
+impl ExpectKind {
+    pub fn parse(s: String) -> ExpectKind {
+        match &s[..] {
+            "all" => ExpectKind::All,
+            "any" => ExpectKind::Any,
+            "none" => ExpectKind::None,
+            _ => ExpectKind::Ref(s),
+        }
+    }
+}
+
 impl SrcKind {
     pub fn parse(mut exp: Vec<String>) -> SrcKind {
-        if exp[0] == "next" {
+        if exp[0] == "if" {
+            if exp.len() == 3 {
+                let last = exp.pop().unwrap();
+                SrcKind::If(exp.pop().unwrap(), last)
+            }
+            else { panic!("ERROR: Uneven IF Logic {:?}",exp) }
+        }
+        else if exp[0] == "next" {
             if exp.len() == 2 {
                 SrcKind::Next(exp.pop().unwrap())
             }
