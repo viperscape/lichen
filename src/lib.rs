@@ -24,12 +24,12 @@ mod tests {
             SrcBlock {
                 name: "root".to_owned(),
                 src: vec![SrcKind::Logic("unequipped".to_owned(),
-                                     LogicKind::IsNot("some_item".to_owned())),
-                      
-                      SrcKind::Logic("has_weight".to_owned(),
-                                     LogicKind::LT("some_weight".to_owned(), 5.0f32)),
-                      
-                      SrcKind::Return(VarKind::String("welcome, \nlook around".to_owned()))]
+                                         LogicKind::IsNot("some_item".to_owned())),
+                          
+                          SrcKind::Logic("has_weight".to_owned(),
+                                         LogicKind::LT("some_weight".to_owned(), 5.0f32)),
+                          
+                          SrcKind::Return(VarKind::String("welcome, \nlook around".to_owned()))]
             })];
 
         for (n,n_) in block.iter().zip(block_.iter()) {

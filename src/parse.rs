@@ -48,14 +48,6 @@ impl SrcKind {
             else { panic!("ERROR: Uneven NEXT Logic {:?}",exp) }
         }
         else if exp[0] == "return" {
-            /*if exp.len() > 2 {
-                let mut src = exp[1];
-                for n in exp[2..].iter() {
-                    src.push(' '); src.push_str(n);
-                };
-
-                SrcKind::Return(VarKind::String(src))
-            }*/
             if exp.len() == 2 {
                 SrcKind::Return(VarKind::parse(&exp.pop().unwrap()))
             }
@@ -186,7 +178,7 @@ impl Parser {
                     match block {
                         Some(BlockKind::Def(ref mut b)) => {
                             b.defs.push((exps[0].to_owned(),
-                                        VarKind::parse(&exps[1])));
+                                         VarKind::parse(&exps[1])));
                         },
                         Some(BlockKind::Src(ref mut b)) => {
                             println!("EXPS{:?}",exps);
