@@ -22,26 +22,13 @@ pub enum BlockKind {
 pub enum SrcKind {
     Logic(String, LogicKind), // ex: item_logic has_item
 
-    // references logic in env and either--
-    // node destination or return varkind;
-    // logic must resolve to true
-    // ex: if item_logic give_quest
-    If(String, String),
-
     Next(String),
     Return(VarKind),
 }
 
 impl SrcKind {
     pub fn parse(mut exp: Vec<String>) -> SrcKind {
-        if exp[0] == "if" {
-            if exp.len() == 3 {
-                let last = exp.pop().unwrap();
-                SrcKind::If(exp.pop().unwrap(), last)
-            }
-            else { panic!("ERROR: Uneven IF Logic {:?}",exp) }
-        }
-        else if exp[0] == "next" {
+        if exp[0] == "next" {
             if exp.len() == 2 {
                 SrcKind::Next(exp.pop().unwrap())
             }
