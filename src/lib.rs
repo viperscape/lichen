@@ -13,7 +13,7 @@ mod tests {
 \n
     if unequipped \"you're looking for something?\"\n
 \n
-    if all return \"welcome, \nlook around\"\n
+    if all \"welcome, \nlook around\"\n
 ;"
     }
     

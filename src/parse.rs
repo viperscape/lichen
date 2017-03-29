@@ -25,11 +25,10 @@ pub enum SrcKind {
     // references logic in env and emits varkind;
     // logic must resolve to true
     // ex: if item_logic give_quest
-    If(String, String),
+    If(ExpectKind, VarKind),
     Expect(ExpectKind),
 
     Next(String),
-    Return(VarKind),
 }
 
 #[derive(Debug,PartialEq)]
@@ -56,7 +55,8 @@ impl SrcKind {
         if exp[0] == "if" {
             if exp.len() == 3 {
                 let last = exp.pop().unwrap();
-                SrcKind::If(exp.pop().unwrap(), last)
+                SrcKind::If(ExpectKind::parse(exp.pop().unwrap()),
+                            VarKind::parse(last))
             }
             else { panic!("ERROR: Uneven IF Logic {:?}",exp) }
         }
@@ -65,13 +65,6 @@ impl SrcKind {
                 SrcKind::Next(exp.pop().unwrap())
             }
             else { panic!("ERROR: Uneven NEXT Logic {:?}",exp) }
-        }
-        else if exp[0] == "return" {
-            if exp.len() == 2 {
-                SrcKind::Return(VarKind::parse(&exp.pop().unwrap()))
-            }
-            else { panic!("ERROR: Uneven RETURN Logic {:?}",exp) }
-            
         }
         else {
             SrcKind::Logic(exp.remove(0),
@@ -93,26 +86,27 @@ pub enum LogicKind {
 }
 
 impl LogicKind {
-    // TODO: conv to pop/removals
-    pub fn parse(exp: Vec<String>) -> LogicKind {
-        let start = 0;
-        let len = exp.len() - start;
+    pub fn parse(mut exp: Vec<String>) -> LogicKind {
+        let len = exp.len();
         
         if len == 1 {
-            if exp[start].split_at(1).0 == "!" {
-                LogicKind::IsNot(exp[start][1..].to_owned())
+            let mut exp = exp.pop().unwrap();
+            let inv = exp.remove(0);
+            if inv == '!' {
+                LogicKind::IsNot(exp)
             }
             else {
-                LogicKind::Is(exp[start][1..].to_owned())
+                LogicKind::Is(exp)
             }
         }
         else if len == 3 {
-            let var = VarKind::parse(&exp[start+2]);
+            let var = exp.pop().unwrap();
+            let var = VarKind::parse(var);
 
             match var {
                 VarKind::Num(num) => {
-                    let key = exp[start].to_owned();
-                    let sym = exp[start + 1].to_owned();
+                    let sym = exp.pop().unwrap();
+                    let key = exp.pop().unwrap();
                     
                     if sym == ">" {
                         LogicKind::GT(key,num)
@@ -137,7 +131,7 @@ pub enum VarKind {
 }
 
 impl VarKind {
-    pub fn parse(t: &str) -> VarKind {
+    pub fn parse(t: String) -> VarKind {
         let val;
 
         if let Ok(v) = t.parse::<f32>() {
@@ -146,7 +140,7 @@ impl VarKind {
         else if let Ok(v) = t.parse::<bool>() {
             val = VarKind::Bool(v);
         }
-        else { val = VarKind::String(t.to_owned()) }
+        else { val = VarKind::String(t) }
         
         val
     }
@@ -197,7 +191,7 @@ impl Parser {
                     match block {
                         Some(BlockKind::Def(ref mut b)) => {
                             b.defs.push((exps[0].to_owned(),
-                                         VarKind::parse(&exps[1])));
+                                         VarKind::parse(exps[1].to_owned())));
                         },
                         Some(BlockKind::Src(ref mut b)) => {
                             println!("EXPS{:?}",exps);
