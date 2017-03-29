@@ -27,6 +27,7 @@ pub enum SrcKind {
     // ex: if item_logic give_quest
     If(ExpectKind, VarKind),
 
+    Composite(String,ExpectKind,Vec<String>),
     Next(String), // ends execution and begins next node
 }
 
@@ -66,8 +67,23 @@ impl SrcKind {
             else { panic!("ERROR: Uneven NEXT Logic {:?}",exp) }
         }
         else {
-            SrcKind::Logic(exp.remove(0),
-                           LogicKind::parse(exp))
+            let keys = exp.remove(0);
+            let mut keys: Vec<&str> = keys.split_terminator(':').collect();
+
+            if keys.len() < 2 { // regular logic
+                SrcKind::Logic(keys.pop().unwrap().to_owned(),
+                               LogicKind::parse(exp))
+            }
+            else { // composite type
+                let kind = ExpectKind::parse(keys.pop().unwrap().to_owned());
+                match kind { // only formal expected types allowed
+                    ExpectKind::Ref(_) => { panic!("ERROR: Informal ExpectKind found {:?}", kind) },
+                    _ => {}
+                }
+                SrcKind::Composite(keys.pop().unwrap().to_owned(),
+                                   kind,
+                                   exp)
+            }
         }
     }
 }

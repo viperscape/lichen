@@ -10,7 +10,7 @@ mod tests {
         "root\n
     unequipped !some_item\n
     has_weight some_weight < 5.0\n
-    #some_comp(all) unequipped !has_weight\n
+    some_comp:any unequipped has_weight\n
 \n
     if unequipped \"you're looking for something?\"\n
 \n
@@ -31,7 +31,9 @@ mod tests {
                           
                           SrcKind::Logic("has_weight".to_owned(),
                                          LogicKind::LT("some_weight".to_owned(), 5.0f32)),
-                          
+                          SrcKind::Composite("some_comp".to_owned(),
+                                             ExpectKind::Any,
+                                             vec!["unequipped".to_owned(),"has_weight".to_owned()]),
                           SrcKind::If(ExpectKind::Ref("unequipped".to_owned()),
                                       VarKind::String("you're looking for something?".to_owned())),
                           SrcKind::If(ExpectKind::All,
