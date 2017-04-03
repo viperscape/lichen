@@ -1,3 +1,5 @@
+use rand::random;
+
 #[derive(Debug,PartialEq)]
 pub struct SrcBlock {
     pub name: String,
@@ -174,7 +176,7 @@ impl Parser {
         let mut in_vec = false;
 
         for c in src.chars() {
-            if c == '[' { in_vec = true; continue; }
+            if c == '[' { in_vec = true; continue }
             else if c == ']' { in_vec = false; }
             else if c == '#' && !in_string { in_comment = true; }
             else if  c == '\n' && in_comment && !in_string {
@@ -219,6 +221,19 @@ impl Parser {
                     }
                 }
                 else { // build block type
+                    let mut qsyms = vec!();
+                    for n in exps.iter_mut() {
+                        if n.chars().next().expect("ERROR: Empty QSYM") == '\'' {
+                            let mut qsym = "__".to_owned();
+                            let sym = n[1..].trim().to_owned();
+                            qsym.push_str(&random::<u16>().to_string());
+                            
+                            qsyms.push(qsym.clone());
+                            qsyms.push(sym);
+                            *n = qsym;
+                        }
+                    }
+                    
                     match block {
                         Some(BlockKind::Def(ref mut b)) => {
                             b.defs.push((exps[0].to_owned(),
@@ -226,6 +241,10 @@ impl Parser {
                         },
                         Some(BlockKind::Src(ref mut b)) => {
                             println!("EXPS{:?}",exps);
+                            if qsyms.len() > 1 {
+                                b.src.push(SrcKind::parse(qsyms));
+                            }
+                            
                             b.src.push(SrcKind::parse(exps));
                         },
                         _ => {}
