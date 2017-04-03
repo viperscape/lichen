@@ -31,6 +31,15 @@ mod tests {
     some_comp:any [has_weight '!some_item ]\n
     ;"
     }
+
+    fn if_vec_block () -> &'static str {
+        "root\n
+    if '!some_item [\n
+        \"you're looking for something?\"\n
+        \"welcome, \nlook around\"\n
+        next store]\n
+;"
+    }
     
     #[test]
     fn parse_block() {
@@ -49,9 +58,11 @@ mod tests {
                                              ExpectKind::Any,
                                              vec!["unequipped".to_owned(),"has_weight".to_owned()]),
                           SrcKind::If(ExpectKind::Ref("unequipped".to_owned()),
-                                      VarKind::String("you're looking for something?".to_owned())),
+                                      vec![VarKind::String("you're looking for something?".to_owned())],
+                                      None),
                           SrcKind::If(ExpectKind::All,
-                                      VarKind::String("welcome, \nlook around".to_owned()))]
+                                      vec![VarKind::String("welcome, \nlook around".to_owned())],
+                                      None)]
             })];
 
         for (n,n_) in block.iter().zip(block_.iter()) {
@@ -72,7 +83,7 @@ mod tests {
                 }
 
                 match b.src[1] {
-                    SrcKind::If(ref x,_) => {
+                    SrcKind::If(ref x,_,_) => {
                         match x {
                             &ExpectKind::Ref(ref r_) => {
                                 assert_eq!(r,r_);
@@ -103,6 +114,25 @@ mod tests {
                 match b.src[2] {
                     SrcKind::Composite(_,_,ref x) => {
                         assert_eq!(r,&x[1]);
+                    },
+                    _ => panic!("unknown source found")
+                }
+            },
+            _ => panic!("unknown block found")
+        }
+    }
+
+        #[test]
+    fn parse_if_vec_block() {
+        let src = if_vec_block();
+        let block = Parser::parse_blocks(src);
+        
+        match &block[0] {
+            &BlockKind::Src(ref b) => {
+                match b.src[1] {
+                    SrcKind::If(_,_, ref next) => {
+                        assert!(next.is_some());
+                        assert_eq!(next,&Some("store".to_owned()));
                     },
                     _ => panic!("unknown source found")
                 }

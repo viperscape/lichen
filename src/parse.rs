@@ -24,10 +24,11 @@ pub enum BlockKind {
 pub enum SrcKind {
     Logic(String, LogicKind), // ex: item_logic has_item
 
-    // references logic in env and emits varkind;
+    // references logic in env and emits varkinds;
     // logic must resolve to true
     // ex: if item_logic give_quest
-    If(ExpectKind, VarKind),
+    // Can optionally end execution and begin next node
+    If(ExpectKind, Vec<VarKind>, Option<String>),
 
     Composite(String,ExpectKind,Vec<String>),
     Next(String), // ends execution and begins next node
@@ -55,12 +56,22 @@ impl ExpectKind {
 impl SrcKind {
     pub fn parse(mut exp: Vec<String>) -> SrcKind {
         if exp[0] == "if" {
-            if exp.len() == 3 {
-                let last = exp.pop().unwrap();
-                SrcKind::If(ExpectKind::parse(exp.pop().unwrap()),
-                            VarKind::parse(last))
+            if exp.len() < 3 { panic!("ERROR: Invalid IF Logic {:?}",exp) }
+            
+            let x = exp.remove(1);
+
+            let mut node = None;
+            if exp.len() > 2 {
+                let next = &exp[exp.len() - 2] == "next";
+                if next {
+                    node = exp.pop();
+                    let _ = exp.pop(); // remove next tag
+                }
             }
-            else { panic!("ERROR: Uneven IF Logic {:?}",exp) }
+            
+            let v = exp.drain(1..).map(|n| VarKind::parse(n)).collect();
+            SrcKind::If(ExpectKind::parse(x),
+                        v, node)
         }
         else if exp[0] == "next" {
             if exp.len() == 2 {
