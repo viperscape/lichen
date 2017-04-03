@@ -189,7 +189,7 @@ impl Parser {
                 if block.is_none() {
                     let name = exps.pop().unwrap();
                     
-                    if name == "with" {
+                    if name == "def" {
                         let b = DefBlock {
                             name: exps.pop().unwrap(),
                             defs: vec!()
