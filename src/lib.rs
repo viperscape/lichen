@@ -27,7 +27,8 @@ mod tests {
 
     fn qsym_comp_block () -> &'static str {
         "root\n
-    some_comp:any [!some_item some_weight]\n
+    has_weight some_weight < 5.0\n
+    some_comp:any [has_weight '!some_item ]\n
     ;"
     }
     
@@ -91,7 +92,22 @@ mod tests {
         let src = qsym_comp_block();
         let block = Parser::parse_blocks(src);
 
-        println!("{:?}",block);
-        panic!()
+        match &block[0] {
+            &BlockKind::Src(ref b) => {
+                let r;
+                match b.src[1] {
+                    SrcKind::Logic(ref qsym,_) => { r = qsym; },
+                    _ => panic!("unknown source found")
+                }
+
+                match b.src[2] {
+                    SrcKind::Composite(_,_,ref x) => {
+                        assert_eq!(r,&x[1]);
+                    },
+                    _ => panic!("unknown source found")
+                }
+            },
+            _ => panic!("unknown block found")
+        }
     }
 }
