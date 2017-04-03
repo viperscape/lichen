@@ -1,4 +1,5 @@
 use rand::random;
+use std::collections::HashMap;
 
 #[derive(Debug,PartialEq)]
 pub struct SrcBlock {
@@ -54,6 +55,136 @@ impl ExpectKind {
 }
 
 impl SrcKind {
+    fn eval<D:Eval> (&self, state: &mut HashMap<String,bool>, data: &D)
+                     -> (Vec<VarKind>,Option<String>)
+    {
+        match self {
+            &SrcKind::Next(ref node) => {
+                return (vec![],Some(node.clone()))
+            },
+            &SrcKind::Logic(ref name, ref logic) => { //logic updates state
+                let name = name.clone();
+                match logic {
+                    &LogicKind::Is(ref lookup) => {
+                        let r = data.eval(&lookup);
+                        if r.is_some() {
+                            match r.unwrap() {
+                                VarKind::Bool(v) => { state.insert(name,v); },
+                                _ => { state.insert(name,true); }, //if exists?
+                            }
+                        }
+                    },
+                    &LogicKind::IsNot(ref lookup) => { //inverse state
+                        let r = data.eval(&lookup);
+                        if r.is_some() {
+                            match r.unwrap() {
+                                VarKind::Bool(v) => {
+                                    if !v { state.insert(name,true); }
+                                },
+                                _ => { state.insert(name,false); },
+                            }
+                        }
+                    },
+
+                   &LogicKind::GT(ref lookup, ref num) => {
+                        let r = data.eval(&lookup);
+                        if r.is_some() {
+                            match r.unwrap() {
+                                VarKind::Num(num_) => {
+                                    state.insert(name, *num > num_);
+                                },
+                                _ => { state.insert(name,false); },
+                            }
+                        }
+                    },
+                    &LogicKind::LT(ref lookup, ref num) => {
+                        let r = data.eval(&lookup);
+                        if r.is_some() {
+                            match r.unwrap() {
+                                VarKind::Num(num_) => {
+                                    state.insert(name, *num > num_);
+                                },
+                                _ => { state.insert(name,false); },
+                            }
+                        }
+                    }
+                }
+
+                return (vec![],None) // logic does not return anything
+            },
+            &SrcKind::Composite(ref name, ref x, ref lookups) => {
+                let mut comp_value = false;
+                match x {
+                    &ExpectKind::All => { // all must pass as true
+                        for lookup in lookups.iter() {
+                            let val = state.get(lookup);
+                            if val.is_some() && *val.unwrap() {
+                                comp_value = true;
+                            }
+                            else { comp_value = false; break }
+                        }
+                        
+                        state.insert(name.clone(),comp_value);
+                    },
+                    &ExpectKind::Any => { // first truth passes for set
+                        for lookup in lookups.iter() {
+                            let val = state.get(lookup);
+                            if val.is_some() && *val.unwrap() {
+                                comp_value = true;
+                                break;
+                            }
+                        }
+
+                        state.insert(name.clone(),comp_value);
+                    },
+                    &ExpectKind::None => { // inverse of any, none must be true
+                        for lookup in lookups.iter() {
+                            let val = state.get(lookup);
+                            if val.is_some() && *val.unwrap() {
+                                comp_value = false;
+                                break;
+                            }
+                        }
+
+                        state.insert(name.clone(),comp_value);
+                    },
+                    &ExpectKind::Ref(_) => panic!("ERROR: Unexpected parsing") // this should never hit
+                }
+
+                return (vec![],None) // composite does not return anything
+            },
+            &SrcKind::If(ref x, ref v, ref node) => {
+                let mut if_value = false;
+                match x {
+                    &ExpectKind::All => {
+                        for n in state.values() {
+                            if !n { if_value = false; break }
+                            else { if_value = true; }
+                        }
+                    },
+                    &ExpectKind::Any => {
+                        for n in state.values() {
+                            if *n { if_value = true; break }
+                        }
+                    },
+                    &ExpectKind::None => {
+                        for n in state.values() {
+                            if !n { if_value = true; }
+                            else { if_value = true; break }
+                        }
+                    },
+                    &ExpectKind::Ref(ref lookup) => {
+                        let val = state.get(lookup);
+                        if val.is_some() && *val.unwrap() { if_value = true; }
+                    },
+                }
+
+                if if_value { return ((*v).clone(),node.clone()) }
+                else { return (vec![],None) }
+            }
+        }
+    }
+    
     pub fn parse(mut exp: Vec<String>) -> SrcKind {
         if exp[0] == "if" {
             if exp.len() < 3 { panic!("ERROR: Invalid IF Logic {:?}",exp) }
@@ -144,18 +275,28 @@ impl LogicKind {
                     }
                     else { panic!("ERROR: Invalid LogicKind Syntax") }
                 },
-                _ => { panic!("ERROR: Invalid LogicKind Value {:?}",exp) }
+                _ => { panic!("ERROR: LogicKind Value-- NaN {:?}",exp) }
             }
         }
         else { panic!("ERROR: Unbalanced LogicKind Syntax ({:?})",exp) }
     }
 }
 
-#[derive(Debug,PartialEq)]
+#[derive(Debug,PartialEq, Clone)]
 pub enum VarKind {
     String(String),
     Num(f32),
     Bool(bool),
+}
+
+impl ToString for VarKind {
+    fn to_string(&self) -> String {
+        match self {
+            &VarKind::String(ref s) => s.clone(),
+            &VarKind::Num(ref n) => n.to_string(),
+            &VarKind::Bool(ref b) => b.to_string(),
+        }
+    }
 }
 
 impl VarKind {
@@ -174,8 +315,63 @@ impl VarKind {
     }
 }
 
-pub struct Parser;
+pub trait Eval {
+    fn eval (&self, data: &str) -> Option<VarKind>;
+}
+
+pub struct Parser {
+    //state: HashMap<String,usize>, //lookup table
+}
+
 impl Parser {
+    pub fn eval_block<D:Eval>
+        (block: &BlockKind, data: &D)
+         -> (Vec<VarKind>,Option<String>)
+    {
+        let mut r = vec!();
+        let mut node = None;
+        
+        match block {
+            &BlockKind::Src(ref b) => {
+                let mut state: HashMap<String,bool> = HashMap::new();
+                for src in b.src.iter() {
+                    let (mut vars, node_) = src.eval(&mut state, data);
+                    for n in vars.drain(..) { r.push(n); }
+                    if node.is_some() { node = node_; break; }
+                }
+            },
+            _ => panic!("ERROR: Unimplemented block evaluation type")
+        }
+
+        for var in r.iter_mut() {
+            match var {
+                &mut VarKind::String(ref mut s) => { //format string
+                    let mut fs = String::new();
+                    let mut started = false;
+                    for word in s.split_whitespace() {
+                        if started { fs.push(' '); }
+                        
+                        if word.chars().next().unwrap() == '`' {
+                            if let Some(ref val) = data.eval(&word[1..]) {
+                                fs.push_str(&val.to_string());
+                            }
+                        }
+                        else {
+                            fs.push_str(word);
+                        }
+
+                        started = true;
+                    }
+
+                    *s = fs;
+                },
+                _ => {}
+            }
+        }
+        
+        return (r,node)
+    }
+    
     pub fn parse_blocks (src: &str) -> Vec<BlockKind> {
         let mut v = vec!();
         let mut exp = String::new();

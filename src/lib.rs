@@ -5,7 +5,27 @@ pub mod parse;
 #[cfg(test)]
 mod tests {
     use ::parse::{Parser,BlockKind,SrcBlock,
-                  LogicKind,SrcKind,VarKind,ExpectKind};
+                  LogicKind,SrcKind,VarKind,ExpectKind,
+                  Eval};
+
+    struct Data;
+    impl Eval for Data {
+        fn eval (&self, data: &str) -> Option<VarKind> {
+            match data {
+                "some_item" => {
+                    Some(VarKind::Bool(false))
+                },
+                "some_weight" => {
+                    Some(VarKind::Num(4.0f32))
+                },
+                "name" => {
+                    Some(VarKind::String("Io".to_owned()))
+                }
+                _ => None
+            }
+        }
+    }
+
     
     fn test_block () -> &'static str {
         "root\n
@@ -38,6 +58,14 @@ mod tests {
         \"you're looking for something?\"\n
         \"welcome, \nlook around\"\n
         next store]\n
+;"
+    }
+
+    fn eval_str_block () -> &'static str {
+        "root\n
+        has_weight some_weight < 5.0\n
+        some_comp:all [has_weight '!some_item ]\n
+    if some_comp \"looks like you are `some_weight kgs heavy, `name\"\n
 ;"
     }
     
@@ -122,7 +150,7 @@ mod tests {
         }
     }
 
-        #[test]
+    #[test]
     fn parse_if_vec_block() {
         let src = if_vec_block();
         let block = Parser::parse_blocks(src);
@@ -139,5 +167,15 @@ mod tests {
             },
             _ => panic!("unknown block found")
         }
+    }
+
+    #[test]
+    fn parse_eval_str_block() {
+        let src = eval_str_block();
+        let block = Parser::parse_blocks(src);
+        let data = Data;
+        let (vars,_node) = Parser::eval_block(&block[0], &data);
+        
+        assert_eq!(vars[0], VarKind::String("looks like you are 4 kgs heavy, Io".to_owned()));
     }
 }
