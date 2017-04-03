@@ -171,12 +171,24 @@ impl Parser {
 
         let mut in_string = false;
         let mut in_comment = false;
+        let mut in_vec = false;
 
         for c in src.chars() {
-            if c == '#' && !in_string { in_comment = true; }
-            if  c == '\n' && in_comment && !in_string { in_comment = false; continue; }
+            if c == '[' { in_vec = true; continue; }
+            else if c == ']' { in_vec = false; }
+            else if c == '#' && !in_string { in_comment = true; }
+            else if  c == '\n' && in_comment && !in_string {
+                in_comment = false;
+                continue;
+            }
+
+            if c == '\n' && in_vec { continue }
             
-            if (c == '#' || c == '\n') && !in_string {
+            if (c == ']' ||
+                c == '#' ||
+                c == '\n')
+                && !in_string
+            {
                 for n in exp.split_whitespace() {
                     exps.push(n.trim().to_owned());
                 }
