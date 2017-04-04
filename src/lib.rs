@@ -18,6 +18,9 @@ mod tests {
                 "some_weight" => {
                     Some(VarKind::Num(4.0f32))
                 },
+                "other_weight" => {
+                    Some(VarKind::Num(5.0f32))
+                },
                 "name" => {
                     Some(VarKind::String("Io".to_owned()))
                 }
@@ -66,6 +69,13 @@ mod tests {
         has_weight some_weight < 5.0\n
         some_comp:all [has_weight '!some_item ]\n
     if some_comp \"looks like you are `some_weight kgs heavy, `name\"\n
+;"
+    }
+
+    fn compare_env_block () -> &'static str {
+        "root\n
+    weight some_weight < other_weight\n
+    if weight next store\n
 ;"
     }
     
@@ -177,5 +187,15 @@ mod tests {
         let (vars,_node) = Parser::eval_block(&block[0], &data);
         
         assert_eq!(vars[0], VarKind::String("looks like you are 4 kgs heavy, Io".to_owned()));
+    }
+
+    #[test]
+    fn parse_compare_env_block() {
+        let src = compare_env_block();
+        let block = Parser::parse_blocks(src);
+        let data = Data;
+        let (_vars,node) = Parser::eval_block(&block[0], &data);
+        
+        assert_eq!(node, Some("store".to_string()));
     }
 }
