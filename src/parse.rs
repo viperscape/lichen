@@ -330,10 +330,7 @@ pub trait Eval {
     fn eval (&self, data: &str) -> Option<VarKind>;
 }
 
-pub struct Parser {
-    //state: HashMap<String,usize>, //lookup table
-}
-
+pub struct Parser;
 impl Parser {
     pub fn eval_block<D:Eval>
         (block: &BlockKind, data: &D)
