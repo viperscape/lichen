@@ -86,23 +86,27 @@ impl SrcKind {
                         }
                     },
 
-                   &LogicKind::GT(ref lookup, ref num) => {
+                    &LogicKind::GT(ref lookup, ref var) => {
+                        let num:f32 = VarKind::get_num::<D>(var,data).unwrap();
+                        
                         let r = data.eval(&lookup);
                         if r.is_some() {
                             match r.unwrap() {
                                 VarKind::Num(num_) => {
-                                    state.insert(name, *num > num_);
+                                    state.insert(name, num > num_);
                                 },
                                 _ => { state.insert(name,false); },
                             }
                         }
                     },
-                    &LogicKind::LT(ref lookup, ref num) => {
+                    &LogicKind::LT(ref lookup, ref var) => {
+                        let num = VarKind::get_num::<D>(var,data).unwrap();
+                        
                         let r = data.eval(&lookup);
                         if r.is_some() {
                             match r.unwrap() {
                                 VarKind::Num(num_) => {
-                                    state.insert(name, *num > num_);
+                                    state.insert(name, num > num_);
                                 },
                                 _ => { state.insert(name,false); },
                             }
@@ -236,8 +240,8 @@ impl SrcKind {
 /// should resolve to boolean
 #[derive(Debug,PartialEq)]
 pub enum LogicKind {
-    GT(String,f32), // weight > 1
-    LT(String,f32),
+    GT(String,VarKind), // weight > 1
+    LT(String,VarKind),
 
     //boolean checks
     Is(String),
@@ -262,21 +266,16 @@ impl LogicKind {
             let var = exp.pop().unwrap();
             let var = VarKind::parse(var);
 
-            match var {
-                VarKind::Num(num) => {
-                    let sym = exp.pop().unwrap();
-                    let key = exp.pop().unwrap();
-                    
-                    if sym == ">" {
-                        LogicKind::GT(key,num)
-                    }
-                    else if sym == "<" {
-                        LogicKind::LT(key,num)
-                    }
-                    else { panic!("ERROR: Invalid LogicKind Syntax") }
-                },
-                _ => { panic!("ERROR: LogicKind Value-- NaN {:?}",exp) }
+            let sym = exp.pop().unwrap();
+            let key = exp.pop().unwrap();
+            
+            if sym == ">" {
+                LogicKind::GT(key,var)
             }
+            else if sym == "<" {
+                LogicKind::LT(key,var)
+            }
+            else { panic!("ERROR: Invalid LogicKind Syntax") }
         }
         else { panic!("ERROR: Unbalanced LogicKind Syntax ({:?})",exp) }
     }
@@ -312,6 +311,25 @@ impl VarKind {
         else { val = VarKind::String(t) }
         
         val
+    }
+
+    pub fn get_num<D:Eval> (&self, data: &D) -> Result<f32,&'static str> {
+        let num;
+        match self {
+            &VarKind::Num(n) => { num = n; },
+            &VarKind::String(ref s) => {
+                if let Some(n) = data.eval(s) {
+                    match n {
+                        VarKind::Num(n) => { num = n; },
+                        _ => return Err("ERROR: NaN Evaluation")
+                    }
+                }
+                else {  return Err("ERROR: Empty Evaluation") }
+            },
+            _ =>  return Err("ERROR: NaN Evaluation")
+        }
+
+        return Ok(num)
     }
 }
 
