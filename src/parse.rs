@@ -179,7 +179,9 @@ impl SrcKind {
                     },
                     &ExpectKind::Ref(ref lookup) => {
                         let val = state.get(lookup);
-                        if val.is_some() && *val.unwrap() { if_value = true; }
+                        if let Some(val) = val {
+                            if_value = *val;
+                        }
                     },
                 }
 
@@ -355,7 +357,7 @@ impl Parser {
                 for src in b.src.iter() {
                     let (mut vars, node_) = src.eval(&mut state, data);
                     for n in vars.drain(..) { r.push(n); }
-                    if node.is_some() { node = node_; break; }
+                    if node_.is_some() { node = node_; break; }
                 }
             },
             _ => panic!("ERROR: Unimplemented block evaluation type")
