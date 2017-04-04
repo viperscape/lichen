@@ -93,7 +93,7 @@ impl SrcKind {
                         if r.is_some() {
                             match r.unwrap() {
                                 VarKind::Num(num_) => {
-                                    state.insert(name, num > num_);
+                                    state.insert(name, num_ > num);
                                 },
                                 _ => { state.insert(name,false); },
                             }
@@ -106,7 +106,7 @@ impl SrcKind {
                         if r.is_some() {
                             match r.unwrap() {
                                 VarKind::Num(num_) => {
-                                    state.insert(name, num > num_);
+                                    state.insert(name, num_ < num);
                                 },
                                 _ => { state.insert(name,false); },
                             }
