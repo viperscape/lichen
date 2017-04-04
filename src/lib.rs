@@ -1,12 +1,13 @@
 extern crate rand;
 pub mod parse;
+pub mod eval;
 
 
 #[cfg(test)]
 mod tests {
     use ::parse::{Parser,BlockKind,SrcBlock,
-                  LogicKind,SrcKind,VarKind,ExpectKind,
-                  Eval};
+                  LogicKind,SrcKind,VarKind,ExpectKind};
+    use ::eval::{Eval,Evaluator};
 
     struct Data;
     impl Eval for Data {
@@ -184,7 +185,7 @@ mod tests {
         let src = eval_str_block();
         let block = Parser::parse_blocks(src);
         let data = Data;
-        let (vars,_node) = Parser::eval_block(&block[0], &data);
+        let (vars,_node) = Evaluator::eval_block(&block[0], &data);
         
         assert_eq!(vars[0], VarKind::String("looks like you are 4 kgs heavy, Io".to_owned()));
     }
@@ -194,7 +195,7 @@ mod tests {
         let src = compare_env_block();
         let block = Parser::parse_blocks(src);
         let data = Data;
-        let (_vars,node) = Parser::eval_block(&block[0], &data);
+        let (_vars,node) = Evaluator::eval_block(&block[0], &data);
         
         assert_eq!(node, Some("store".to_string()));
     }
