@@ -91,7 +91,7 @@ mod tests {
                                          LogicKind::IsNot("some_item".to_owned())),
                          
                           SrcKind::Logic("has_weight".to_owned(),
-                                         LogicKind::LT("some_weight".to_owned(), VarKind::Num(5.0f32))),
+                                         LogicKind::LT(VarKind::String("some_weight".to_owned()), VarKind::Num(5.0f32))),
                           SrcKind::Composite("some_comp".to_owned(),
                                              ExpectKind::Any,
                                              vec!["unequipped".to_owned(),"has_weight".to_owned()]),

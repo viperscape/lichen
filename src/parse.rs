@@ -86,32 +86,22 @@ impl SrcKind {
                         }
                     },
 
-                    &LogicKind::GT(ref lookup, ref var) => {
-                        let num:f32 = VarKind::get_num::<D>(var,data).unwrap();
+                    &LogicKind::GT(ref left, ref right) => {
+                        let right = VarKind::get_num::<D>(right,data);
+                        let left = VarKind::get_num::<D>(left,data);
                         
-                        let r = data.eval(&lookup);
-                        if r.is_some() {
-                            match r.unwrap() {
-                                VarKind::Num(num_) => {
-                                    state.insert(name, num_ > num);
-                                },
-                                _ => { state.insert(name,false); },
-                            }
+                        if left.is_ok() && right.is_ok() {
+                            state.insert(name, left.unwrap() > right.unwrap());
                         }
                     },
-                    &LogicKind::LT(ref lookup, ref var) => {
-                        let num = VarKind::get_num::<D>(var,data).unwrap();
+                    &LogicKind::LT(ref left, ref right) => {
+                        let right = VarKind::get_num::<D>(right,data);
+                        let left = VarKind::get_num::<D>(left,data);
                         
-                        let r = data.eval(&lookup);
-                        if r.is_some() {
-                            match r.unwrap() {
-                                VarKind::Num(num_) => {
-                                    state.insert(name, num_ < num);
-                                },
-                                _ => { state.insert(name,false); },
-                            }
+                        if left.is_ok() && right.is_ok() {
+                            state.insert(name, left.unwrap() < right.unwrap());
                         }
-                    }
+                    },
                 }
 
                 return (vec![],None) // logic does not return anything
@@ -242,8 +232,8 @@ impl SrcKind {
 /// should resolve to boolean
 #[derive(Debug,PartialEq)]
 pub enum LogicKind {
-    GT(String,VarKind), // weight > 1
-    LT(String,VarKind),
+    GT(VarKind,VarKind), // weight > 1
+    LT(VarKind,VarKind),
 
     //boolean checks
     Is(String),
@@ -270,6 +260,7 @@ impl LogicKind {
 
             let sym = exp.pop().unwrap();
             let key = exp.pop().unwrap();
+            let key = VarKind::parse(key);
             
             if sym == ">" {
                 LogicKind::GT(key,var)
