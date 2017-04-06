@@ -30,9 +30,11 @@ mod tests {
         }
     }
 
+
     
-    fn test_block () -> &'static str {
-        "root\n
+    #[test]
+    fn parse_block() {
+        let src = "root\n
     unequipped !some_item\n
     has_weight some_weight < 5.0\n
     some_comp:any [\nunequipped \nhas_weight\n]\n
@@ -40,36 +42,8 @@ mod tests {
     if unequipped \"you're looking for something?\"\n
 \n
     if all \"welcome, \nlook around\"\n
-;"
-    }
-
-    fn qsym_comp_block () -> &'static str {
-        "root\n
-    has_weight some_weight < 5.0\n
-    some_comp:any [has_weight '!some_item ]\n
-    ;"
-    }
-
-    fn if_vec_block () -> &'static str {
-        "root\n
-    if '!some_item [\n
-        \"you're looking for something?\"\n
-        \"welcome, \nlook around\"\n
-        next store]\n
-;"
-    }
-
-    fn eval_str_block () -> &'static str {
-        "root\n
-        has_weight some_weight < 5.0\n
-        some_comp:all [has_weight '!some_item ]\n
-    if some_comp \"looks like you are `some_weight kgs heavy, `name\"\n
-;"
-    }
-    
-    #[test]
-    fn parse_block() {
-        let src = test_block();
+;";
+        
         let block = Parser::parse_blocks(src);
 
         let block_ = [BlockKind::Src(
@@ -128,7 +102,11 @@ mod tests {
 
     #[test]
     fn parse_qsym_comp_block() {
-        let src = qsym_comp_block();
+        let src =  "root\n
+    has_weight some_weight < 5.0\n
+    some_comp:any [has_weight '!some_item ]\n
+    ;";
+        
         let block = Parser::parse_blocks(src);
 
         match &block[0] {
@@ -152,7 +130,13 @@ mod tests {
 
     #[test]
     fn parse_if_vec_block() {
-        let src = if_vec_block();
+        let src = "root\n
+    if '!some_item [\n
+        \"you're looking for something?\"\n
+        \"welcome, \nlook around\"\n
+        next store]\n
+;";
+        
         let block = Parser::parse_blocks(src);
         
         match &block[0] {
@@ -171,7 +155,12 @@ mod tests {
 
     #[test]
     fn parse_eval_str_block() {
-        let src = eval_str_block();
+        let src = "root\n
+        has_weight some_weight < 5.0\n
+        some_comp:all [has_weight '!some_item ]\n
+    if some_comp \"looks like you are `some_weight kgs heavy, `name\"\n
+;";
+        
         let block = Parser::parse_blocks(src);
         let data = Data;
         
