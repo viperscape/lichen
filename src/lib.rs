@@ -11,8 +11,8 @@ mod tests {
 
     struct Data;
     impl Eval for Data {
-        fn eval (&self, data: &str) -> Option<VarKind> {
-            match data {
+        fn eval (&self, lookup: &str) -> Option<VarKind> {
+            match lookup {
                 "some_item" => {
                     Some(VarKind::Bool(false))
                 },
