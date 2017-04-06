@@ -293,6 +293,27 @@ impl ToString for VarKind {
     }
 }
 
+impl From<bool> for VarKind {
+    fn from(t:bool) -> VarKind {
+        VarKind::Bool(t)
+    }
+}
+impl From<f32> for VarKind {
+    fn from(t:f32) -> VarKind {
+        VarKind::Num(t)
+    }
+}
+impl From<String> for VarKind {
+    fn from(t:String) -> VarKind {
+        VarKind::String(t)
+    }
+}
+impl<'a> From<&'a str> for VarKind {
+    fn from(t:&str) -> VarKind {
+        VarKind::String(t.to_owned())
+    }
+}
+
 impl VarKind {
     pub fn parse(t: String) -> VarKind {
         let val;
