@@ -43,12 +43,6 @@ mod tests {
 ;"
     }
 
-    fn qsym_block () -> &'static str {
-        "root\n
-    if '!some_item \"you're looking for something?\"\n
-;"
-    }
-
     fn qsym_comp_block () -> &'static str {
         "root\n
     has_weight some_weight < 5.0\n
@@ -72,13 +66,6 @@ mod tests {
     if some_comp \"looks like you are `some_weight kgs heavy, `name\"\n
 ;"
     }
-
-    fn compare_env_block () -> &'static str {
-        "root\n
-    weight some_weight < other_weight\n
-    if weight next store\n
-;"
-    }
     
     #[test]
     fn parse_block() {
@@ -92,15 +79,15 @@ mod tests {
                                          LogicKind::IsNot("some_item".to_owned())),
                          
                           SrcKind::Logic("has_weight".to_owned(),
-                                         LogicKind::LT(VarKind::String("some_weight".to_owned()), VarKind::Num(5.0f32))),
+                                         LogicKind::LT("some_weight".into(), 5.0 .into())),
                           SrcKind::Composite("some_comp".to_owned(),
                                              ExpectKind::Any,
                                              vec!["unequipped".to_owned(),"has_weight".to_owned()]),
                           SrcKind::If(ExpectKind::Ref("unequipped".to_owned()),
-                                      vec![VarKind::String("you're looking for something?".to_owned())],
+                                      vec!["you're looking for something?".into()],
                                       None),
                           SrcKind::If(ExpectKind::All,
-                                      vec![VarKind::String("welcome, \nlook around".to_owned())],
+                                      vec!["welcome, \nlook around".into()],
                                       None)]
             })];
 
@@ -111,7 +98,9 @@ mod tests {
 
     #[test]
     fn parse_qsym_block() {
-        let src = qsym_block();
+        let src = "root\n
+    if '!some_item \"you're looking for something?\"\n
+;";
         let block = Parser::parse_blocks(src);
         match &block[0] {
             &BlockKind::Src(ref b) => {
@@ -189,12 +178,15 @@ mod tests {
         let ev = Evaluator::new(&block[0], &data);
         let (vars,_node) = ev.block();
         
-        assert_eq!(vars[0], VarKind::String("looks like you are 4 kgs heavy, Io".to_owned()));
+        assert_eq!(vars[0], "looks like you are 4 kgs heavy, Io".into());
     }
 
     #[test]
     fn parse_compare_env_block() {
-        let src = compare_env_block();
+        let src = "root\n
+    weight some_weight < other_weight\n
+    if weight next store\n
+;";
         let block = Parser::parse_blocks(src);
         let data = Data;
 
