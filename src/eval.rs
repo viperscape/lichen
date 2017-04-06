@@ -2,23 +2,32 @@ use std::collections::HashMap;
 use parse::{BlockKind,VarKind};
 
 pub trait Eval {
-    fn eval (&self, data: &str) -> Option<VarKind>;
+    fn eval (&self, lookup: &str) -> Option<VarKind>;
 }
 
-pub struct Evaluator;
-impl Evaluator {
-    pub fn eval_block<D:Eval>
-        (block: &BlockKind, data: &D)
-         -> (Vec<VarKind>,Option<String>)
+pub struct Evaluator<'b, 'd, D:Eval + 'd> {
+    data: &'d D,
+    src: &'b BlockKind,
+}
+
+impl<'b, 'd, D:Eval> Evaluator<'b, 'd, D> {
+    pub fn new (block: &'b BlockKind, data: &'d D) -> Evaluator<'b, 'd, D> {
+        Evaluator { src: block, data: data }
+    }
+    
+    pub fn block (&self)
+                  -> (Vec<VarKind>,Option<String>)
+        where D: Eval + 'd
     {
         let mut r = vec!();
         let mut node = None;
         
-        match block {
+        match self.src {
             &BlockKind::Src(ref b) => {
                 let mut state: HashMap<String,bool> = HashMap::new();
+                
                 for src in b.src.iter() {
-                    let (mut vars, node_) = src.eval(&mut state, data);
+                    let (mut vars, node_) = src.eval(&mut state, self.data);
                     for n in vars.drain(..) { r.push(n); }
                     if node_.is_some() { node = node_; break; }
                 }
@@ -35,7 +44,7 @@ impl Evaluator {
                         if started { fs.push(' '); }
                         
                         if word.chars().next().unwrap() == '`' {
-                            if let Some(ref val) = data.eval(&word[1..]) {
+                            if let Some(ref val) = self.data.eval(&word[1..]) {
                                 fs.push_str(&val.to_string());
                             }
                         }
