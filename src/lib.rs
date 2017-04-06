@@ -203,4 +203,21 @@ mod tests {
         
         assert_eq!(node, Some("store".to_string()));
     }
+
+    #[test]
+    fn parse_return_varkind() {
+        let src = "root\n
+    weight some_weight < other_weight\n
+    if weight `some_weight \"hi `name\"\n
+;";
+
+        let block = Parser::parse_blocks(src);
+        let data = Data;
+
+        let ev = Evaluator::new(&block[0], &data);
+        let (vars,_) = ev.block();
+        
+        assert_eq!(vars[0], 4.0 .into());
+        assert_eq!(vars[1], "hi Io" .into());
+    }
 }

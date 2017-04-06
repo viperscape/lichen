@@ -36,28 +36,44 @@ impl<'b, 'd, D:Eval> Evaluator<'b, 'd, D> {
         }
 
         for var in r.iter_mut() {
+            let mut val = None;
             match var {
                 &mut VarKind::String(ref mut s) => { //format string
                     let mut fs = String::new();
                     let mut started = false;
-                    for word in s.split_whitespace() {
-                        if started { fs.push(' '); }
-                        
-                        if word.chars().next().unwrap() == '`' {
-                            if let Some(ref val) = self.data.eval(&word[1..]) {
-                                fs.push_str(&val.to_string());
+
+                    // NOTE: we should move this out to a SYM varkind instead
+                    // (parsed earlier)
+                    if s.split_whitespace().count() == 1 {
+                        if s.chars().next().unwrap() == '`' {
+                            if let Some(ref val_) = self.data.eval(&s[1..]) {
+                                val = Some(val_.clone());
                             }
                         }
-                        else {
-                            fs.push_str(word);
-                        }
-
-                        started = true;
                     }
+                    else {
+                        for word in s.split_whitespace() {
+                            if started { fs.push(' '); }
+                            
+                            if word.chars().next().unwrap() == '`' {
+                                if let Some(ref val_) = self.data.eval(&word[1..]) {
+                                    fs.push_str(&val_.to_string());
+                                }
+                            }
+                            else {
+                                fs.push_str(word);
+                            }
 
-                    *s = fs;
+                            started = true;
+                        }
+                        *s = fs;
+                    }
                 },
                 _ => {}
+            }
+
+            if let Some(val) = val {
+                *var = val;
             }
         }
         
