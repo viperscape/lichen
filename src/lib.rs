@@ -14,16 +14,16 @@ mod tests {
         fn eval (&self, lookup: &str) -> Option<VarKind> {
             match lookup {
                 "some_item" => {
-                    Some(VarKind::from(false))
+                    Some(false.into())
                 },
                 "some_weight" => {
-                    Some(VarKind::from(4.0f32))
+                    Some(4.0 .into())
                 },
                 "other_weight" => {
-                    Some(VarKind::from(5.0f32))
+                    Some(5.0 .into())
                 },
                 "name" => {
-                    Some(VarKind::from("Io".to_owned()))
+                    Some("Io".into())
                 }
                 _ => None
             }
