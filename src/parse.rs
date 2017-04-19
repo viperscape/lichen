@@ -33,6 +33,8 @@ pub enum SrcKind {
     // Can optionally end execution and begin next node
     If(ExpectKind, Vec<VarKind>, Option<String>),
 
+    Emit(Vec<VarKind>), //just emits variables
+    
     Composite(String,ExpectKind,Vec<String>),
     Next(String), // ends execution and begins next node
 }
@@ -63,6 +65,9 @@ impl SrcKind {
         match self {
             &SrcKind::Next(ref node) => {
                 return (vec![],Some(node.clone()))
+            },
+            &SrcKind::Emit(ref vars) => {
+                return (vars.clone(),None)
             },
             &SrcKind::Logic(ref name, ref logic) => { //logic updates state
                 let name = name.clone();
@@ -207,6 +212,17 @@ impl SrcKind {
                 SrcKind::Next(exp.pop().unwrap())
             }
             else { panic!("ERROR: Uneven NEXT Logic {:?}",exp) }
+        }
+        else if exp[0] == "emit" {
+            if exp.len() > 1 {
+                let mut v = vec![];
+                for e in exp.drain(1..) {
+                    v.push(VarKind::parse(e));
+                }
+
+                SrcKind::Emit(v)
+            }
+            else { panic!("ERROR: Missing EMIT Logic {:?}",exp) }
         }
         else {
             let keys = exp.remove(0);
