@@ -16,6 +16,9 @@ mod tests {
                 "some_item" => {
                     Some(false.into())
                 },
+                "other_item" => {
+                    Some(true.into())
+                },
                 "some_weight" => {
                     Some(4.0 .into())
                 },
@@ -126,6 +129,21 @@ mod tests {
             },
             _ => panic!("unknown block found")
         }
+    }
+
+    #[test]
+    fn validate_qsym_block() {
+        let src =  "root\n
+    if 'other_item next store\n
+    ;";
+        
+        let env = Parser::parse_blocks(src).into_env();
+        let data = Data;
+
+        let mut ev = Evaluator::new(&env, &data);
+        let (_,nn) = ev.next().unwrap();
+        
+        assert_eq!(nn, Some("store".into()));
     }
 
     #[test]

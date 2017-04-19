@@ -22,6 +22,7 @@ impl<'e, 'd, D:Eval + 'd> Iterator for Evaluator<'e, 'd, D>
         if let Some(nn) = r.1.clone() {
             self.next_node = nn;
         }
+        else { self.next_node = "".to_owned(); }
 
         Some(r)
     }

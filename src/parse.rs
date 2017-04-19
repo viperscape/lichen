@@ -253,6 +253,7 @@ impl LogicKind {
                 LogicKind::IsNot(exp)
             }
             else {
+                exp.insert(0,inv);
                 LogicKind::Is(exp)
             }
         }
