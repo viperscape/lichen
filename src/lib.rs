@@ -165,7 +165,7 @@ mod tests {
         let data = Data;
         
         let ev = Evaluator::new(&env, &data);
-        let (vars,_node) = ev.run();
+        let (vars,_node) = ev.run("root");
         
         assert_eq!(vars[0], "looks like you are 4 kgs heavy, Io".into());
     }
@@ -180,7 +180,7 @@ mod tests {
         let data = Data;
 
         let ev = Evaluator::new(&env, &data);
-        let (_vars,node) = ev.run();
+        let (_vars,node) = ev.run("root");
         
         assert_eq!(node, Some("store".to_string()));
     }
@@ -196,9 +196,30 @@ mod tests {
         let data = Data;
 
         let ev = Evaluator::new(&env, &data);
-        let (vars,_) = ev.run();
+        let (vars,_) = ev.run("root");
         
         assert_eq!(vars[0], 4.0 .into());
         assert_eq!(vars[1], "hi Io" .into());
+    }
+
+    #[test]
+    fn parse_follow_nodes() {
+        let src = "root\n
+    weight some_weight < other_weight\n
+    if weight next store\n
+;\n
+\n
+store\n
+    if '!some_item \"welcome, \nlook around\"\n
+;";
+
+        let env = Parser::parse_blocks(src).into_env();
+        let data = Data;
+
+        let mut ev = Evaluator::new(&env, &data);
+        ev.next(); // runs root
+        let (vars,_) = ev.next().unwrap();
+        
+        assert_eq!(vars[0], "welcome, \nlook around".into());
     }
 }

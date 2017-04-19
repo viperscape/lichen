@@ -8,21 +8,38 @@ pub trait Eval {
 pub struct Evaluator<'e, 'd, D:Eval + 'd> {
     data: &'d D,
     env: &'e Env,
+    pub next_node: String,
+}
+
+impl<'e, 'd, D:Eval + 'd> Iterator for Evaluator<'e, 'd, D>
+    where D: Eval + 'd {
+    
+    type Item = (Vec<VarKind>,Option<String>);
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.next_node.is_empty() { return None }
+        
+        let r = self.run(&self.next_node);
+        if let Some(nn) = r.1.clone() {
+            self.next_node = nn;
+        }
+
+        Some(r)
+    }
 }
 
 impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
     pub fn new (env: &'e Env, data: &'d D) -> Evaluator<'e, 'd, D> {
-        Evaluator { env: env, data: data }
+        Evaluator { env: env, data: data, next_node: "root".to_owned() }
     }
     
-    pub fn run (&self)
+    pub fn run (&self, node_name: &str)
                 -> (Vec<VarKind>,Option<String>)
         where D: Eval + 'd
     {
         let mut r = vec!();
         let mut node = None;
         
-        if let Some(b) = self.env.src.get("root") {
+        if let Some(b) = self.env.src.get(node_name) {
             let mut state: HashMap<String,bool> = HashMap::new();
             
             for src in b.src.iter() {
@@ -41,7 +58,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
 
                     // NOTE: we should move this out to a SYM varkind instead
                     // (parsed earlier)
-                    if s.split_whitespace().count() == 1 {
+                    if s.split_terminator(' ').count() == 1 {
                         if s.chars().next().unwrap() == '`' {
                             if let Some(ref val_) = self.data.eval(&s[1..]) {
                                 val = Some(val_.clone());
@@ -49,7 +66,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                         }
                     }
                     else {
-                        for word in s.split_whitespace() {
+                        for word in s.split_terminator(' ') {
                             if started { fs.push(' '); }
                             
                             if word.chars().next().unwrap() == '`' {
@@ -57,7 +74,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                                     fs.push_str(&val_.to_string());
                                 }
                             }
-                            else {
+                            else { println!("word:{:?}",word);
                                 fs.push_str(word);
                             }
 
