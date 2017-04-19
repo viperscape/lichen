@@ -12,6 +12,7 @@
 ```toml
 [dependencies]
 lichen = "0.2"
+```
 
 ### Examples
 
