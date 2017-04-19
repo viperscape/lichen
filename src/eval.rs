@@ -75,7 +75,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                                     fs.push_str(&val_.to_string());
                                 }
                             }
-                            else { println!("word:{:?}",word);
+                            else {
                                 fs.push_str(word);
                             }
 
