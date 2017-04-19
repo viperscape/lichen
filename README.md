@@ -17,5 +17,6 @@ lichen = "0.2"
 ### Examples
 
 ###### a contrived example
-[lichen source](https://raw.githubusercontent.com/viperscape/lichen/master/examples/contrived.ls)
-[rust main program](https://raw.githubusercontent.com/viperscape/lichen/master/examples/contrived.rs)
+
+- [lichen source](https://raw.githubusercontent.com/viperscape/lichen/master/examples/contrived.ls)
+- [rust main program](https://raw.githubusercontent.com/viperscape/lichen/master/examples/contrived.rs)
