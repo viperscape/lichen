@@ -1,38 +1,35 @@
 use std::collections::HashMap;
-use parse::{BlockKind,VarKind};
+use parse::{VarKind,Env};
 
 pub trait Eval {
     fn eval (&self, lookup: &str) -> Option<VarKind>;
 }
 
-pub struct Evaluator<'b, 'd, D:Eval + 'd> {
+pub struct Evaluator<'e, 'd, D:Eval + 'd> {
     data: &'d D,
-    src: &'b BlockKind,
+    env: &'e Env,
 }
 
-impl<'b, 'd, D:Eval> Evaluator<'b, 'd, D> {
-    pub fn new (block: &'b BlockKind, data: &'d D) -> Evaluator<'b, 'd, D> {
-        Evaluator { src: block, data: data }
+impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
+    pub fn new (env: &'e Env, data: &'d D) -> Evaluator<'e, 'd, D> {
+        Evaluator { env: env, data: data }
     }
     
-    pub fn block (&self)
-                  -> (Vec<VarKind>,Option<String>)
+    pub fn run (&self)
+                -> (Vec<VarKind>,Option<String>)
         where D: Eval + 'd
     {
         let mut r = vec!();
         let mut node = None;
         
-        match self.src {
-            &BlockKind::Src(ref b) => {
-                let mut state: HashMap<String,bool> = HashMap::new();
-                
-                for src in b.src.iter() {
-                    let (mut vars, node_) = src.eval(&mut state, self.data);
-                    for n in vars.drain(..) { r.push(n); }
-                    if node_.is_some() { node = node_; break; }
-                }
-            },
-            _ => panic!("ERROR: Unimplemented block evaluation type")
+        if let Some(b) = self.env.src.get("root") {
+            let mut state: HashMap<String,bool> = HashMap::new();
+            
+            for src in b.src.iter() {
+                let (mut vars, node_) = src.eval(&mut state, self.data);
+                for n in vars.drain(..) { r.push(n); }
+                if node_.is_some() { node = node_; break; }
+            }
         }
 
         for var in r.iter_mut() {

@@ -161,11 +161,11 @@ mod tests {
     if some_comp \"looks like you are `some_weight kgs heavy, `name\"\n
 ;";
         
-        let block = Parser::parse_blocks(src);
+        let env = Parser::parse_blocks(src).into_env();
         let data = Data;
         
-        let ev = Evaluator::new(&block[0], &data);
-        let (vars,_node) = ev.block();
+        let ev = Evaluator::new(&env, &data);
+        let (vars,_node) = ev.run();
         
         assert_eq!(vars[0], "looks like you are 4 kgs heavy, Io".into());
     }
@@ -176,11 +176,11 @@ mod tests {
     weight some_weight < other_weight\n
     if weight next store\n
 ;";
-        let block = Parser::parse_blocks(src);
+        let env = Parser::parse_blocks(src).into_env();
         let data = Data;
 
-        let ev = Evaluator::new(&block[0], &data);
-        let (_vars,node) = ev.block();
+        let ev = Evaluator::new(&env, &data);
+        let (_vars,node) = ev.run();
         
         assert_eq!(node, Some("store".to_string()));
     }
@@ -192,11 +192,11 @@ mod tests {
     if weight `some_weight \"hi `name\"\n
 ;";
 
-        let block = Parser::parse_blocks(src);
+        let env = Parser::parse_blocks(src).into_env();
         let data = Data;
 
-        let ev = Evaluator::new(&block[0], &data);
-        let (vars,_) = ev.block();
+        let ev = Evaluator::new(&env, &data);
+        let (vars,_) = ev.run();
         
         assert_eq!(vars[0], 4.0 .into());
         assert_eq!(vars[1], "hi Io" .into());

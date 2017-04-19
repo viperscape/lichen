@@ -349,9 +349,16 @@ impl VarKind {
     }
 }
 
-pub struct Parser;
+pub struct Parser(Vec<BlockKind>);
+
+use std::ops::Deref;
+impl Deref for Parser {
+    type Target = Vec<BlockKind>;
+    fn deref(&self) -> &Self::Target { &self.0 }
+}
+
 impl Parser {
-    pub fn parse_blocks (src: &str) -> Vec<BlockKind> {
+    pub fn parse_blocks (src: &str) -> Parser {
         let mut v = vec!();
         let mut exp = String::new();
         let mut exps: Vec<String> = vec!();
@@ -464,6 +471,31 @@ impl Parser {
             }
         }
         
-        v
+        Parser(v)
     }
+
+    pub fn into_env (mut self) -> Env {
+        let mut src = HashMap::new();
+        let mut def = HashMap::new();
+        
+        for b in self.0.drain(..) {
+            match b {
+                BlockKind::Def(db) => {
+                    def.insert(db.name.clone(), db);
+                },
+                BlockKind::Src(sb) => {
+                    src.insert(sb.name.clone(), sb);
+                },
+            }
+
+            
+        }
+
+        Env { def: def, src: src }
+    }
+}
+
+pub struct Env {
+    pub def: HashMap<String, DefBlock>,
+    pub src: HashMap<String, SrcBlock>
 }
