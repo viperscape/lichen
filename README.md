@@ -12,3 +12,7 @@
 ```toml
 [dependencies]
 lichen = "0.2"
+
+### Examples
+
+[contrived example](https://raw.githubusercontent.com/viperscape/lichen/master/examples/contrived.ls)
