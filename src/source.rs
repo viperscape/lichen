@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use parse::{Logic,Expect};
+use ::{Logic,Expect};
 use eval::Eval;
 use var::Var;
 
