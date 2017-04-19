@@ -1,12 +1,17 @@
 extern crate rand;
+
 pub mod parse;
 pub mod eval;
+pub mod source;
+pub mod var;
 
 
 #[cfg(test)]
 mod tests {
     use ::parse::{Parser,Block,SrcBlock,
-                  Logic,Src,Var,Expect};
+                  Logic,Expect};
+    use ::var::Var;
+    use ::source::Src;
     use ::eval::{Eval,Evaluator};
 
     struct Data;

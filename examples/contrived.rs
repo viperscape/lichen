@@ -2,7 +2,8 @@ extern crate lichen;
 
 use std::collections::HashMap;
 
-use lichen::parse::{Parser,Var,};
+use lichen::parse::Parser;
+use lichen::var::Var;
 use lichen::eval::{Eval,Evaluator};
 
 struct Player {

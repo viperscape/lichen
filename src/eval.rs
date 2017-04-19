@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-use parse::{Var,Env};
+use parse::Env;
+use var::Var;
 
 pub trait Eval {
     fn eval (&self, lookup: &str) -> Option<Var>;
