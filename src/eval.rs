@@ -1,8 +1,8 @@
 use std::collections::HashMap;
-use parse::{VarKind,Env};
+use parse::{Var,Env};
 
 pub trait Eval {
-    fn eval (&self, lookup: &str) -> Option<VarKind>;
+    fn eval (&self, lookup: &str) -> Option<Var>;
 }
 
 pub struct Evaluator<'e, 'd, D:Eval + 'd> {
@@ -14,7 +14,7 @@ pub struct Evaluator<'e, 'd, D:Eval + 'd> {
 impl<'e, 'd, D:Eval + 'd> Iterator for Evaluator<'e, 'd, D>
     where D: Eval + 'd {
     
-    type Item = (Vec<VarKind>,Option<String>);
+    type Item = (Vec<Var>,Option<String>);
     fn next(&mut self) -> Option<Self::Item> {
         if self.next_node.is_empty() { return None }
         
@@ -34,7 +34,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
     }
     
     pub fn run (&self, node_name: &str)
-                -> (Vec<VarKind>,Option<String>)
+                -> (Vec<Var>,Option<String>)
         where D: Eval + 'd
     {
         let mut r = vec!();
@@ -53,7 +53,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
         for var in r.iter_mut() {
             let mut val = None;
             match var {
-                &mut VarKind::String(ref mut s) => { //format string
+                &mut Var::String(ref mut s) => { //format string
                     let mut fs = String::new();
                     let mut started = false;
 

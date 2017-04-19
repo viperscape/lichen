@@ -2,7 +2,7 @@ extern crate lichen;
 
 use std::collections::HashMap;
 
-use lichen::parse::{Parser,VarKind,};
+use lichen::parse::{Parser,Var,};
 use lichen::eval::{Eval,Evaluator};
 
 struct Player {
@@ -19,7 +19,7 @@ enum Items {
 }
 
 impl Eval for Player {
-    fn eval (&self, lookup: &str) -> Option<VarKind> {
+    fn eval (&self, lookup: &str) -> Option<Var> {
         match lookup {
             "weight" => {
                 Some(self.weight.into())

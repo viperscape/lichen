@@ -5,13 +5,13 @@ pub mod eval;
 
 #[cfg(test)]
 mod tests {
-    use ::parse::{Parser,BlockKind,SrcBlock,
-                  LogicKind,SrcKind,VarKind,ExpectKind};
+    use ::parse::{Parser,Block,SrcBlock,
+                  Logic,Src,Var,Expect};
     use ::eval::{Eval,Evaluator};
 
     struct Data;
     impl Eval for Data {
-        fn eval (&self, lookup: &str) -> Option<VarKind> {
+        fn eval (&self, lookup: &str) -> Option<Var> {
             match lookup {
                 "some_item" => {
                     Some(false.into())
@@ -49,23 +49,23 @@ mod tests {
         
         let block = Parser::parse_blocks(src);
 
-        let block_ = [BlockKind::Src(
+        let block_ = [Block::Src(
             SrcBlock {
                 name: "root".to_owned(),
-                src: vec![SrcKind::Logic("unequipped".to_owned(),
-                                         LogicKind::IsNot("some_item".to_owned())),
-                         
-                          SrcKind::Logic("has_weight".to_owned(),
-                                         LogicKind::LT("some_weight".into(), 5.0 .into())),
-                          SrcKind::Composite("some_comp".to_owned(),
-                                             ExpectKind::Any,
-                                             vec!["unequipped".to_owned(),"has_weight".to_owned()]),
-                          SrcKind::If(ExpectKind::Ref("unequipped".to_owned()),
-                                      vec!["you're looking for something?".into()],
-                                      None),
-                          SrcKind::If(ExpectKind::All,
-                                      vec!["welcome, \nlook around".into()],
-                                      None)]
+                src: vec![Src::Logic("unequipped".to_owned(),
+                                     Logic::IsNot("some_item".to_owned())),
+                          
+                          Src::Logic("has_weight".to_owned(),
+                                     Logic::LT("some_weight".into(), 5.0 .into())),
+                          Src::Composite("some_comp".to_owned(),
+                                         Expect::Any,
+                                         vec!["unequipped".to_owned(),"has_weight".to_owned()]),
+                          Src::If(Expect::Ref("unequipped".to_owned()),
+                                  vec!["you're looking for something?".into()],
+                                  None),
+                          Src::If(Expect::All,
+                                  vec!["welcome, \nlook around".into()],
+                                  None)]
             })];
 
         for (n,n_) in block.iter().zip(block_.iter()) {
@@ -80,17 +80,17 @@ mod tests {
 ;";
         let block = Parser::parse_blocks(src);
         match &block[0] {
-            &BlockKind::Src(ref b) => {
+            &Block::Src(ref b) => {
                 let r;
                 match b.src[0] {
-                    SrcKind::Logic(ref qsym,_) => { r = qsym; },
+                    Src::Logic(ref qsym,_) => { r = qsym; },
                     _ => panic!("unknown source found")
                 }
 
                 match b.src[1] {
-                    SrcKind::If(ref x,_,_) => {
+                    Src::If(ref x,_,_) => {
                         match x {
-                            &ExpectKind::Ref(ref r_) => {
+                            &Expect::Ref(ref r_) => {
                                 assert_eq!(r,r_);
                             },
                             _ => panic!("unknown expect found")
@@ -113,15 +113,15 @@ mod tests {
         let block = Parser::parse_blocks(src);
 
         match &block[0] {
-            &BlockKind::Src(ref b) => {
+            &Block::Src(ref b) => {
                 let r;
                 match b.src[1] {
-                    SrcKind::Logic(ref qsym,_) => { r = qsym; },
+                    Src::Logic(ref qsym,_) => { r = qsym; },
                     _ => panic!("unknown source found")
                 }
 
                 match b.src[2] {
-                    SrcKind::Composite(_,_,ref x) => {
+                    Src::Composite(_,_,ref x) => {
                         assert_eq!(r,&x[1]);
                     },
                     _ => panic!("unknown source found")
@@ -158,9 +158,9 @@ mod tests {
         let block = Parser::parse_blocks(src);
         
         match &block[0] {
-            &BlockKind::Src(ref b) => {
+            &Block::Src(ref b) => {
                 match b.src[1] {
-                    SrcKind::If(_,_, ref next) => {
+                    Src::If(_,_, ref next) => {
                         assert!(next.is_some());
                         assert_eq!(next,&Some("store".to_owned()));
                     },
