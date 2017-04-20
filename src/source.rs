@@ -40,19 +40,41 @@ impl Src {
                         let r = data.eval(&lookup);
                         if r.is_some() {
                             match r.unwrap() {
+
                                 Var::Bool(v) => { state.insert(name,v); },
                                 _ => { state.insert(name,true); }, //if exists?
+                            }
+                        }
+                        else { //check state table: some_thing !some_otherthing
+                            let mut val = None;
+                            if let Some(r) = state.get(lookup) {
+                                val = Some(*r);
+                            }
+
+                            if let Some(val) = val {
+                                state.insert(name,val);
                             }
                         }
                     },
                     &Logic::IsNot(ref lookup) => { //inverse state
                         let r = data.eval(&lookup);
+                        
                         if r.is_some() {
                             match r.unwrap() {
                                 Var::Bool(v) => {
                                     if !v { state.insert(name,true); }
                                 },
                                 _ => { state.insert(name,false); },
+                            }
+                        }
+                        else {
+                            let mut val = None;
+                            if let Some(r) = state.get(lookup) {
+                                val = Some(!r);
+                            }
+
+                            if let Some(val) = val {
+                                state.insert(name,val);
                             }
                         }
                     },
@@ -139,9 +161,22 @@ impl Src {
                         }
                     },
                     &Expect::Ref(ref lookup) => {
-                        let val = state.get(lookup);
-                        if let Some(val) = val {
-                            if_value = *val;
+                        let has_val = {
+                            let val = state.get(lookup);
+                            if let Some(val) = val {
+                                if_value = *val;
+                            }
+
+                            val.is_some()
+                        };
+
+                        if !has_val {
+                            if let Some(val) = data.eval(lookup) {
+                                match val {
+                                    Var::Bool(v) => { if_value = v; },
+                                    _ => { if_value = true; }
+                                }
+                            }
                         }
                     },
                 }

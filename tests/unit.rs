@@ -144,6 +144,25 @@ fn validate_qsym_block() {
 }
 
 #[test]
+fn validate_reflection_block() {
+    let src =  "root\n
+    has other_item
+    hasnt some_item
+    hasnt-too !hasnt
+    comp:all has hasnt-too
+    if comp next store\n
+    ;";
+    
+    let env = Parser::parse_blocks(src).into_env();
+    let data = Data;
+
+    let mut ev = Evaluator::new(&env, &data);
+    let (_,nn) = ev.next().unwrap();
+    
+    assert_eq!(nn, Some("store".into()));
+}
+
+#[test]
 fn parse_if_vec_block() {
     let src = "root\n
     if '!some_item [\n
