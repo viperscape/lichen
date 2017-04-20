@@ -7,11 +7,14 @@ root
 ;
 
 store
-    emit "G'day, you look weary, `name"
+    comp:all ['!items.Dragonscale-Great-Sword !this.visited]
+    if '!this.visited "G'day, you look weary, `name"
+    if this.visited "Welcome back my friend, `name"
 
-    if '!items.Dragonscale-Great-Sword [
+    if comp [
       "Let me tell you about the rare Dragonscale Great Sword"
       "Are you interested?"
+      next info-dragonscale
     ]
 
     await
@@ -22,4 +25,6 @@ store
 info-dragonscale
     emit ["There is a long history of Dragonscale"
          "It all started.."]
+
+    next store
 ;

@@ -9,6 +9,7 @@ pub struct SrcBlock {
     pub name: String,
     pub src: Vec<Src>,
     pub await_idx: usize,
+    pub visited: bool,
 }
 
 #[derive(Debug,PartialEq)]
@@ -85,6 +86,7 @@ impl Parser {
                             name: name,
                             src: vec!(),
                             await_idx: 0,
+                            visited: false,
                         };
                         
                         block = Some(Block::Src(b));
