@@ -7,7 +7,8 @@ use var::Var;
 #[derive(Debug,PartialEq)]
 pub struct SrcBlock {
     pub name: String,
-    pub src: Vec<Src>
+    pub src: Vec<Src>,
+    pub await_idx: usize,
 }
 
 #[derive(Debug,PartialEq)]
@@ -82,7 +83,8 @@ impl Parser {
                     else {
                         let b = SrcBlock {
                             name: name,
-                            src: vec!()
+                            src: vec!(),
+                            await_idx: 0,
                         };
                         
                         block = Some(Block::Src(b));

@@ -10,11 +10,16 @@ store
     emit "G'day, you look weary, `name"
 
     if '!items.Dragonscale-Great-Sword [
-       "I have a great sword to sell,
- it's very rare!"
+      "Let me tell you about the rare Dragonscale Great Sword"
       "Are you interested?"
     ]
 
-   if 'items.Valerium-Great-Sword "You are quite the master, I see! 
-Care to sell your Valerium Great Sword?"
+    await
+
+    if 'items.Valerium-Great-Sword "You are quite the master, I see!"
+;
+
+info-dragonscale
+    emit ["There is a long history of Dragonscale"
+         "It all started.."]
 ;

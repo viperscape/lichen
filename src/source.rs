@@ -19,6 +19,8 @@ pub enum Src {
     
     Composite(String,Expect,Vec<String>),
     Next(String), // ends execution and begins next node
+
+    Await(Option<String>), // pauses execution, saving the iteration, optional next node
 }
 
 
@@ -32,6 +34,9 @@ impl Src {
             },
             &Src::Emit(ref vars) => {
                 return (vars.clone(),None)
+            },
+            &Src::Await(ref nn) => {
+                return (vec![],nn.clone())
             },
             &Src::Logic(ref name, ref logic) => { //logic updates state
                 let name = name.clone();
@@ -211,6 +216,14 @@ impl Src {
                 Src::Next(exp.pop().unwrap())
             }
             else { panic!("ERROR: Uneven NEXT Logic {:?}",exp) }
+        }
+        else if exp[0] == "await" {
+            if exp.len() == 2 {
+                Src::Await(Some(exp.pop().unwrap()))
+            }
+            else {
+                Src::Await(None)
+            }
         }
         else if exp[0] == "emit" {
             if exp.len() > 1 {

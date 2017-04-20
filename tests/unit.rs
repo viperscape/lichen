@@ -48,6 +48,7 @@ fn parse_block() {
 
     let block_ = [Block::Src(
         SrcBlock {
+            yield_idx: 0,
             name: "root".to_owned(),
             src: vec![Src::Logic("unequipped".to_owned(),
                                  Logic::IsNot("some_item".to_owned())),
@@ -134,10 +135,10 @@ fn validate_qsym_block() {
     if 'other_item next store\n
     ;";
     
-    let env = Parser::parse_blocks(src).into_env();
+    let mut env = Parser::parse_blocks(src).into_env();
     let data = Data;
 
-    let mut ev = Evaluator::new(&env, &data);
+    let mut ev = Evaluator::new(&mut env, &data);
     let (_,nn) = ev.next().unwrap();
     
     assert_eq!(nn, Some("store".into()));
@@ -153,10 +154,10 @@ fn validate_reflection_block() {
     if comp next store\n
     ;";
     
-    let env = Parser::parse_blocks(src).into_env();
+    let mut env = Parser::parse_blocks(src).into_env();
     let data = Data;
 
-    let mut ev = Evaluator::new(&env, &data);
+    let mut ev = Evaluator::new(&mut env, &data);
     let (_,nn) = ev.next().unwrap();
     
     assert_eq!(nn, Some("store".into()));
@@ -195,10 +196,10 @@ fn parse_eval_str_block() {
     if some_comp \"looks like you are `some_weight kgs heavy, `name\"\n
 ;";
     
-    let env = Parser::parse_blocks(src).into_env();
+    let mut env = Parser::parse_blocks(src).into_env();
     let data = Data;
     
-    let ev = Evaluator::new(&env, &data);
+    let mut ev = Evaluator::new(&mut env, &data);
     let (vars,_node) = ev.run("root");
     
     assert_eq!(vars[0], "looks like you are 4 kgs heavy, Io".into());
@@ -210,10 +211,10 @@ fn parse_compare_env_block() {
     weight some_weight < other_weight\n
     if weight next store\n
 ;";
-    let env = Parser::parse_blocks(src).into_env();
+    let mut env = Parser::parse_blocks(src).into_env();
     let data = Data;
 
-    let ev = Evaluator::new(&env, &data);
+    let mut ev = Evaluator::new(&mut env, &data);
     let (_vars,node) = ev.run("root");
     
     assert_eq!(node, Some("store".to_string()));
@@ -226,10 +227,10 @@ fn parse_return_varkind() {
     if weight `some_weight \"hi `name\"\n
 ;";
 
-    let env = Parser::parse_blocks(src).into_env();
+    let mut env = Parser::parse_blocks(src).into_env();
     let data = Data;
 
-    let ev = Evaluator::new(&env, &data);
+    let mut ev = Evaluator::new(&mut env, &data);
     let (vars,_) = ev.run("root");
     
     assert_eq!(vars[0], 4.0 .into());
@@ -247,10 +248,10 @@ store\n
     if '!some_item \"welcome, \nlook around\"\n
 ;";
 
-    let env = Parser::parse_blocks(src).into_env();
+    let mut env = Parser::parse_blocks(src).into_env();
     let data = Data;
 
-    let mut ev = Evaluator::new(&env, &data);
+    let mut ev = Evaluator::new(&mut env, &data);
     ev.next(); // runs root
     let (vars,_) = ev.next().unwrap();
     

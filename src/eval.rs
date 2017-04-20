@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use parse::Env;
 use var::Var;
+use source::Src;
 
 pub trait Eval {
     fn eval (&self, lookup: &str) -> Option<Var>;
@@ -8,7 +9,7 @@ pub trait Eval {
 
 pub struct Evaluator<'e, 'd, D:Eval + 'd> {
     data: &'d D,
-    env: &'e Env,
+    env: &'e mut Env,
     pub next_node: String,
 }
 
@@ -18,8 +19,9 @@ impl<'e, 'd, D:Eval + 'd> Iterator for Evaluator<'e, 'd, D>
     type Item = (Vec<Var>,Option<String>);
     fn next(&mut self) -> Option<Self::Item> {
         if self.next_node.is_empty() { return None }
-        
-        let r = self.run(&self.next_node);
+
+        let nn = self.next_node.clone();
+        let r = self.run(&nn);
         if let Some(nn) = r.1.clone() {
             self.next_node = nn;
         }
@@ -30,21 +32,34 @@ impl<'e, 'd, D:Eval + 'd> Iterator for Evaluator<'e, 'd, D>
 }
 
 impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
-    pub fn new (env: &'e Env, data: &'d D) -> Evaluator<'e, 'd, D> {
+    pub fn new (env: &'e mut Env, data: &'d D) -> Evaluator<'e, 'd, D> {
         Evaluator { env: env, data: data, next_node: "root".to_owned() }
     }
     
-    pub fn run (&self, node_name: &str)
+    pub fn run (&mut self, node_name: &str)
                 -> (Vec<Var>,Option<String>)
         where D: Eval + 'd
     {
         let mut r = vec!();
         let mut node = None;
         
-        if let Some(b) = self.env.src.get(node_name) {
+        if let Some(b) = self.env.src.get_mut(node_name) {
             let mut state: HashMap<String,bool> = HashMap::new();
+
+            let yield_idx = b.await_idx;
+            b.await_idx = 0;
             
-            for src in b.src.iter() {
+            for (i,src) in b.src[yield_idx..].iter().enumerate() {
+                match src {
+                    &Src::Await(ref nn) => {
+                        b.await_idx = i+1;
+                        node = nn.clone();
+                        break
+                    },
+                    _ => {}
+                }
+                    
+                
                 let (mut vars, node_) = src.eval(&mut state, self.data);
                 for n in vars.drain(..) { r.push(n); }
                 if node_.is_some() { node = node_; break; }
