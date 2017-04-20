@@ -46,10 +46,10 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
         if let Some(b) = self.env.src.get_mut(node_name) {
             let mut state: HashMap<String,bool> = HashMap::new();
 
-            let yield_idx = b.await_idx;
+            let await_idx = b.await_idx;
             b.await_idx = 0;
             
-            for (i,src) in b.src[yield_idx..].iter().enumerate() {
+            for (i,src) in b.src[await_idx..].iter().enumerate() {
                 match src {
                     &Src::Await(ref nn) => {
                         b.await_idx = i+1;
