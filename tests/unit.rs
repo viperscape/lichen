@@ -48,7 +48,7 @@ fn parse_block() {
 
     let block_ = [Block::Src(
         SrcBlock {
-            yield_idx: 0,
+            await_idx: 0,
             name: "root".to_owned(),
             src: vec![Src::Logic("unequipped".to_owned(),
                                  Logic::IsNot("some_item".to_owned())),
