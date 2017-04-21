@@ -46,6 +46,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
         if let Some(b) = self.env.src.get_mut(node_name) { //println!("src:{:?}",b.src);
             let mut state: HashMap<String,bool> = HashMap::new();
             state.insert("this.visited".to_owned(), b.visited);
+            b.visited = true;
 
             let await_idx = b.await_idx;
             b.await_idx = 0;
