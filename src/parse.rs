@@ -44,6 +44,7 @@ impl Parser {
         let mut in_string = false;
         let mut in_comment = false;
         let mut in_vec = false;
+        let mut was_if = false;
 
         for c in src.chars() {
             if c == '[' { in_vec = true; continue }
@@ -114,7 +115,18 @@ impl Parser {
                         Some(Block::Src(ref mut b)) => {
                             //println!("EXPS{:?}",exps); //DEBUG
                             if qsyms.len() > 1 {
-                                b.src.push(Src::parse(qsyms));
+                                let src = Src::parse(qsyms);
+                                match &src {
+                                    &Src::If(_,_,_) => { was_if = true; },
+                                    &Src::Or(_,_) => {
+                                        if !was_if {
+                                            panic!("ERROR: IF must prepend OR");
+                                        }
+                                    },
+                                    _ => { was_if = false; },
+                                }
+                                
+                                b.src.push(src);
                             }
                             
                             b.src.push(Src::parse(exps));
