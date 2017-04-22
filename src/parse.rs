@@ -1,4 +1,3 @@
-use rand::random;
 use std::collections::HashMap;
 
 use source::Src;
@@ -99,7 +98,7 @@ impl Parser {
                         if n.chars().next().expect("ERROR: Empty QSYM") == '\'' {
                             let mut qsym = "__".to_owned();
                             let sym = n[1..].trim().to_owned();
-                            qsym.push_str(&random::<u16>().to_string());
+                            qsym.push_str(&sym);
                             
                             qsyms.push(qsym.clone());
                             qsyms.push(sym);

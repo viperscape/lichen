@@ -18,7 +18,6 @@ store
       await info-dragonscale
     ]
 
-    #await
     comp:all [this.visited 'items.Valerium-Great-Sword]
     if comp "You are quite the master, I see!"
 ;

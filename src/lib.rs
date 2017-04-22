@@ -1,5 +1,3 @@
-extern crate rand;
-
 pub mod parse;
 pub mod eval;
 pub mod source;

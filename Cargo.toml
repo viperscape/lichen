@@ -8,4 +8,3 @@ description = "Scripting DSL (for Dialogue Graphs, et al)"
 keywords = ["scripting","dsl"]
 
 [dependencies]
-rand = "0.3"
