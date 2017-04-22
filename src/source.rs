@@ -13,8 +13,8 @@ pub enum Src {
     // logic must resolve to true
     // ex: if item_logic give_quest
     // Can optionally end execution and begin next node
-    If(Expect, Vec<Var>, Option<String>),
-    Or(Vec<Var>,Option<String>), //must follow an previous IF
+    If(Expect, Vec<Var>, Option<(String,bool)>),
+    Or(Vec<Var>,Option<(String,bool)>), //must follow an previous IF
 
     Emit(Vec<Var>), //just emits variables
     
@@ -27,11 +27,11 @@ pub enum Src {
 
 impl Src {
     pub fn eval<D:Eval> (&self, state: &mut HashMap<String,bool>, data: &D)
-                     -> (Vec<Var>,Option<String>)
+                     -> (Vec<Var>,Option<(String,bool)>)
     {
         match self {
             &Src::Next(ref node) => {
-                return (vec![],Some(node.clone()))
+                return (vec![],Some((node.clone(),false)))
             },
             &Src::Or(ref vars, ref node) => {
                 return (vars.clone(),node.clone())
@@ -40,7 +40,11 @@ impl Src {
                 return (vars.clone(),None)
             },
             &Src::Await(ref nn) => {
-                return (vec![],nn.clone())
+                if let &Some(ref node) = nn {
+                    return (vec![], Some((node.clone(),true)))
+                }
+                
+                return (vec![], None)
             },
             &Src::Logic(ref name, ref logic) => { //logic updates state
                 let name = name.clone();
@@ -203,32 +207,45 @@ impl Src {
             let x = exp.remove(1);
 
             let mut node = None;
+            let mut await = false;
             if exp.len() > 2 {
                 let next = &exp[exp.len() - 2] == "next";
-                if next {
+                await = &exp[exp.len() - 2] == "await";
+                if next || await {
                     node = exp.pop();
                     let _ = exp.pop(); // remove next tag
                 }
             }
             
             let v = exp.drain(1..).map(|n| Var::parse(n)).collect();
+            if let Some(node) = node {
+                return Src::If(Expect::parse(x),
+                               v, Some((node,await)))
+            }
+
             Src::If(Expect::parse(x),
-                    v, node)
+                    v, None)
         }
         else if exp[0] == "or" {
             if exp.len() < 2 { panic!("ERROR: Invalid OR Logic {:?}",exp) }
 
             let mut node = None;
+            let mut await = false;
             if exp.len() > 2 {
                 let next = &exp[exp.len() - 2] == "next";
-                if next {
+                await = &exp[exp.len() - 2] == "await";
+                if next || await {
                     node = exp.pop();
                     let _ = exp.pop(); // remove next tag
                 }
             }
             
             let v = exp.drain(1..).map(|n| Var::parse(n)).collect();
-            Src::Or(v, node)
+            if let Some(node) = node {
+                return Src::Or(v, Some((node,await)))
+            }
+
+            Src::Or(v,None)
         }
         else if exp[0] == "next" {
             if exp.len() == 2 {

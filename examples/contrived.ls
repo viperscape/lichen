@@ -15,7 +15,7 @@ store
     if comp [
       "Let me tell you about the rare Dragonscale Great Sword"
       "Are you interested?"
-      next info-dragonscale
+      await info-dragonscale
     ]
 
     #await
