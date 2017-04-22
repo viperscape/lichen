@@ -50,6 +50,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
 
             let await_idx = b.await_idx;
             b.await_idx = 0;
+            let mut was_if = false;
             
             for (i,src) in b.src[await_idx..].iter().enumerate() {
                 match src {
@@ -58,11 +59,22 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                         node = nn.clone();
                         break
                     },
-                    _ => {}
+                    &Src::If(_,_,_) => { was_if = true; },
+                    &Src::Or(_,_) => {
+                        if !was_if {
+                            println!("ERROR: IF must orepend OR");
+                            continue
+                        }
+                    },
+                    _ => { was_if = false; },
                 }
                     
                 
                 let (mut vars, node_) = src.eval(&mut state, self.data);
+
+                // reset if if was successful
+                if (vars.len() > 0) || node_.is_some() { was_if = false; }
+                
                 for n in vars.drain(..) { r.push(n); }
                 if node_.is_some() { node = node_; break; }
             }

@@ -14,6 +14,7 @@ pub enum Src {
     // ex: if item_logic give_quest
     // Can optionally end execution and begin next node
     If(Expect, Vec<Var>, Option<String>),
+    Or(Vec<Var>,Option<String>), //must follow an previous IF
 
     Emit(Vec<Var>), //just emits variables
     
@@ -31,6 +32,9 @@ impl Src {
         match self {
             &Src::Next(ref node) => {
                 return (vec![],Some(node.clone()))
+            },
+            &Src::Or(ref vars, ref node) => {
+                return (vars.clone(),node.clone())
             },
             &Src::Emit(ref vars) => {
                 return (vars.clone(),None)
@@ -209,7 +213,22 @@ impl Src {
             
             let v = exp.drain(1..).map(|n| Var::parse(n)).collect();
             Src::If(Expect::parse(x),
-                        v, node)
+                    v, node)
+        }
+        else if exp[0] == "or" {
+            if exp.len() < 2 { panic!("ERROR: Invalid OR Logic {:?}",exp) }
+
+            let mut node = None;
+            if exp.len() > 2 {
+                let next = &exp[exp.len() - 2] == "next";
+                if next {
+                    node = exp.pop();
+                    let _ = exp.pop(); // remove next tag
+                }
+            }
+            
+            let v = exp.drain(1..).map(|n| Var::parse(n)).collect();
+            Src::Or(v, node)
         }
         else if exp[0] == "next" {
             if exp.len() == 2 {

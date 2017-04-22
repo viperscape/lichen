@@ -10,7 +10,7 @@ store
     no_dgs !items.Dragonscale-Great-Sword
     comp:all [no_dgs '!this.visited]
     if '!this.visited "G'day, you look weary, `name"
-    if this.visited "Welcome back my friend, `name"
+    or "Welcome back my friend, `name"
 
     if comp [
       "Let me tell you about the rare Dragonscale Great Sword"

@@ -1,4 +1,4 @@
-(setq lkeywords '("if" "next" "await" "emit"))
+(setq lkeywords '("if" "or" "next" "await" "emit"))
 (setq lkeywordsr (regexp-opt lkeywords 'words))
 
 (setq font-lock-keywords
