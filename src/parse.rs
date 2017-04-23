@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap,BTreeSet};
 
 use source::Src;
 use var::Var;
@@ -44,6 +44,10 @@ impl Parser {
         let mut in_comment = false;
         let mut in_vec = false;
         let mut was_if = false;
+
+        
+        let mut usyms = BTreeSet::new(); //unique set, remove dupes
+                            
 
         for c in src.chars() {
             if c == '[' { in_vec = true; continue }
@@ -94,15 +98,21 @@ impl Parser {
                 }
                 else { // build block type
                     let mut qsyms = vec!();
-                    for n in exps.iter_mut() {
-                        if n.chars().next().expect("ERROR: Empty QSYM") == '\'' {
-                            let sym = n[1..].trim().to_owned();
-                            
-                            qsyms.push(sym.clone());
-                            qsyms.push(sym.clone());
-                            *n = sym;
+
+                    if exps.len() > 2 { //must be if/or/comp blocks
+                        for n in exps.iter_mut() {
+                            if n.chars().next().expect("ERROR: Empty Eager Symbol") == '!' {
+                                let mut sym = "not_".to_owned();
+                                sym.push_str(n[1..].trim());
+                                
+                                let osym = n.trim().to_owned();
+                                
+                                qsyms.push((sym.clone(),osym));
+                                *n = sym;
+                            }
                         }
                     }
+                    
                     
                     match block {
                         Some(Block::Def(ref mut b)) => {
@@ -110,11 +120,13 @@ impl Parser {
                                          Var::parse(exps[1].to_owned())));
                         },
                         Some(Block::Src(ref mut b)) => {
-                            //println!("EXPS{:?}",exps); //DEBUG
                             let mut srcs = vec![];
                             
-                            if qsyms.len() > 1 {
-                                let src = Src::parse(qsyms);
+                            for (qsym,sym) in qsyms.drain(..) {
+                                if usyms.contains(&qsym) { continue }
+                                usyms.insert(qsym.clone());
+                                
+                                let src = Src::parse(vec![qsym,sym]);
                                 srcs.push(src);
                             }
 
@@ -131,6 +143,7 @@ impl Parser {
                                     },
                                     _ => { was_if = false; },
                                 }
+
                                 
                                 b.src.push(src);
                             }
@@ -157,6 +170,7 @@ impl Parser {
             else if c == ';' && !in_string && !in_comment {
                 //fail otherwise, block should be built!
                 v.push(block.unwrap());
+                usyms.clear(); //clear out on new block
                 block = None;
             }
             else {
