@@ -49,6 +49,7 @@ fn parse_block() {
     let block_ = [Block::Src(
         SrcBlock {
             await_idx: 0,
+            visited: false,
             name: "root".to_owned(),
             src: vec![Src::Logic("unequipped".to_owned(),
                                  Logic::IsNot("some_item".to_owned())),
@@ -179,7 +180,7 @@ fn parse_if_vec_block() {
             match b.src[1] {
                 Src::If(_,_, ref next) => {
                     assert!(next.is_some());
-                    assert_eq!(next,&Some("store".to_owned()));
+                    assert_eq!(next,&Some(("store".to_owned(),false)));
                 },
                 _ => panic!("unknown source found")
             }
