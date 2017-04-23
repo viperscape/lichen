@@ -113,40 +113,48 @@ impl Src {
                 return (vec![],None) // logic does not return anything
             },
             &Src::Composite(ref name, ref x, ref lookups) => {
-                let mut comp_value = false;
+                // track if any lookups are false or true
+                let mut comp_false = false;
+                let mut comp_true = false;
+                
+                for lookup in lookups.iter() {
+                    let val = state.get(lookup);
+                    if val.is_some() && *val.unwrap() {
+                        comp_true = true;
+                    }
+                    else {
+                        if val.is_some() { //found it but it's false
+                            comp_false = true;
+                        }
+                        else { //check data for delayed reference
+                            if let Some(val) = data.eval(lookup) {
+                                match val {
+                                    Var::Bool(b) => {
+                                        if b { comp_true = true; }
+                                        else { comp_false = true; }
+                                    }
+                                    _ => { comp_true = true; } //identity/exists, true
+                                }
+                            }
+                        }
+                    }
+                }
+                
                 match x {
                     &Expect::All => { // all must pass as true
-                        for lookup in lookups.iter() {
-                            let val = state.get(lookup);
-                            if val.is_some() && *val.unwrap() {
-                                comp_value = true;
-                            }
-                            else { comp_value = false; break }
+                        if comp_true && !comp_false {
+                            state.insert(name.clone(),true);
                         }
-                        
-                        state.insert(name.clone(),comp_value);
                     },
                     &Expect::Any => { // first truth passes for set
-                        for lookup in lookups.iter() {
-                            let val = state.get(lookup);
-                            if val.is_some() && *val.unwrap() {
-                                comp_value = true;
-                                break;
-                            }
+                        if comp_true {
+                            state.insert(name.clone(),true);
                         }
-
-                        state.insert(name.clone(),comp_value);
                     },
                     &Expect::None => { // inverse of any, none must be true
-                        for lookup in lookups.iter() {
-                            let val = state.get(lookup);
-                            if val.is_some() && *val.unwrap() {
-                                comp_value = false;
-                                break;
-                            }
+                        if !comp_true && comp_false {
+                            state.insert(name.clone(),true);
                         }
-
-                        state.insert(name.clone(),comp_value);
                     },
                     &Expect::Ref(_) => panic!("ERROR: Unexpected parsing") // this should never hit
                 }
