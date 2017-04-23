@@ -75,7 +75,7 @@ fn parse_block() {
 #[test]
 fn parse_qsym_block() {
     let src = "root\n
-    if '!some_item \"you're looking for something?\"\n
+    if !some_item \"you're looking for something?\"\n
 ;";
     let block = Parser::parse_blocks(src);
     match &block[0] {
@@ -106,7 +106,7 @@ fn parse_qsym_block() {
 fn parse_qsym_comp_block() {
     let src =  "root\n
     has_weight some_weight < 5.0\n
-    some_comp:any [has_weight '!some_item ]\n
+    some_comp:any [has_weight !some_item ]\n
     ;";
     
     let block = Parser::parse_blocks(src);
@@ -133,7 +133,7 @@ fn parse_qsym_comp_block() {
 #[test]
 fn validate_qsym_block() {
     let src =  "root\n
-    if 'other_item next store\n
+    if other_item next store\n
     ;";
     
     let mut env = Parser::parse_blocks(src).into_env();
@@ -167,7 +167,7 @@ fn validate_reflection_block() {
 #[test]
 fn parse_if_vec_block() {
     let src = "root\n
-    if '!some_item [\n
+    if !some_item [\n
         \"you're looking for something?\"\n
         \"welcome, \nlook around\"\n
         next store]\n
@@ -193,7 +193,7 @@ fn parse_if_vec_block() {
 fn parse_eval_str_block() {
     let src = "root\n
         has_weight some_weight < 5.0\n
-        some_comp:all [has_weight '!some_item ]\n
+        some_comp:all [has_weight !some_item ]\n
     if some_comp \"looks like you are `some_weight kgs heavy, `name\"\n
 ;";
     
@@ -246,7 +246,7 @@ fn parse_follow_nodes() {
 ;\n
 \n
 store\n
-    if '!some_item \"welcome, \nlook around\"\n
+    if !some_item \"welcome, \nlook around\"\n
 ;";
 
     let mut env = Parser::parse_blocks(src).into_env();
