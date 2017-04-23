@@ -96,13 +96,11 @@ impl Parser {
                     let mut qsyms = vec!();
                     for n in exps.iter_mut() {
                         if n.chars().next().expect("ERROR: Empty QSYM") == '\'' {
-                            let mut qsym = "__".to_owned();
                             let sym = n[1..].trim().to_owned();
-                            qsym.push_str(&sym);
                             
-                            qsyms.push(qsym.clone());
-                            qsyms.push(sym);
-                            *n = qsym;
+                            qsyms.push(sym.clone());
+                            qsyms.push(sym.clone());
+                            *n = sym;
                         }
                     }
                     
@@ -113,8 +111,17 @@ impl Parser {
                         },
                         Some(Block::Src(ref mut b)) => {
                             //println!("EXPS{:?}",exps); //DEBUG
+                            let mut srcs = vec![];
+                            
                             if qsyms.len() > 1 {
                                 let src = Src::parse(qsyms);
+                                srcs.push(src);
+                            }
+
+                            let src = Src::parse(exps);
+                            srcs.push(src);
+
+                            for src in srcs.drain(..) {
                                 match &src {
                                     &Src::If(_,_,_) => { was_if = true; },
                                     &Src::Or(_,_) => {
@@ -127,8 +134,6 @@ impl Parser {
                                 
                                 b.src.push(src);
                             }
-                            
-                            b.src.push(Src::parse(exps));
                         },
                         _ => {}
                     }
