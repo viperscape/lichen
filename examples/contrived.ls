@@ -7,9 +7,8 @@ root
 ;
 
 store
-    no_dgs !items.Dragonscale-Great-Sword
-    comp:all [no_dgs '!this.visited]
-    if '!this.visited "G'day, you look weary, `name"
+    comp:all [!items.Dragonscale-Great-Sword !this.visited]
+    if !this.visited "G'day, you look weary, `name"
     or "Welcome back my friend, `name"
 
     if comp [
@@ -18,7 +17,7 @@ store
       await info-dragonscale
     ]
 
-    comp:all [this.visited 'items.Valerium-Great-Sword]
+    comp:all [this.visited items.Valerium-Great-Sword]
     if comp "You are quite the master, I see!"
 ;
 
