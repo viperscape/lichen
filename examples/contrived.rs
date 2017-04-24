@@ -29,16 +29,17 @@ impl Eval for Player {
             "name" => {
                 Some(self.name.clone().into())
             }
-            _ => {
-                let lookups: Vec<&str> = lookup.split_terminator('.').collect();
-                match lookups[0] {
-                    "items" => {
-                        Some(self.items.contains_key(lookups[1]).into())
-                    },
-                    _ => None,
-                }
-            }
+            _ => { None }
         }
+    }
+
+    fn sub (&self, path: Vec<&str>, lookup: &str) -> Option<Var> {
+        // NOTE: slice patterns are not supported yet! use vec
+        let items_path = vec!["items"];
+        if path == items_path {
+            Some(self.items.contains_key(lookup).into())
+        }
+        else { None }
     }
 }
 

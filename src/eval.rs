@@ -5,6 +5,16 @@ use source::Src;
 
 pub trait Eval {
     fn eval (&self, lookup: &str) -> Option<Var>;
+    fn sub (&self, path: Vec<&str>, lookup: &str) -> Option<Var>;
+    fn to_sub (&self, lookup: &str) -> Option<Var> {
+        let mut lookups: Vec<&str> = lookup.split_terminator('.').collect();
+        let lookup = lookups.pop().unwrap();
+        
+        if lookups.len() > 0 {
+            self.sub(lookups, lookup)
+        }
+        else { None }
+    }
 }
 
 pub struct Evaluator<'e, 'd, D:Eval + 'd> {

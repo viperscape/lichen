@@ -28,6 +28,11 @@ impl Eval for Data {
             _ => None
         }
     }
+
+    #[allow(unused_variables)]
+    fn sub (&self, path: Vec<&str>, lookup: &str) -> Option<Var> {
+        None
+    }
 }
 
 
