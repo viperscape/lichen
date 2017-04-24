@@ -10,30 +10,43 @@ pub trait Eval {
 pub struct Evaluator<'e, 'd, D:Eval + 'd> {
     data: &'d D,
     env: &'e mut Env,
-    pub next_node: String,
+    next_node: String,
+    await_node: String,
 }
 
 impl<'e, 'd, D:Eval + 'd> Iterator for Evaluator<'e, 'd, D>
     where D: Eval + 'd {
     
-    type Item = (Vec<Var>,Option<String>);
+    type Item = (Vec<Var>,Option<String>); //here we only return node name as an option to advance
     fn next(&mut self) -> Option<Self::Item> {
-        if self.next_node.is_empty() { return None }
+        let nn = {
+            if !self.await_node.is_empty() { self.await_node.clone() }
+            else if self.next_node.is_empty() { return None }
+            else { self.next_node.clone() }
+        };
 
-        let nn = self.next_node.clone();
-        let r = self.run(&nn);
+        let mut r = self.run(&nn);
         if let Some(nn) = r.1.clone() {
             self.next_node = nn;
         }
         else { self.next_node = "".to_owned(); }
 
+        if self.await_node.is_empty() { r.1 = None; } //no need to return node name
+        
         Some(r)
     }
 }
 
 impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
     pub fn new (env: &'e mut Env, data: &'d D) -> Evaluator<'e, 'd, D> {
-        Evaluator { env: env, data: data, next_node: "root".to_owned() }
+        Evaluator {
+            env: env, data: data,
+            next_node: "root".to_owned(),
+            await_node: "".to_owned()
+        }
+    }
+    pub fn advance (&mut self) {
+        self.await_node.clear();
     }
     
     pub fn run (&mut self, node_name: &str)
@@ -77,7 +90,10 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
 
                 for n in vars.drain(..) { r.push(n); }
                 if let Some((node_,await)) = node_ {
-                    if await { b.await_idx = i+1; }
+                    if await {
+                        b.await_idx = i+1;
+                        self.await_node = node_name.to_owned();
+                    }
                     
                     node = Some(node_);
                     break;

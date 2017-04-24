@@ -133,7 +133,7 @@ fn parse_qsym_comp_block() {
 #[test]
 fn validate_qsym_block() {
     let src =  "root\n
-    if other_item next store\n
+    if other_item await store\n
     ;";
     
     let mut env = Parser::parse_blocks(src).into_env();
@@ -152,7 +152,7 @@ fn validate_reflection_block() {
     hasnt some_item
     hasnt-too !hasnt
     comp:all has hasnt-too
-    if comp next store\n
+    if comp await store\n
     ;";
     
     let mut env = Parser::parse_blocks(src).into_env();

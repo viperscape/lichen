@@ -55,11 +55,12 @@ fn main() {
         items: items,
     };
 
-    let ev = Evaluator::new(&mut env, &player);
+    let mut ev = Evaluator::new(&mut env, &player);
     
-    for (vars,_) in ev {
+    while let Some((vars,node)) = ev.next() {
         for var in vars {
             println!("{:?}", var);
         }
+        if node.is_some() { ev.advance(); } //let's advance all awaited nodes
     }
 }
