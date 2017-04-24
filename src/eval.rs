@@ -20,16 +20,20 @@ impl<'e, 'd, D:Eval + 'd> Iterator for Evaluator<'e, 'd, D>
     type Item = (Vec<Var>,Option<String>); //here we only return node name as an option to advance
     fn next(&mut self) -> Option<Self::Item> {
         let nn = {
-            if !self.await_node.is_empty() { self.await_node.clone() }
-            else if self.next_node.is_empty() { return None }
-            else { self.next_node.clone() }
+            if !self.await_node.is_empty() {
+                let an = self.await_node.clone();
+                self.await_node.clear();
+                an
+            }
+            else if !self.next_node.is_empty() { self.next_node.clone() }
+            else { return None }
         };
+        
 
         let mut r = self.run(&nn);
-        if let Some(nn) = r.1.clone() {
-            self.next_node = nn;
-        }
-        else { self.next_node = "".to_owned(); }
+        let nn = r.1.clone();
+        if nn.is_none() { self.next_node.clear(); }
+        else { self.next_node = nn.unwrap(); }
 
         if self.await_node.is_empty() { r.1 = None; } //no need to return node name
         

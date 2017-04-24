@@ -1,5 +1,6 @@
 extern crate lichen;
 
+use std::io;
 use std::collections::HashMap;
 
 use lichen::parse::Parser;
@@ -61,6 +62,21 @@ fn main() {
         for var in vars {
             println!("{:?}", var);
         }
-        if node.is_some() { ev.advance(); } //let's advance all awaited nodes
+        if let Some(node) = node {
+            println!("\nContinue to {:?}\n", node);
+            let mut line = String::new();
+            
+            match io::stdin().read_line(&mut line) {
+                Ok(_) => {
+                    match line.trim() {
+                        "y" | "Y" => {
+                            ev.advance();
+                        },
+                        _ => {}
+                    }
+                },
+                Err(_) => panic!()
+            }
+        }
     }
 }
