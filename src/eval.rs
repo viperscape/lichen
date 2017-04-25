@@ -74,7 +74,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
     {
         let mut r = vec!();
         let mut node = None;
-        let mut if_valid = false; //track for OR
+        let mut or_valid = false; //track for OR
         
         if let Some(b) = self.env.src.get_mut(node_name) { //println!("src:{:?}",b.src);
             let mut state: HashMap<String,bool> = HashMap::new();
@@ -92,20 +92,20 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                         break
                     },
                     &Src::Or(_,_) => {
-                        if !if_valid {
+                        if !or_valid {
                             continue
                         }
-                        else { if_valid = false; }
+                        else { or_valid = false; }
                     }
-                    &Src::If(_,_,_) => { if_valid = true; }
-                    _ => { if_valid = false; },
+                    &Src::If(_,_,_) => { or_valid = true; }
+                    _ => { or_valid = false; },
                 }
                     
                 
                 let (mut vars, node_) = src.eval(&mut state, self.data);
 
                 // reset if if was successful
-                if (vars.len() > 0) || node_.is_some() { if_valid = false; }
+                if (vars.len() > 0) || node_.is_some() { or_valid = false; }
 
                 for n in vars.drain(..) { r.push(n); }
                 if let Some((node_,await)) = node_ {
