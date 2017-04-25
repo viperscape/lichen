@@ -61,6 +61,10 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
         }
     }
     pub fn advance (&mut self) {
+        if let Some(b) = self.env.src.get_mut(&self.await_node) {
+            b.await_idx = 0; //reset on advance
+        }
+        
         self.await_node.clear();
     }
     
