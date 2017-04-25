@@ -38,7 +38,7 @@ some_block
 
 ##### New Lines/Multilines
 
-Almost all commands are based on a single line entry, if something spans multiple lines then a bracket pair should be used. Currently only if statement results and composite groups should use multiline entries.
+Almost all commands are based on a single line entry, if something spans multiple lines then a bracket pair should be used. Currently only if/emit statement results and composite groups should use multiline entries.
 
 ```
 some_block
