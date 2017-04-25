@@ -20,3 +20,7 @@ lichen = "0.2"
 
 - [lichen source](https://raw.githubusercontent.com/viperscape/lichen/master/examples/contrived.ls)
 - [rust main program](https://github.com/viperscape/lichen/blob/master/examples/contrived.rs)
+
+### Syntax Documentation
+
+[syntax rules](https://github.com/viperscape/lichen/blob/master/docs/syntax.md)
