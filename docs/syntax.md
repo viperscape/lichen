@@ -55,6 +55,7 @@ some_block
 Logic defines flow through the node. Current logic is as such:
 - Is and IsNot valid/exists/boolean response
 - Greater/Lesser-Than numeric comparison
+
 The resulting logic types become local variables for use in flow-logic.
 
 ```
@@ -101,16 +102,18 @@ some_block
 
 ##### Other/Non-Logic
 
-External to if-statements and logic entirely, a block can also contain standard responses.
+External to if-statements and logic entirely, a block can also contain standard responses.  
+Emit returns variables back to the caller, and can be a multiline region.
 
 ```
 some_block
     emit "hi"
+    emit ["here, have a number and boolean" 2.0 false]
     next other_block
 ;
 ```
 
-##### Await
+##### Await/Next
 
 The Await statement defines a pausable region which requires advancement, unlike a Next statement which is immediately directed to the next block.
 
