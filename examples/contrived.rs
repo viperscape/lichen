@@ -21,23 +21,24 @@ enum Items {
 }
 
 impl Eval for Player {
-    fn eval (&self, lookup: &str) -> Option<Var> {
-        match lookup {
-            "weight" => {
-                Some(self.weight.into())
-            },
-            "name" => {
-                Some(self.name.clone().into())
+    fn eval (&self, path: Option<&[&str]>, lookup: &str) -> Option<Var> {
+        if let Some(path) = path {
+            if path[..] == ["items"] {
+                Some(self.items.contains_key(lookup).into())
             }
-            _ => { None }
+            else { None }
         }
-    }
-
-    fn sub (&self, path: Vec<&str>, lookup: &str) -> Option<Var> {
-        if path[..] == ["items"] {
-            Some(self.items.contains_key(lookup).into())
+        else {
+            match lookup {
+                "weight" => {
+                    Some(self.weight.into())
+                },
+                "name" => {
+                    Some(self.name.clone().into())
+                }
+                _ => { None }
+            }
         }
-        else { None }
     }
 }
 

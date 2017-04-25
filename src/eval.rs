@@ -4,16 +4,17 @@ use var::Var;
 use source::Src;
 
 pub trait Eval {
-    fn eval (&self, lookup: &str) -> Option<Var>;
-    fn sub (&self, path: Vec<&str>, lookup: &str) -> Option<Var>;
-    fn to_sub (&self, lookup: &str) -> Option<Var> {
+    fn eval (&self, path: Option<&[&str]>, lookup: &str) -> Option<Var>;
+    
+    fn eval_bare (&self, lookup: &str) -> Option<Var> {
         let mut lookups: Vec<&str> = lookup.split_terminator('.').collect();
         let lookup = lookups.pop().unwrap();
-        
-        if lookups.len() > 0 {
-            self.sub(lookups, lookup)
-        }
-        else { None }
+
+        let path;
+        if lookups.len() > 0 { path = Some(&lookups[..]); }
+        else { path = None }
+
+        self.eval(path, lookup)
     }
 }
 
@@ -126,7 +127,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                     // (parsed earlier)
                     if s.split_terminator(' ').count() == 1 {
                         if s.chars().next().unwrap() == '`' {
-                            if let Some(ref val_) = self.data.eval(&s[1..]) {
+                            if let Some(ref val_) = self.data.eval_bare(&s[1..]) {
                                 val = Some(val_.clone());
                             }
                         }
@@ -136,7 +137,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                             if started { fs.push(' '); }
                             
                             if word.chars().next().unwrap() == '`' {
-                                if let Some(ref val_) = self.data.eval(&word[1..]) {
+                                if let Some(ref val_) = self.data.eval_bare(&word[1..]) {
                                     fs.push_str(&val_.to_string());
                                 }
                             }

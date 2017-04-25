@@ -50,7 +50,7 @@ impl Src {
                 let name = name.clone();
                 match logic {
                     &Logic::Is(ref lookup) => {
-                        let r = data.eval(&lookup);
+                        let r = data.eval_bare(&lookup);
                         if r.is_some() {
                             match r.unwrap() {
 
@@ -70,7 +70,7 @@ impl Src {
                         }
                     },
                     &Logic::IsNot(ref lookup) => { //inverse state
-                        let r = data.eval(&lookup);
+                        let r = data.eval_bare(&lookup);
                         
                         if r.is_some() {
                             match r.unwrap() {
@@ -127,7 +127,7 @@ impl Src {
                             comp_false = true;
                         }
                         else { //check data for delayed reference
-                            if let Some(val) = data.eval(lookup) {
+                            if let Some(val) = data.eval_bare(lookup) {
                                 match val {
                                     Var::Bool(b) => {
                                         if b { comp_true = true; }
@@ -192,7 +192,7 @@ impl Src {
                         };
 
                         if !has_val {
-                            if let Some(val) = data.eval(lookup) {
+                            if let Some(val) = data.eval_bare(lookup) {
                                 match val {
                                     Var::Bool(v) => { if_value = v; },
                                     _ => { if_value = true; }

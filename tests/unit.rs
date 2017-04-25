@@ -8,7 +8,8 @@ use lichen::eval::{Eval,Evaluator};
 
 struct Data;
 impl Eval for Data {
-    fn eval (&self, lookup: &str) -> Option<Var> {
+    #[allow(unused_variables)]
+    fn eval (&self, path: Option<&[&str]>, lookup: &str) -> Option<Var> {
         match lookup {
             "some_item" => {
                 Some(false.into())
@@ -27,11 +28,6 @@ impl Eval for Data {
             }
             _ => None
         }
-    }
-
-    #[allow(unused_variables)]
-    fn sub (&self, path: Vec<&str>, lookup: &str) -> Option<Var> {
-        None
     }
 }
 

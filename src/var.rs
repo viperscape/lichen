@@ -58,7 +58,7 @@ impl Var {
         match self {
             &Var::Num(n) => { num = n; },
             &Var::String(ref s) => {
-                if let Some(n) = data.eval(s) {
+                if let Some(n) = data.eval_bare(s) {
                     match n {
                         Var::Num(n) => { num = n; },
                         _ => return Err("ERROR: NaN Evaluation")
