@@ -34,9 +34,7 @@ impl Eval for Player {
     }
 
     fn sub (&self, path: Vec<&str>, lookup: &str) -> Option<Var> {
-        // NOTE: slice patterns are not supported yet! use vec
-        let items_path = vec!["items"];
-        if path == items_path {
+        if path[..] == ["items"] {
             Some(self.items.contains_key(lookup).into())
         }
         else { None }
