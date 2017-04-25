@@ -126,3 +126,23 @@ some_block
     emit "still here?"
 ;
 ```
+
+##### Formatting/Reference
+
+Referenced variables can be returned to the caller, as well can be formatted into strings. The ``````` backtick symbol is used to specify a referenced variable.
+
+```
+some_block
+    if some_attrib "G'day, you look weary, `name"  # use name variable as apart of response
+;
+```
+
+##### Internal State
+
+Each node tracks its visited-status upon evaluation, and can be accessed with the ```this.visited``` variable.
+
+```
+some_block
+    if this.visited "hi again"
+;
+```
