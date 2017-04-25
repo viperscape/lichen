@@ -76,7 +76,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
         let mut node = None;
         let mut or_valid = false; //track for OR
         
-        if let Some(b) = self.env.src.get_mut(node_name) { //println!("src:{:?}",b.src);
+        if let Some(b) = self.env.src.get_mut(node_name) {
             let mut state: HashMap<String,bool> = HashMap::new();
             state.insert("this.visited".to_owned(), b.visited);
             b.visited = true;
