@@ -129,7 +129,7 @@ some_block
 
 ##### Formatting/Reference
 
-Referenced variables can be returned to the caller, as well can be formatted into strings. The ``````` backtick symbol is used to specify a referenced variable.
+Referenced variables can be returned to the caller, as well can be formatted into strings. The ` backtick symbol is used to specify a referenced variable.
 
 ```
 some_block
