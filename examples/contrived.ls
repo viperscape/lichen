@@ -7,7 +7,7 @@ root
 ;
 
 store
-    comp:all [!items.Dragonscale-Great-Sword !this.visited]
+    comp:all !items.Dragonscale-Great-Sword !this.visited
     if !this.visited "G'day, you look weary, `name"
     or "Welcome back my friend, `name"
 
@@ -17,7 +17,7 @@ store
       await info-dragonscale
     ]
 
-    comp:all [this.visited items.Valerium-Great-Sword]
+    comp:all this.visited items.Valerium-Great-Sword
     if comp "You are quite the master, I see!"
 ;
 
