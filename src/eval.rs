@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use parse::Env;
 use var::Var;
-use source::Src;
+use source::{Src,Next};
 
 pub trait Eval {
     fn eval (&self, path: Option<&[&str]>, lookup: &str) -> Option<Var>;
@@ -86,10 +86,15 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
             
             for (i,src) in b.src[await_idx..].iter().enumerate() {
                 match src {
-                    &Src::Await(ref nn) => {
-                        b.await_idx = i+1;
-                        node = nn.clone();
-                        break
+                    &Src::Next(ref nn) => {
+                        match nn {
+                            &Next::Await(ref nn) => {
+                                b.await_idx = i+1;
+                                node = Some(nn.clone());
+                                break
+                            }
+                            _ => {}
+                        }
                     },
                     &Src::Or(_,_) => {
                         if !or_valid {
@@ -102,16 +107,24 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                 }
                     
                 
-                let (mut vars, node_) = src.eval(&mut state, self.data);
+                let (mut vars, next) = src.eval(&mut state, self.data);
 
                 // reset if if was successful
-                if (vars.len() > 0) || node_.is_some() { or_valid = false; }
+                if (vars.len() > 0) || next.is_some() { or_valid = false; }
 
                 for n in vars.drain(..) { r.push(n); }
-                if let Some((node_,await)) = node_ {
-                    if await {
-                        b.await_idx = i+1;
-                        self.await_node = node_name.to_owned();
+                if let Some(next) = next {
+                    let node_;
+                    match next {
+                        Next::Await(nn) => {
+                            b.await_idx = i+1;
+                            self.await_node = node_name.to_owned();
+                            node_ = nn;
+                        }
+                        Next::Now(nn) => {
+                            node_ = nn;
+                        }
+                        _ => { panic!("ERROR: unimplemented SELECT") }
                     }
                     
                     node = Some(node_);

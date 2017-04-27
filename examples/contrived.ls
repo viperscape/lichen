@@ -1,7 +1,7 @@
 root
     has_weight weight < 100.0
     
-    if has_weight next store
+    if has_weight next:now store
     
     emit "You look overloaded, `name"
 ;
@@ -14,7 +14,7 @@ store
     if comp [
       "Let me tell you about the rare Dragonscale Great Sword"
       "Are you interested?"
-      await info-dragonscale
+      next:await info-dragonscale
     ]
 
     comp:all this.visited items.Valerium-Great-Sword
@@ -25,5 +25,5 @@ info-dragonscale
     emit ["There is a long history of Dragonscale"
          "It all started.."]
 
-    next store
+    next:now store
 ;

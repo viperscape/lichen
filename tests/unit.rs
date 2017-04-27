@@ -3,7 +3,7 @@ extern crate lichen;
 use lichen::parse::{Parser,Block,SrcBlock};
 use lichen::{Logic,Expect};
 use lichen::var::Var;
-use lichen::source::Src;
+use lichen::source::{Src,Next};
 use lichen::eval::{Eval,Evaluator};
 
 struct Data;
@@ -43,6 +43,7 @@ fn parse_block() {
     if unequipped \"you're looking for something?\"\n
 \n
     if all \"welcome, \nlook around\"\n
+    next:now end\n
 ;";
     
     let block = Parser::parse_blocks(src);
@@ -65,7 +66,8 @@ fn parse_block() {
                               None),
                       Src::If(Expect::All,
                               vec!["welcome, \nlook around".into()],
-                              None)]
+                              None),
+                      Src::Next(Next::Now("end".to_owned()))]
         })];
 
     for (n,n_) in block.iter().zip(block_.iter()) {
@@ -134,7 +136,7 @@ fn parse_qsym_comp_block() {
 #[test]
 fn validate_qsym_block() {
     let src =  "root\n
-    if other_item await store\n
+    if other_item next:await store\n
     ;";
     
     let mut env = Parser::parse_blocks(src).into_env();
@@ -153,7 +155,7 @@ fn validate_reflection_block() {
     hasnt some_item
     hasnt-too !hasnt
     comp:all has hasnt-too
-    if comp await store\n
+    if comp next:await store\n
     ;";
     
     let mut env = Parser::parse_blocks(src).into_env();
@@ -171,7 +173,7 @@ fn parse_if_vec_block() {
     if !some_item [\n
         \"you're looking for something?\"\n
         \"welcome, \nlook around\"\n
-        next store]\n
+        next:now store]\n
 ;";
     
     let block = Parser::parse_blocks(src);
@@ -180,8 +182,7 @@ fn parse_if_vec_block() {
         &Block::Src(ref b) => {
             match b.src[1] {
                 Src::If(_,_, ref next) => {
-                    assert!(next.is_some());
-                    assert_eq!(next,&Some(("store".to_owned(),false)));
+                    assert_eq!(next,&Some(Next::Now("store".to_owned())));
                 },
                 _ => panic!("unknown source found")
             }
@@ -211,7 +212,7 @@ fn parse_eval_str_block() {
 fn parse_compare_env_block() {
     let src = "root\n
     weight some_weight < other_weight\n
-    if weight next store\n
+    if weight next:now store\n
 ;";
     let mut env = Parser::parse_blocks(src).into_env();
     let data = Data;
@@ -243,7 +244,7 @@ fn parse_return_varkind() {
 fn parse_follow_nodes() {
     let src = "root\n
     weight some_weight < other_weight\n
-    if weight next store\n
+    if weight next:now store\n
 ;\n
 \n
 store\n

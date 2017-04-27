@@ -13,38 +13,67 @@ pub enum Src {
     // logic must resolve to true
     // ex: if item_logic give_quest
     // Can optionally end execution and begin next node
-    If(Expect, Vec<Var>, Option<(String,bool)>),
-    Or(Vec<Var>,Option<(String,bool)>), //must follow an previous IF
+    If(Expect, Vec<Var>, Option<Next>),
+    Or(Vec<Var>,Option<Next>), //must follow an previous IF
 
     Emit(Vec<Var>), //just emits variables
     
     Composite(String,Expect,Vec<String>),
-    Next(String), // ends execution and begins next node
+    Next(Next), // ends execution and begins next node
+}
 
-    Await(Option<String>), // pauses execution, saving the iteration, optional next node
+/// Next-node action types
+#[derive(Debug,PartialEq,Clone)]
+pub enum Next {
+    Now(String),  //instantly advances
+    Await(String), //awaits for manual advancement, failure to advance continues current node
+    Select(HashMap<String,String>), //select from a group, based on decision
+}
+impl Next {
+    pub fn parse(exp: &mut Vec<String>) -> Option<Next> {
+        let mut next = None;
+        if let Some(node) = exp.pop() {
+            if let Some(tag) = exp.pop() {
+                let mut next_tag = tag.split_terminator(':');
+                let is_next = next_tag.next() == Some("next");
+                if is_next {
+                    
+                    let next_tag = next_tag.next().expect("ERROR: Empty Next Entry");
+                    match next_tag {
+                        "now" => { next = Some(Next::Now(node)) },
+                        "await" => { next = Some(Next::Await(node)) },
+                        "select" => { panic!("ERROR: Select unimplemented") },
+                        _ => { panic!("ERROR: Invalid Next Type Found {:?}", next_tag) },
+                    }
+                }
+                else {
+                    exp.push(tag.clone());
+                    exp.push(node);
+                }
+            }
+            else {
+                exp.push(node);
+            }
+        }
+
+        next
+    }
 }
 
 
 impl Src {
     pub fn eval<D:Eval> (&self, state: &mut HashMap<String,bool>, data: &D)
-                     -> (Vec<Var>,Option<(String,bool)>)
+                     -> (Vec<Var>,Option<Next>)
     {
         match self {
-            &Src::Next(ref node) => {
-                return (vec![],Some((node.clone(),false)))
+            &Src::Next(ref next) => {
+                return (vec![],Some(next.clone()))
             },
-            &Src::Or(ref vars, ref node) => {
-                return (vars.clone(),node.clone())
+            &Src::Or(ref vars, ref next) => {
+                return (vars.clone(), next.clone())
             },
             &Src::Emit(ref vars) => {
                 return (vars.clone(),None)
-            },
-            &Src::Await(ref nn) => {
-                if let &Some(ref node) = nn {
-                    return (vec![], Some((node.clone(),true)))
-                }
-                
-                return (vec![], None)
             },
             &Src::Logic(ref name, ref logic) => { //logic updates state
                 let name = name.clone();
@@ -161,7 +190,7 @@ impl Src {
 
                 return (vec![],None) // composite does not return anything
             },
-            &Src::If(ref x, ref v, ref node) => {
+            &Src::If(ref x, ref v, ref next) => {
                 let mut if_value = false;
                 match x {
                     &Expect::All => {
@@ -202,7 +231,7 @@ impl Src {
                     },
                 }
 
-                if if_value { return ((*v).clone(),node.clone()) }
+                if if_value { return ((*v).clone(), next.clone()) }
                 else { return (vec![],None) }
             }
         }
@@ -214,60 +243,26 @@ impl Src {
             
             let x = exp.remove(1);
 
-            let mut node = None;
-            let mut await = false;
-            if exp.len() > 2 {
-                let next = &exp[exp.len() - 2] == "next";
-                await = &exp[exp.len() - 2] == "await";
-                if next || await {
-                    node = exp.pop();
-                    let _ = exp.pop(); // remove next tag
-                }
-            }
+            let next = Next::parse(&mut exp);
             
             let v = exp.drain(1..).map(|n| Var::parse(n)).collect();
-            if let Some(node) = node {
-                return Src::If(Expect::parse(x),
-                               v, Some((node,await)))
-            }
 
             Src::If(Expect::parse(x),
-                    v, None)
+                    v, next)
         }
         else if exp[0] == "or" {
             if exp.len() < 2 { panic!("ERROR: Invalid OR Logic {:?}",exp) }
 
-            let mut node = None;
-            let mut await = false;
-            if exp.len() > 2 {
-                let next = &exp[exp.len() - 2] == "next";
-                await = &exp[exp.len() - 2] == "await";
-                if next || await {
-                    node = exp.pop();
-                    let _ = exp.pop(); // remove next tag
-                }
-            }
+            let next = Next::parse(&mut exp);
             
             let v = exp.drain(1..).map(|n| Var::parse(n)).collect();
-            if let Some(node) = node {
-                return Src::Or(v, Some((node,await)))
-            }
-
-            Src::Or(v,None)
+            Src::Or(v,next)
         }
-        else if exp[0] == "next" {
-            if exp.len() == 2 {
-                Src::Next(exp.pop().unwrap())
+        else if &exp[0].split_terminator(':').next() == &Some("next") {
+            if let Some(next) = Next::parse(&mut exp) {
+                Src::Next(next)
             }
-            else { panic!("ERROR: Uneven NEXT Logic {:?}",exp) }
-        }
-        else if exp[0] == "await" {
-            if exp.len() == 2 {
-                Src::Await(Some(exp.pop().unwrap()))
-            }
-            else {
-                Src::Await(None)
-            }
+            else { panic!("ERROR: Invalid NEXT Logic {:?}",exp) }
         }
         else if exp[0] == "emit" {
             if exp.len() > 1 {
