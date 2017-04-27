@@ -145,7 +145,7 @@ fn validate_qsym_block() {
     let mut ev = Evaluator::new(&mut env, &data);
     let (_,nn) = ev.next().unwrap();
     
-    assert_eq!(nn, Some("store".into()));
+    assert_eq!(nn, Some(Next::Await("store".into())));
 }
 
 #[test]
@@ -164,7 +164,7 @@ fn validate_reflection_block() {
     let mut ev = Evaluator::new(&mut env, &data);
     let (_,nn) = ev.next().unwrap();
     
-    assert_eq!(nn, Some("store".into()));
+    assert_eq!(nn, Some(Next::Await("store".into())));
 }
 
 #[test]
@@ -220,7 +220,7 @@ fn parse_compare_env_block() {
     let mut ev = Evaluator::new(&mut env, &data);
     let (_vars,node) = ev.run("root");
     
-    assert_eq!(node, Some("store".to_string()));
+    assert_eq!(node, Some(Next::Now("store".to_string())));
 }
 
 #[test]
@@ -259,4 +259,22 @@ store\n
     let (vars,_) = ev.next().unwrap();
     
     assert_eq!(vars[0], "welcome, \nlook around".into());
+}
+
+#[test]
+fn parse_select_nodes() {
+    let src = "root\n
+    next:select [\"Head to Store?\" store\n
+                \"Leave the town?\" exit-town]\n
+\n
+    emit \"A dustball blows by\"\n
+;";
+    let mut env = Parser::parse_blocks(src).into_env();
+    let data = Data;
+
+    let mut ev = Evaluator::new(&mut env, &data);
+    ev.next();
+    let (_,_next) = ev.next().unwrap();
+
+    //TODO: finish this test
 }

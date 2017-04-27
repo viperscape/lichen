@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use lichen::parse::Parser;
 use lichen::var::Var;
 use lichen::eval::{Eval,Evaluator};
+use lichen::source::Next;
 
 struct Player {
     items: HashMap<String,Items>,
@@ -58,25 +59,52 @@ fn main() {
 
     let mut ev = Evaluator::new(&mut env, &player);
     
-    while let Some((vars,node)) = ev.next() {
+    while let Some((vars,next)) = ev.next() {
         for var in vars {
             println!("{:?}", var);
         }
-        if let Some(node) = node {
-            println!("\nContinue to {:?}\n", node);
-            let mut line = String::new();
-            
-            match io::stdin().read_line(&mut line) {
-                Ok(_) => {
-                    match line.trim() {
-                        "y" | "Y" => {
-                            ev.advance();
+        if let Some(next) = next {
+            match next {
+                Next::Await(node) => {
+                    println!("\nContinue to {:?}\n", node);
+                    let mut line = String::new();
+                    
+                    match io::stdin().read_line(&mut line) {
+                        Ok(_) => {
+                            match line.trim() {
+                                "y" | "Y" => {
+                                    ev.advance(None);
+                                },
+                                _ => {}
+                            }
                         },
-                        _ => {}
+                        Err(_) => panic!()
                     }
                 },
-                Err(_) => panic!()
+                Next::Select(mut selects) => {
+                    println!("{:?}",selects);
+                    println!("\nEnter in a destination\n");
+                    for key in selects.keys() {
+                        println!("\n{:?}\n", key);
+                    }
+                    
+                    let mut line = String::new();
+                    
+                    match io::stdin().read_line(&mut line) {
+                        Ok(_) => {
+                            if let Some(node) = selects.remove(&line) {
+                                ev.advance(Some(node));
+                            }
+                            else {
+                                ev.advance(None);
+                            }
+                        },
+                        Err(_) => panic!()
+                    }
+                },
+                _ => {},
             }
+            
         }
     }
 }

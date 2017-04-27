@@ -22,12 +22,13 @@ pub enum Src {
     Next(Next), // ends execution and begins next node
 }
 
+type Select = HashMap<String,(String,String)>;
 /// Next-node action types
 #[derive(Debug,PartialEq,Clone)]
 pub enum Next {
     Now(String),  //instantly advances
     Await(String), //awaits for manual advancement, failure to advance continues current node
-    Select(HashMap<String,String>), //select from a group, based on decision
+    Select(Select), //select from a group, based on decision
 }
 impl Next {
     pub fn parse(exp: &mut Vec<String>) -> Option<Next> {
@@ -42,7 +43,7 @@ impl Next {
                     match next_tag {
                         "now" => { next = Some(Next::Now(node)) },
                         "await" => { next = Some(Next::Await(node)) },
-                        "select" => { panic!("ERROR: Select unimplemented") },
+                        "select" => { panic!("ERROR: Nested SELECT") },
                         _ => { panic!("ERROR: Invalid Next Type Found {:?}", next_tag) },
                     }
                 }
@@ -57,6 +58,38 @@ impl Next {
         }
 
         next
+    }
+
+    /// used to parse a top-level next statement
+    pub fn parse_bare(exp: &mut Vec<String>) -> Option<Next> {
+        if exp.len() < 3 { return Next::parse(exp); }
+
+        let mut selects = HashMap::new();
+        
+        let tag = exp.remove(0);
+        let mut tags = tag.split_terminator(':');
+        let next_tag = tags.next();
+        let is_next = next_tag == Some("next");
+        
+        if is_next {
+            let tag_kind = tags.next().expect("ERROR: Empty Next Entry");
+            if tag_kind != "select" { panic!("ERROR: Invalid Next Type Found {:?}", tags) }
+        }
+        else {
+            exp.push(next_tag.unwrap().to_owned());
+            exp.push(tag.clone());
+        }
+
+        let mut location = "".to_owned();
+        for n in exp.drain(..) {
+            if location.is_empty() { location = n; }
+            else {
+                selects.insert(location,n);
+                location = "".to_owned();
+            }
+        }
+
+        Some(Next::Select(selects))
     }
 }
 
@@ -259,7 +292,7 @@ impl Src {
             Src::Or(v,next)
         }
         else if &exp[0].split_terminator(':').next() == &Some("next") {
-            if let Some(next) = Next::parse(&mut exp) {
+            if let Some(next) = Next::parse_bare(&mut exp) {
                 Src::Next(next)
             }
             else { panic!("ERROR: Invalid NEXT Logic {:?}",exp) }
