@@ -8,7 +8,7 @@ Defining a block starts with the name identifier and ends with a semicolon, each
 
 ```
 some_block
-...
+
 ;
 ```
 
@@ -38,7 +38,7 @@ some_block
 
 ##### New Lines/Multilines
 
-Almost all commands are based on a single line entry, if something spans multiple lines then a bracket pair should be used. Currently only if/emit statement results and composite groups should use multiline entries.
+Almost all commands are based on a single line entry, if something spans multiple lines then a bracket pair should be used. The starting bracket *must* be inline with the originating statement.
 
 ```
 some_block
@@ -67,7 +67,7 @@ some_block
 
 ###### Composites
 
-Composites are logic results tied together, they must be specified as requiring All/Any/None
+Composites are logic results tied together, they must be specified as requiring All/Any/None tags
 
 ```
 some_block
@@ -77,7 +77,7 @@ some_block
     comp:any [has_weight
               !other_attrib]
 
-    if comp next other_block
+    if comp next:now other_block
 ;
 ```
 
@@ -87,7 +87,7 @@ If statements are used to control entry points and behavior. The result of a val
 
 ```
 some_block
-    if some_attrib ["seeya!" next other_block]
+    if some_attrib ["seeya!" next:now other_block]
 ;
 ```
 
@@ -95,8 +95,8 @@ Or statements must always immediately follow an If statement, and is flow for a 
 
 ```
 some_block
-    if some_attrib ["seeya!" next other_block]
-    or ["how about something else?" await something_else]
+    if some_attrib ["seeya!" next:now other_block]
+    or ["how about something else?" next:await something_else]
 ;
 ```
 
@@ -109,23 +109,33 @@ Emit returns variables back to the caller, and can be a multiline region.
 some_block
     emit "hi"
     emit ["here, have a number and boolean" 2.0 false]
-    next other_block
+    emit `name  # reference an environment variable to return
 ;
 ```
 
-##### Await/Next
+##### Next
 
-The Await statement defines a pausable region which requires advancement, unlike a Next statement which is immediately directed to the next block.
+The Next statement defines an optionally pausable region which requires advancement. The statement must be tagged with a next type: now, await or select.
 
 ```
 some_block
-    if some_attrib ["seeya!" next other_block]  # immediately heads to other_block
-    or ["how about something else?" await something_else]  # waits for manual advancement to something_else
+    if some_attrib ["seeya!" next:now other_block]  # immediately heads to other_block
+    or ["how about something else?" next:await something_else]  # waits for manual advancement to something_else
 
     # if failure to advance, then we pickup back where we left off after the Await
     emit "still here?"
 ;
 ```
+
+To pass multiple node entries to select on use the select tag. Note, this cannot be nested and must exist on the top-level of the node (eg: not in an If).
+
+```
+some_block
+    next:select ["Go to store" store  # store would be the actual node name
+                "Get out of here" exit]
+    next:now some_block  # start over if user selects wrong entry!
+;
+```    
 
 ##### Formatting/Reference
 
