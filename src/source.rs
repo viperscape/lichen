@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use ::{Logic,Expect};
 use eval::Eval;
-use var::Var;
+use var::{Var,Mut};
 use parse::{Parser,Map};
 
 /// delimited by new line
@@ -21,6 +21,8 @@ pub enum Src {
     
     Composite(String,Expect,Vec<String>),
     Next(Next), // ends execution and begins next node
+
+    Mut(Mut, Var,Var), // mutate type, var being mutated, argument var
 }
 
 /// Next-node action types
@@ -110,6 +112,10 @@ impl Src {
                      -> (Vec<Var>,Option<Next>)
     {
         match self {
+            &Src::Mut(ref m, ref v, ref a) => {
+
+                return (vec![],None)
+            }
             &Src::Next(ref next) => {
                 return (vec![],Some(next.clone()))
             },
@@ -282,6 +288,10 @@ impl Src {
     }
     
     pub fn parse(mut exp: Vec<String>) -> Src {
+        if exp[0].chars().next() == Some('@') { //mutating statement
+            let (m, v, a) = Mut::parse(&mut exp);
+            return Src::Mut(m,v,a)
+        }
         if exp[0] == "if" {
             if exp.len() < 3 { panic!("ERROR: Invalid IF Logic {:?}",exp) }
 

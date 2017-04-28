@@ -16,10 +16,13 @@ pub trait Eval {
 
         self.eval(path, lookup)
     }
+
+    /// expects var to be written to underlying store
+    fn set (&mut self, path: Option<&[&str]>, lookup: &str, var: Var);
 }
 
 pub struct Evaluator<'e, 'd, D:Eval + 'd> {
-    data: &'d D,
+    data: &'d mut D,
     env: &'e mut Env,
     next_node: String,
     await_node: String,
@@ -55,7 +58,7 @@ impl<'e, 'd, D:Eval + 'd> Iterator for Evaluator<'e, 'd, D>
     }
 
 impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
-    pub fn new (env: &'e mut Env, data: &'d D) -> Evaluator<'e, 'd, D> {
+    pub fn new (env: &'e mut Env, data: &'d mut D) -> Evaluator<'e, 'd, D> {
         Evaluator {
             env: env, data: data,
             next_node: "root".to_owned(),

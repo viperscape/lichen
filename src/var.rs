@@ -72,3 +72,45 @@ impl Var {
         return Ok(num)
     }
 }
+
+#[derive(Debug,PartialEq, Clone)]
+pub enum Mut {
+    Add,
+    Sub,
+    Mul,
+    Div,
+
+    Swap, // swap value
+}
+
+
+impl Mut {
+    pub fn parse(exps: &mut Vec<String>) -> (Mut, Var,Var) {
+        let m;
+        let v;
+        let a;
+        
+        if exps.len() > 2 { // math
+            a = exps.pop().unwrap();
+            let x: &str = &exps.pop().unwrap();
+            v = exps.pop().unwrap();
+
+            match x {
+                "+" => { m = Mut::Add },
+                "-" => { m = Mut::Sub },
+                "*" => { m = Mut::Mul },
+                "/" => { m = Mut::Div },
+                _ => { panic!("ERROR: Unimplemented function {:?}", x) }
+            }
+        }
+        else {
+            a = exps.pop().unwrap();
+            v = exps.pop().unwrap();
+            m = Mut::Swap;
+        }
+
+        let v = Var::parse(v);
+        let a = Var::parse(a);
+        (m,v,a)
+    }
+}

@@ -31,6 +31,9 @@ impl Eval for Data {
             _ => None
         }
     }
+
+    #[allow(unused_variables)]
+    fn set (&mut self, path: Option<&[&str]>, lookup: &str, var: Var) {}
 }
 
 
@@ -142,9 +145,9 @@ fn validate_qsym_block() {
     ;";
     
     let mut env = Parser::parse_blocks(src).into_env();
-    let data = Data;
+    let mut data = Data;
 
-    let mut ev = Evaluator::new(&mut env, &data);
+    let mut ev = Evaluator::new(&mut env, &mut data);
     let (_,nn) = ev.next().unwrap();
     
     assert_eq!(nn, Some(Next::Await("store".into())));
@@ -161,9 +164,9 @@ fn validate_reflection_block() {
     ;";
     
     let mut env = Parser::parse_blocks(src).into_env();
-    let data = Data;
+    let mut data = Data;
 
-    let mut ev = Evaluator::new(&mut env, &data);
+    let mut ev = Evaluator::new(&mut env, &mut data);
     let (_,nn) = ev.next().unwrap();
     
     assert_eq!(nn, Some(Next::Await("store".into())));
@@ -202,9 +205,9 @@ fn parse_eval_str_block() {
 ;";
     
     let mut env = Parser::parse_blocks(src).into_env();
-    let data = Data;
+    let mut data = Data;
     
-    let mut ev = Evaluator::new(&mut env, &data);
+    let mut ev = Evaluator::new(&mut env, &mut data);
     let (vars,_node) = ev.run("root");
     
     assert_eq!(vars[0], "looks like you are 4 kgs heavy, Io".into());
@@ -217,9 +220,9 @@ fn parse_compare_env_block() {
     if weight next:now store\n
 ;";
     let mut env = Parser::parse_blocks(src).into_env();
-    let data = Data;
+    let mut data = Data;
 
-    let mut ev = Evaluator::new(&mut env, &data);
+    let mut ev = Evaluator::new(&mut env, &mut data);
     let (_vars,node) = ev.run("root");
     
     assert_eq!(node, Some(Next::Now("store".to_string())));
@@ -233,9 +236,9 @@ fn parse_return_varkind() {
 ;";
 
     let mut env = Parser::parse_blocks(src).into_env();
-    let data = Data;
+    let mut data = Data;
 
-    let mut ev = Evaluator::new(&mut env, &data);
+    let mut ev = Evaluator::new(&mut env, &mut data);
     let (vars,_) = ev.run("root");
     
     assert_eq!(vars[0], 4.0 .into());
@@ -254,9 +257,9 @@ store\n
 ;";
 
     let mut env = Parser::parse_blocks(src).into_env();
-    let data = Data;
+    let mut data = Data;
 
-    let mut ev = Evaluator::new(&mut env, &data);
+    let mut ev = Evaluator::new(&mut env, &mut data);
     ev.next(); // runs root
     let (vars,_) = ev.next().unwrap();
     
@@ -275,9 +278,9 @@ fn parse_select_nodes() {
     emit \"A dustball blows by\"\n
 ;";
     let mut env = Parser::parse_blocks(src).into_env();
-    let data = Data;
+    let mut data = Data;
 
-    let mut ev = Evaluator::new(&mut env, &data);
+    let mut ev = Evaluator::new(&mut env, &mut data);
     let (_vars,select1) = ev.next().unwrap();
     let (_vars,select2) = ev.next().unwrap();
 
@@ -288,4 +291,47 @@ fn parse_select_nodes() {
     map.insert("Leave the town?".to_owned(), vec!["exit-town".to_owned()]);
     
     assert_eq!(select1, Some(Next::Select(map)));
+}
+
+
+// Test for mutable state
+#[derive(Debug)]
+struct Player {
+    coins: f32,
+}
+impl Eval for Player {
+    #[allow(unused_variables)]
+    fn eval (&self, path: Option<&[&str]>, lookup: &str) -> Option<Var> {
+        if lookup == "coins" { Some(self.coins.into()) }
+        else { None }
+    }
+
+    #[allow(unused_variables)]
+    fn set (&mut self, path: Option<&[&str]>, lookup: &str, var: Var) {
+        if lookup == "coins" {
+            match var {
+                Var::Num(n) => {
+                    self.coins = n;
+                },
+                _ => {}
+            }
+        }
+    }    
+}
+
+#[test]
+fn parse_state_mut() {
+    let src = "root\n
+    @coins + 1\n
+;";
+
+    let mut env = Parser::parse_blocks(src).into_env();
+    let mut data = Player { coins: 0.0 };
+
+    {
+        let mut ev = Evaluator::new(&mut env, &mut data);
+        let (_,_) = ev.next().unwrap();
+    }
+
+    assert_eq!(data.coins, 1.0);
 }
