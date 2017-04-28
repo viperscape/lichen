@@ -61,7 +61,10 @@ fn main() {
     
     while let Some((vars,next)) = ev.next() {
         for var in vars {
-            println!("{:?}", var);
+            match var {
+                Var::String(s) => { println!("{:}", s); },
+                _ => {},
+            }
         }
         if let Some(next) = next {
             match next {
@@ -82,21 +85,18 @@ fn main() {
                     }
                 },
                 Next::Select(mut selects) => {
-                    println!("{:?}",selects);
-                    println!("\nEnter in a destination\n");
-                    for key in selects.keys() {
-                        println!("\n{:?}\n", key);
+                    println!("\nEnter in a destination");
+                    for (key,val) in selects.iter() {
+                        println!("{:}, type {:?}", val, key);
                     }
                     
                     let mut line = String::new();
                     
                     match io::stdin().read_line(&mut line) {
                         Ok(_) => {
-                            if let Some(node) = selects.remove(&line) {
-                                ev.advance(Some(node));
-                            }
-                            else {
-                                ev.advance(None);
+                            let line = line.trim();
+                            if let Some(_) = selects.remove(line) {
+                                ev.advance(Some(line.to_owned()));
                             }
                         },
                         Err(_) => panic!()

@@ -27,29 +27,32 @@ pub struct Evaluator<'e, 'd, D:Eval + 'd> {
 
 impl<'e, 'd, D:Eval + 'd> Iterator for Evaluator<'e, 'd, D>
     where D: Eval + 'd {
-    
-    type Item = (Vec<Var>, Option<Next>); //here we only return node name as an option to advance
-    fn next(&mut self) -> Option<Self::Item> {
-        let nn = {
-            if !self.await_node.is_empty() {
-                let an = self.await_node.clone();
-                self.await_node.clear();
-                an
-            }
-            else if !self.next_node.is_empty() { self.next_node.clone() }
-            else { return None }
-        };
         
+        type Item = (Vec<Var>, Option<Next>); //here we only return node name as an option to advance
+        fn next(&mut self) -> Option<Self::Item> {
+            let nn = {
+                if !self.await_node.is_empty() {
+                    self.await_node.clone()
+                }
+                else if !self.next_node.is_empty() {
+                    self.next_node.clone()
+                }
+                else { return None }
+            };
 
-        let r = self.run(&nn);
-        match r.1 {
-            Some(Next::Now(ref node)) => { self.next_node = node.clone(); },
-            _ => {},
+            
+            self.next_node.clear();
+            self.await_node.clear();
+
+            let r = self.run(&nn);
+            match r.1 {
+                Some(Next::Now(ref node)) => { self.next_node = node.clone(); },
+                _ => {},
+            }
+            
+            Some(r)
         }
-        
-        Some(r)
     }
-}
 
 impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
     pub fn new (env: &'e mut Env, data: &'d D) -> Evaluator<'e, 'd, D> {
@@ -59,7 +62,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
             await_node: "".to_owned()
         }
     }
-    pub fn advance (&mut self, node: Option<String>) { println!("advancing {:?}",node);
+    pub fn advance (&mut self, node: Option<String>) {
         if let Some(b) = self.env.src.get_mut(&self.await_node) {
             b.await_idx = 0; //reset on advance
         }
@@ -92,11 +95,19 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                 match src {
                     &Src::Next(ref next) => {
                         match next {
-                            &Next::Await(_) | &Next::Select(_) => {
+                            &Next::Await(ref nn) => {
                                 b.await_idx = i+1;
                                 node = Some(next.clone());
+                                self.await_node = node_name.to_owned();
+                                self.next_node = nn.to_owned();
                                 break
-                            }
+                            },
+                            &Next::Select(_) => {
+                                b.await_idx = i+1;
+                                node = Some(next.clone());
+                                self.await_node = node_name.to_owned();
+                                break
+                            },
                             _ => {}
                         }
                     },
@@ -120,10 +131,15 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                 
                 if let Some(next) = next {
                     match next {
-                        Next::Await(_) | Next::Select(_) => {
+                        Next::Await(ref nn) => {
                             b.await_idx = i+1;
                             self.await_node = node_name.to_owned();
-                        }
+                            self.next_node = nn.to_owned();
+                        },
+                        Next::Select(_) => {
+                            b.await_idx = i+1;
+                            self.await_node = node_name.to_owned();
+                        },
                         Next::Now(_) => { }
                     }
                     

@@ -22,7 +22,7 @@ pub enum Src {
     Next(Next), // ends execution and begins next node
 }
 
-type Select = HashMap<String,(String,String)>;
+type Select = HashMap<String,String>;
 /// Next-node action types
 #[derive(Debug,PartialEq,Clone)]
 pub enum Next {
@@ -84,7 +84,7 @@ impl Next {
         for n in exp.drain(..) {
             if location.is_empty() { location = n; }
             else {
-                selects.insert(location,n);
+                selects.insert(n,location);
                 location = "".to_owned();
             }
         }

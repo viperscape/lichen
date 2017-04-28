@@ -19,6 +19,9 @@ store
 
     comp:all this.visited items.Valerium-Great-Sword
     if comp "You are quite the master, I see!"
+
+    emit "See you later!"
+    next:now town
 ;
 
 info-dragonscale
@@ -33,6 +36,7 @@ town
                 "Leave the town?" exit-town]
 
     emit "A dustball blows by"
+    next:now town
 ;
 
 exit-town
