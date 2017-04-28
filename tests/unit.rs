@@ -6,6 +6,8 @@ use lichen::var::Var;
 use lichen::source::{Src,Next};
 use lichen::eval::{Eval,Evaluator};
 
+use std::collections::HashMap;
+
 struct Data;
 impl Eval for Data {
     #[allow(unused_variables)]
@@ -264,17 +266,26 @@ store\n
 #[test]
 fn parse_select_nodes() {
     let src = "root\n
-    next:select [\"Head to Store?\" store\n
-                \"Leave the town?\" exit-town]\n
+    next:select {\"Head to Store?\" store\n
+                \"Leave the town?\" exit-town}\n
 \n
+    if !some_item [\"Some choices\"
+        next:select {\"Head to Store?\" store\n
+                    \"Leave the town?\" exit-town}]\n
     emit \"A dustball blows by\"\n
 ;";
     let mut env = Parser::parse_blocks(src).into_env();
     let data = Data;
 
     let mut ev = Evaluator::new(&mut env, &data);
-    ev.next();
-    let (_,_next) = ev.next().unwrap();
+    let (_vars,select1) = ev.next().unwrap();
+    let (_vars,select2) = ev.next().unwrap();
 
-    //TODO: finish this test
+    assert_eq!(select1,select2);
+    
+    let mut map = HashMap::new();
+    map.insert("Head to Store?".to_owned(), vec!["store".to_owned()]);
+    map.insert("Leave the town?".to_owned(), vec!["exit-town".to_owned()]);
+    
+    assert_eq!(select1, Some(Next::Select(map)));
 }

@@ -32,8 +32,8 @@ info-dragonscale
 ;
 
 town
-    next:select ["Head to Store?" store
-                "Leave the town?" exit-town]
+    next:select {"Head to Store?" store
+                "Leave the town?" exit-town}
 
     emit "A dustball blows by"
     next:now town

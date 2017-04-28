@@ -24,6 +24,7 @@ pub enum Block {
 }
 
 
+pub type Map = HashMap<String,Vec<String>>;
 
 pub struct Parser(Vec<Block>);
 
@@ -43,6 +44,7 @@ impl Parser {
         let mut in_string = false;
         let mut in_comment = false;
         let mut in_vec = false;
+        let mut in_map = false;
         let mut was_if = false;
 
         
@@ -52,15 +54,18 @@ impl Parser {
         for c in src.chars() {
             if c == '[' { in_vec = true; continue }
             else if c == ']' { in_vec = false; }
+            else if c == '{' { in_map = true; } // we don't skip bc we incl this char
+            else if c == '}' { in_map = false; }
             else if c == '#' && !in_string { in_comment = true; }
             else if  c == '\n' && in_comment && !in_string {
                 in_comment = false;
                 continue;
             }
 
-            if c == '\n' && in_vec { continue }
+            if c == '\n' && (in_vec || in_map) { continue }
             
             if (c == ']' ||
+                c == '}' ||
                 c == '#' ||
                 c == '\n')
                 && !in_string
@@ -68,6 +73,8 @@ impl Parser {
                 for n in exp.split_whitespace() {
                     exps.push(n.trim().to_owned());
                 }
+                if c == '}' { exps.push("}".to_owned()); } //add this back in manually
+                
                 exp = String::new();
 
                 if exps.len() < 1 { continue }
@@ -201,6 +208,49 @@ impl Parser {
         }
 
         Env { def: def, src: src }
+    }
+
+    pub fn parse_map (exps: &mut Vec<String>) -> Option<Map> {
+        let mut map: Map = HashMap::new(); // optionally unbounded val-lengths
+
+        let mut arg = exps.remove(0);
+        if arg.chars().next() != Some('{') { return None }
+        let _ = arg.remove(0);
+        
+        if exps.pop().expect("ERROR: Unbalanced MAP") != "}" { return None }
+        if exps.len() < 1 { return None }
+
+        let mut size_hint = 0;
+        
+        if arg.chars().next() == Some('^') { //size hint provided
+            let _ = arg.remove(0);
+            if let Ok(v) = arg.parse::<usize>() {
+                size_hint = v;
+            }
+            else { panic!("ERROR: Invalid Size-hint provided for MAP"); }
+        }
+        else { exps.insert(0,arg); } //put back if not a sizehint!
+
+        if size_hint == 0 { size_hint = 1; } // single-element map is default
+        
+        let mut key = "".to_owned();
+        let mut vals = vec![];
+        
+        for n in exps.drain(..) {
+            if key.is_empty() { key = n; continue }
+
+            vals.push(n);
+
+            if vals.len() == size_hint {
+                map.insert(key,vals);
+                vals = vec![];
+                key = "".to_owned();
+            }
+        }
+
+        if !key.is_empty() { panic!("ERROR: Unbalanced MAP at: {:?}",key); }
+        
+        Some(map)
     }
 }
 

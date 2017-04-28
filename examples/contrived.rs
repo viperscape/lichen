@@ -87,7 +87,7 @@ fn main() {
                 Next::Select(mut selects) => {
                     println!("\nEnter in a destination");
                     for (key,val) in selects.iter() {
-                        println!("{:}, type {:?}", val, key);
+                        println!("{:?}, type {:?}", val, key);
                     }
                     
                     let mut line = String::new();

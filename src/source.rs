@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use ::{Logic,Expect};
 use eval::Eval;
 use var::Var;
+use parse::{Parser,Map};
 
 /// delimited by new line
 #[derive(Debug,PartialEq)]
@@ -22,16 +23,34 @@ pub enum Src {
     Next(Next), // ends execution and begins next node
 }
 
-type Select = HashMap<String,String>;
 /// Next-node action types
 #[derive(Debug,PartialEq,Clone)]
 pub enum Next {
     Now(String),  //instantly advances
     Await(String), //awaits for manual advancement, failure to advance continues current node
-    Select(Select), //select from a group, based on decision
+    Select(Map), //select from a group, based on decision
 }
 impl Next {
     pub fn parse(exp: &mut Vec<String>) -> Option<Next> {
+        let mut select_idx = None;
+        for (i,n) in exp.iter().enumerate() {
+            if &n == &"next:select" {
+                select_idx = Some(i);
+                break
+            }
+        }
+        
+        // handle nested selects as a special case
+        if let Some(idx) = select_idx {
+            let mut select: Vec<String> = exp.drain(idx..).collect();
+            let _ = select.remove(0);
+            if let Some(map) = Parser::parse_map(&mut select) {
+                return Some(Next::Select(map))
+            }
+            else { return None }
+        }
+        
+
         let mut next = None;
         if let Some(node) = exp.pop() {
             if let Some(tag) = exp.pop() {
@@ -63,8 +82,6 @@ impl Next {
     /// used to parse a top-level next statement
     pub fn parse_bare(exp: &mut Vec<String>) -> Option<Next> {
         if exp.len() < 3 { return Next::parse(exp); }
-
-        let mut selects = HashMap::new();
         
         let tag = exp.remove(0);
         let mut tags = tag.split_terminator(':');
@@ -80,16 +97,10 @@ impl Next {
             exp.push(tag.clone());
         }
 
-        let mut location = "".to_owned();
-        for n in exp.drain(..) {
-            if location.is_empty() { location = n; }
-            else {
-                selects.insert(n,location);
-                location = "".to_owned();
-            }
+        if let Some(selects) = Parser::parse_map(exp) {
+            Some(Next::Select(selects))
         }
-
-        Some(Next::Select(selects))
+        else { None }
     }
 }
 
@@ -273,12 +284,13 @@ impl Src {
     pub fn parse(mut exp: Vec<String>) -> Src {
         if exp[0] == "if" {
             if exp.len() < 3 { panic!("ERROR: Invalid IF Logic {:?}",exp) }
-            
-            let x = exp.remove(1);
+
+            let _ = exp.remove(0);
+            let x = exp.remove(0);
 
             let next = Next::parse(&mut exp);
             
-            let v = exp.drain(1..).map(|n| Var::parse(n)).collect();
+            let v = exp.drain(..).map(|n| Var::parse(n)).collect();
 
             Src::If(Expect::parse(x),
                     v, next)
