@@ -127,12 +127,12 @@ some_block
 ;
 ```
 
-To pass multiple node entries to select on use the select tag. Note, this cannot be nested and must exist on the top-level of the node (eg: not in an If).
+To pass multiple node entries to select on use the select tag. Note the use of braclets ```{}``` to create the key-value map. You can optionally specify a length parameter to create a list value for the map. ```{^3 "my-list" "one" "two" "three"}```
 
 ```
 some_block
-    next:select ["Go to store" store  # store would be the actual node name
-                "Get out of here" exit]
+    next:select {"Go to store" store  # store would be the actual node name
+                "Get out of here" exit}
     next:now some_block  # start over if user selects wrong entry!
 ;
 ```    
