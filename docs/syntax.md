@@ -127,7 +127,7 @@ some_block
 ;
 ```
 
-To pass multiple node entries to select on use the select tag. Note the use of braclets ```{}``` to create the key-value map. You can optionally specify a length parameter to create a list value for the map. ```{^3 "my-list" "one" "two" "three"}```
+To pass multiple node entries to select on, use the select tag. Note the use of braclets ```{}``` to create the key-value map. You can optionally specify a length parameter to create a list value for the map. ```{^3 "my-list" "one" "two" "three"}```
 
 ```
 some_block
