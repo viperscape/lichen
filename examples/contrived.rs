@@ -84,10 +84,14 @@ fn main() {
                         Err(_) => panic!()
                     }
                 },
-                Next::Select(mut selects) => {
+                Next::Select(selects) => {
                     println!("\nEnter in a destination");
+
+                    // we're going to invert K/V for convenience for input
+                    let mut choices = HashMap::new();
                     for (key,val) in selects.iter() {
-                        println!("{:?}, type {:?}", val, key);
+                        println!("{:?}, type {:?}", key, val[0]);
+                        choices.insert(val[0].clone(),key.clone());
                     }
                     
                     let mut line = String::new();
@@ -95,7 +99,7 @@ fn main() {
                     match io::stdin().read_line(&mut line) {
                         Ok(_) => {
                             let line = line.trim();
-                            if let Some(_) = selects.remove(line) {
+                            if let Some(_) = choices.remove(line) {
                                 ev.advance(Some(line.to_owned()));
                             }
                         },
