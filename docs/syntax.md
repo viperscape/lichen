@@ -156,3 +156,39 @@ some_block
     if this.visited "hi again"
 ;
 ```
+
+##### Mutate from Functions
+
+There are a few builtins to mutate external state. To affect data you must prefix the referenced variable with an ```@``` symbol. Currently functions are only called on the top-level of the node, node within statement regions/multilines. It's also possible to implement your own custom function, to call it you simply surround the function-name within parenthesis.
+
+```
+some_block
+    @coins + 1  # increment coins by one, basic math is built in
+    @coins 5  # swaps the value in
+    @coins (inc) 1 2 3  # a custom function that takes multiple arguments
+;
+```
+
+When the node is reached, these side-affect functions will run immediately. The custom ```inc``` function must be built on the rust side of things as apart of the Eval implementation.
+
+```rust
+    fn call (&mut self, var: Var, fun: &str, vars: &Vec<Var>) -> Option<Var> {
+        match fun {
+            "inc" => {
+                if let Ok(v) = Var::get_num(&var, self) {
+                    let mut r = v;
+                    for n in vars.iter() {
+                        if let Ok(v) = Var::get_num(&n, self) {
+                            r += v;
+                        }
+                    }
+
+                    return Some(Var::Num(r))
+                }
+            },
+            _ => { }
+        }
+
+        None
+    }
+```
