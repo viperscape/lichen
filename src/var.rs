@@ -81,36 +81,56 @@ pub enum Mut {
     Div,
 
     Swap, // swap value
+
+    Fn(String),
 }
 
 
 impl Mut {
+    pub fn parse_fn (mut exp: String) -> Option<String> {
+        if exp.chars().next() == Some('(') {
+            let _ = exp.remove(0);
+            let close = exp.pop().unwrap();
+            if close == ')' {
+                return Some(exp)
+            }
+        }
+        
+        None
+    }
+    
     pub fn parse(exps: &mut Vec<String>) -> (Mut, String, Vec<Var>) {
         let m;
         let mut v;
         let a;
         
-        if exps.len() == 3 { // math
-            a = exps.pop().unwrap();
-            let x: &str = &exps.pop().unwrap();
-            v = exps.pop().unwrap();
+        if exps.len() > 2 {
+            v = exps.remove(0);
+            let x: &str = &exps.remove(0);
+            a = exps.drain(..).map(|n| Var::parse(n)).collect();
 
             match x {
                 "+" => { m = Mut::Add },
                 "-" => { m = Mut::Sub },
                 "*" => { m = Mut::Mul },
                 "/" => { m = Mut::Div },
-                _ => { panic!("ERROR: Unimplemented function {:?}", x) }
+                _ => {
+                    if let Some(fun) = Mut::parse_fn(x.to_owned()) {
+                        m = Mut::Fn(fun)
+                    }
+                    else {
+                        panic!("ERROR: Unimplemented function {:?}", x)
+                    }
+                }
             }
         }
         else {
-            a = exps.pop().unwrap();
+            a = vec![Var::parse(exps.pop().unwrap())];
             v = exps.pop().unwrap();
             m = Mut::Swap;
         }
 
         let _ = v.remove(0); // remove @ in var name
-        let a = vec![Var::parse(a)];
         (m,v,a)
     }
 }

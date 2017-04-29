@@ -142,7 +142,14 @@ impl Src {
                     },
                     &Mut::Swap => {
                         data.set_path(&v, a[0].clone());
-                    }
+                    },
+                    &Mut::Fn(ref fun) => {
+                        if let Some(var) = data.get_path(&v) {
+                            if let Some(r) = data.call(var, fun, a) {
+                                data.set_path(&v, r);
+                            }
+                        }
+                    },
                 }
                 
                 return (vec![],None)

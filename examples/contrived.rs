@@ -56,7 +56,12 @@ impl Eval for Player {
                 _ => {}
             }
         }
-    }   
+    }
+
+    #[allow(unused_variables)]
+    fn call (&mut self, var: Var, fun: &str, vars: &Vec<Var>) -> Option<Var> {
+        None
+    }
 }
 
 fn main() {

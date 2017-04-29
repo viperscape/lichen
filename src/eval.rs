@@ -29,6 +29,8 @@ pub trait Eval {
         let (path,lookup) = self.as_path(&lookup);
         self.set(path,lookup, v);
     }
+
+    fn call (&mut self, var: Var, fun: &str, vars: &Vec<Var>) -> Option<Var>;
 }
 
 pub struct Evaluator<'e, 'd, D:Eval + 'd> {

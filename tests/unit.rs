@@ -34,6 +34,11 @@ impl Eval for Data {
 
     #[allow(unused_variables)]
     fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var) {}
+
+    #[allow(unused_variables)]
+    fn call (&mut self, var: Var, fun: &str, vars: &Vec<Var>) -> Option<Var> {
+        None
+    }
 }
 
 
@@ -316,7 +321,28 @@ impl Eval for Player {
                 _ => {}
             }
         }
-    }    
+    }
+
+    #[allow(unused_variables)]
+    fn call (&mut self, var: Var, fun: &str, vars: &Vec<Var>) -> Option<Var> {
+        match fun {
+            "inc" => {
+                if let Ok(v) = Var::get_num(&var, self) {
+                    let mut r = v;
+                    for n in vars.iter() {
+                        if let Ok(v) = Var::get_num(&n, self) {
+                            r += v;
+                        }
+                    }
+
+                    return Some(Var::Num(r))
+                }
+            },
+            _ => { }
+        }
+
+        None
+    }
 }
 
 #[test]
@@ -337,4 +363,21 @@ fn state_mut() {
     }
 
     assert_eq!(data.coins, 5.0);
+}
+
+#[test]
+fn parse_cust_fn() {
+    let src = "root\n
+    @coins (inc) 1 2 3\n
+;";
+    
+    let mut env = Parser::parse_blocks(src).into_env();
+    let mut data = Player { coins: 0.0 };
+    
+    {
+        let mut ev = Evaluator::new(&mut env, &mut data);
+        let (_,_) = ev.next().unwrap();
+    }
+
+    assert_eq!(data.coins, 6.0);
 }
