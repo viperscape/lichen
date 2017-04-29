@@ -112,7 +112,7 @@ impl Src {
                      -> (Vec<Var>,Option<Next>)
     {
         match self {
-            &Src::Mut(ref m, ref v, ref a) => { println!("{:?}",m);
+            &Src::Mut(ref m, ref v, ref a) => {
                 match m {
                     &Mut::Add | &Mut::Sub | &Mut::Mul | &Mut::Div => {
                         let mut num = None;

@@ -320,9 +320,11 @@ impl Eval for Player {
 }
 
 #[test]
+/// this test shows that all statements are processed in one Eval iteration
 fn state_mut() {
     let src = "root\n
     @coins + 1\n
+    emit \"step\"\n
     @coins 5\n
 ;";
     
@@ -331,14 +333,7 @@ fn state_mut() {
     
     {
         let mut ev = Evaluator::new(&mut env, &mut data);
-        let (_,_) = ev.next().unwrap();
-    }
-
-    assert_eq!(data.coins, 1.0);
-
-    {
-        //let mut ev = Evaluator::new(&mut env, &mut data);
-        //let (_,_) = ev.next().unwrap();
+        let (_vars,_) = ev.next().unwrap();
     }
 
     assert_eq!(data.coins, 5.0);
