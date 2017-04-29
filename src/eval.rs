@@ -4,21 +4,31 @@ use var::Var;
 use source::{Src,Next};
 
 pub trait Eval {
-    fn eval (&self, path: Option<&[&str]>, lookup: &str) -> Option<Var>;
-    
-    fn eval_bare (&self, lookup: &str) -> Option<Var> {
-        let mut lookups: Vec<&str> = lookup.split_terminator('.').collect();
-        let lookup = lookups.pop().unwrap();
+    fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var>;
+
+    fn as_path<'a> (&self, lookup: &'a str) -> (Option<Vec<&'a str>>, &'a str) {
+        let mut lookups: Vec<&'a str> = lookup.split_terminator('.').collect();
+        let item = lookups.pop().unwrap();
 
         let path;
-        if lookups.len() > 0 { path = Some(&lookups[..]); }
+        if lookups.len() > 0 { path = Some(lookups); }
         else { path = None }
 
-        self.eval(path, lookup)
+        (path,item)
+    }
+                                          
+    fn get_path (&self, lookup: &str) -> Option<Var> {
+        let (path,lookup) = self.as_path(lookup);
+        self.get(path, lookup)
     }
 
     /// expects var to be written to underlying store
-    fn set (&mut self, path: Option<&[&str]>, lookup: &str, var: Var);
+    fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var);
+
+    fn set_path (&mut self, lookup: &str, v: Var) {
+        let (path,lookup) = self.as_path(&lookup);
+        self.set(path,lookup, v);
+    }
 }
 
 pub struct Evaluator<'e, 'd, D:Eval + 'd> {
@@ -163,7 +173,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                     // (parsed earlier)
                     if s.split_terminator(' ').count() == 1 {
                         if s.chars().next().unwrap() == '`' {
-                            if let Some(ref val_) = self.data.eval_bare(&s[1..]) {
+                            if let Some(ref val_) = self.data.get_path(&s[1..]) {
                                 val = Some(val_.clone());
                             }
                         }
@@ -173,7 +183,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                             if started { fs.push(' '); }
                             
                             if word.chars().next().unwrap() == '`' {
-                                if let Some(ref val_) = self.data.eval_bare(&word[1..]) {
+                                if let Some(ref val_) = self.data.get_path(&word[1..]) {
                                     fs.push_str(&val_.to_string());
                                 }
                             }

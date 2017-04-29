@@ -11,7 +11,7 @@ use std::collections::HashMap;
 struct Data;
 impl Eval for Data {
     #[allow(unused_variables)]
-    fn eval (&self, path: Option<&[&str]>, lookup: &str) -> Option<Var> {
+    fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var> {
         match lookup {
             "some_item" => {
                 Some(false.into())
@@ -33,7 +33,7 @@ impl Eval for Data {
     }
 
     #[allow(unused_variables)]
-    fn set (&mut self, path: Option<&[&str]>, lookup: &str, var: Var) {}
+    fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var) {}
 }
 
 
@@ -301,13 +301,13 @@ struct Player {
 }
 impl Eval for Player {
     #[allow(unused_variables)]
-    fn eval (&self, path: Option<&[&str]>, lookup: &str) -> Option<Var> {
+    fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var> {
         if lookup == "coins" { Some(self.coins.into()) }
         else { None }
     }
 
     #[allow(unused_variables)]
-    fn set (&mut self, path: Option<&[&str]>, lookup: &str, var: Var) {
+    fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var) {
         if lookup == "coins" {
             match var {
                 Var::Num(n) => {
@@ -320,18 +320,26 @@ impl Eval for Player {
 }
 
 #[test]
-fn parse_state_mut() {
+fn state_mut() {
     let src = "root\n
     @coins + 1\n
+    @coins 5\n
 ;";
-
+    
     let mut env = Parser::parse_blocks(src).into_env();
     let mut data = Player { coins: 0.0 };
-
+    
     {
         let mut ev = Evaluator::new(&mut env, &mut data);
         let (_,_) = ev.next().unwrap();
     }
 
     assert_eq!(data.coins, 1.0);
+
+    {
+        //let mut ev = Evaluator::new(&mut env, &mut data);
+        //let (_,_) = ev.next().unwrap();
+    }
+
+    assert_eq!(data.coins, 5.0);
 }

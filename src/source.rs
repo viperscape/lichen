@@ -108,12 +108,53 @@ impl Next {
 
 
 impl Src {
-    pub fn eval<D:Eval> (&self, state: &mut HashMap<String,bool>, data: &D)
+    pub fn eval<D:Eval> (&self, state: &mut HashMap<String,bool>, data: &mut D)
                      -> (Vec<Var>,Option<Next>)
     {
         match self {
-            &Src::Mut(ref m, ref v, ref a) => {
-
+            &Src::Mut(ref m, ref v, ref a) => { println!("{:?}",m);
+                match m {
+                    &Mut::Add | &Mut::Sub | &Mut::Mul | &Mut::Div => {
+                        let mut num = None;
+                        if let Ok(v1) = Var::get_num(v,data) {
+                            if let Ok(v2) = Var::get_num(a, data) {
+                                match m {
+                                    &Mut::Add => {
+                                        num = Some(v1+v2);
+                                    },
+                                    &Mut::Sub => {
+                                        num = Some(v1-v2);
+                                    },
+                                    &Mut::Mul => {
+                                        num = Some(v1*v2);
+                                    },
+                                    &Mut::Div => {
+                                        num = Some(v1/v2);
+                                    },
+                                    _ => {},
+                                }
+                            }
+                        }
+                        
+                        if let Some(num) = num {
+                            match v {
+                                &Var::String(ref s) => {
+                                    data.set_path(&s, Var::Num(num));
+                                },
+                                _ => {}, //NOTE: we should probably use a bare str
+                            }
+                        }
+                    },
+                    &Mut::Swap => {
+                        match v {
+                            &Var::String(ref s) => {
+                                data.set_path(&s, a.clone());
+                            },
+                            _ => {},
+                        }
+                    }
+                }
+                
                 return (vec![],None)
             }
             &Src::Next(ref next) => {
@@ -129,7 +170,7 @@ impl Src {
                 let name = name.clone();
                 match logic {
                     &Logic::Is(ref lookup) => {
-                        let r = data.eval_bare(&lookup);
+                        let r = data.get_path(&lookup);
                         if r.is_some() {
                             match r.unwrap() {
 
@@ -149,7 +190,7 @@ impl Src {
                         }
                     },
                     &Logic::IsNot(ref lookup) => { //inverse state
-                        let r = data.eval_bare(&lookup);
+                        let r = data.get_path(&lookup);
                         
                         if r.is_some() {
                             match r.unwrap() {
@@ -206,7 +247,7 @@ impl Src {
                             comp_false = true;
                         }
                         else { //check data for delayed reference
-                            if let Some(val) = data.eval_bare(lookup) {
+                            if let Some(val) = data.get_path(lookup) {
                                 match val {
                                     Var::Bool(b) => {
                                         if b { comp_true = true; }
@@ -271,7 +312,7 @@ impl Src {
                         };
 
                         if !has_val {
-                            if let Some(val) = data.eval_bare(lookup) {
+                            if let Some(val) = data.get_path(lookup) {
                                 match val {
                                     Var::Bool(v) => { if_value = v; },
                                     _ => { if_value = true; }

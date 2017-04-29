@@ -23,7 +23,7 @@ enum Items {
 }
 
 impl Eval for Player {
-    fn eval (&self, path: Option<&[&str]>, lookup: &str) -> Option<Var> {
+    fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var> {
         if let Some(path) = path {
             if path[..] == ["items"] {
                 Some(self.items.contains_key(lookup).into())
@@ -47,7 +47,7 @@ impl Eval for Player {
     }
 
     #[allow(unused_variables)]
-    fn set (&mut self, path: Option<&[&str]>, lookup: &str, var: Var) {
+    fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var) {
         if lookup == "coins" {
             match var {
                 Var::Num(n) => {

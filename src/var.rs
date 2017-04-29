@@ -58,7 +58,7 @@ impl Var {
         match self {
             &Var::Num(n) => { num = n; },
             &Var::String(ref s) => {
-                if let Some(n) = data.eval_bare(s) {
+                if let Some(n) = data.get_path(s) {
                     match n {
                         Var::Num(n) => { num = n; },
                         _ => return Err("ERROR: NaN Evaluation")
@@ -87,7 +87,7 @@ pub enum Mut {
 impl Mut {
     pub fn parse(exps: &mut Vec<String>) -> (Mut, Var,Var) {
         let m;
-        let v;
+        let mut v;
         let a;
         
         if exps.len() > 2 { // math
@@ -109,6 +109,7 @@ impl Mut {
             m = Mut::Swap;
         }
 
+        let _ = v.remove(0); // remove @ in var name
         let v = Var::parse(v);
         let a = Var::parse(a);
         (m,v,a)
