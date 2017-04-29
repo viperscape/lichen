@@ -85,12 +85,12 @@ pub enum Mut {
 
 
 impl Mut {
-    pub fn parse(exps: &mut Vec<String>) -> (Mut, Var,Var) {
+    pub fn parse(exps: &mut Vec<String>) -> (Mut, String, Vec<Var>) {
         let m;
         let mut v;
         let a;
         
-        if exps.len() > 2 { // math
+        if exps.len() == 3 { // math
             a = exps.pop().unwrap();
             let x: &str = &exps.pop().unwrap();
             v = exps.pop().unwrap();
@@ -110,8 +110,7 @@ impl Mut {
         }
 
         let _ = v.remove(0); // remove @ in var name
-        let v = Var::parse(v);
-        let a = Var::parse(a);
+        let a = vec![Var::parse(a)];
         (m,v,a)
     }
 }

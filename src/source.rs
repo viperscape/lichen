@@ -22,7 +22,7 @@ pub enum Src {
     Composite(String,Expect,Vec<String>),
     Next(Next), // ends execution and begins next node
 
-    Mut(Mut, Var,Var), // mutate type, var being mutated, argument var
+    Mut(Mut, String, Vec<Var>), // mutate type, var being mutated, argument vars
 }
 
 /// Next-node action types
@@ -116,8 +116,8 @@ impl Src {
                 match m {
                     &Mut::Add | &Mut::Sub | &Mut::Mul | &Mut::Div => {
                         let mut num = None;
-                        if let Ok(v1) = Var::get_num(v,data) {
-                            if let Ok(v2) = Var::get_num(a, data) {
+                        if let Ok(v1) = Var::get_num(&Var::String(v.to_owned()), data) {
+                            if let Ok(v2) = Var::get_num(&a[0], data) {
                                 match m {
                                     &Mut::Add => {
                                         num = Some(v1+v2);
@@ -137,21 +137,11 @@ impl Src {
                         }
                         
                         if let Some(num) = num {
-                            match v {
-                                &Var::String(ref s) => {
-                                    data.set_path(&s, Var::Num(num));
-                                },
-                                _ => {}, //NOTE: we should probably use a bare str
-                            }
+                            data.set_path(&v, Var::Num(num));
                         }
                     },
                     &Mut::Swap => {
-                        match v {
-                            &Var::String(ref s) => {
-                                data.set_path(&s, a.clone());
-                            },
-                            _ => {},
-                        }
+                        data.set_path(&v, a[0].clone());
                     }
                 }
                 
