@@ -3,18 +3,22 @@ use parse::Env;
 use var::Var;
 use source::{Src,Next};
 
+pub fn as_path<'a> (lookup: &'a str) -> (Option<Vec<&'a str>>, &'a str) {
+    let mut lookups: Vec<&'a str> = lookup.split_terminator('.').collect();
+    let item = lookups.pop().unwrap();
+
+    let path;
+    if lookups.len() > 0 { path = Some(lookups); }
+    else { path = None }
+
+    (path,item)
+}
+
 pub trait Eval {
     fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var>;
 
     fn as_path<'a> (&self, lookup: &'a str) -> (Option<Vec<&'a str>>, &'a str) {
-        let mut lookups: Vec<&'a str> = lookup.split_terminator('.').collect();
-        let item = lookups.pop().unwrap();
-
-        let path;
-        if lookups.len() > 0 { path = Some(lookups); }
-        else { path = None }
-
-        (path,item)
+        as_path(lookup)
     }
                                           
     fn get_path (&self, lookup: &str) -> Option<Var> {
@@ -87,6 +91,29 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
         if let Some(node) = node {
             self.next_node = node;
         }
+    }
+
+    pub fn get_symbol (&self, s: &str) -> Option<Var> {
+        if s.chars().next().unwrap() == '`' {
+            let (path,lookup) = as_path(&s[1..]);
+            if let Some(path) = path {
+                if let Some(ref def) = self.env.def.get(path[0]) {
+                    if let Some(v) = def.def.get(&lookup[..]) {
+                        return Some(v.clone())
+                    }
+                }
+                else {
+                    let v = self.data.get(Some(path),lookup);
+                    if v.is_some() { return v }
+                }
+            }
+            else {
+                let v = self.data.get_path(&s[1..]);
+                if v.is_some() { return v }
+            }
+        }
+
+        None
     }
     
     pub fn run (&mut self, node_name: &str)
@@ -174,19 +201,15 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                     // NOTE: we should move this out to a SYM varkind instead
                     // (parsed earlier)
                     if s.split_terminator(' ').count() == 1 {
-                        if s.chars().next().unwrap() == '`' {
-                            if let Some(ref val_) = self.data.get_path(&s[1..]) {
-                                val = Some(val_.clone());
-                            }
-                        }
+                        val = self.get_symbol(&s);
                     }
                     else {
                         for word in s.split_terminator(' ') {
                             if started { fs.push(' '); }
                             
                             if word.chars().next().unwrap() == '`' {
-                                if let Some(ref val_) = self.data.get_path(&word[1..]) {
-                                    fs.push_str(&val_.to_string());
+                                if let Some(ref v) = self.get_symbol(&word) {
+                                    fs.push_str(&v.to_string());
                                 }
                             }
                             else {

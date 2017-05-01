@@ -381,3 +381,24 @@ fn parse_cust_fn() {
 
     assert_eq!(data.coins, 6.0);
 }
+
+
+#[test]
+fn parse_def_block() {
+    let src = "root\n
+    emit `global.name `global.size\n
+;\n
+\n
+def global\n
+    name my-game\n
+    size 1.5\n
+;";
+    
+    let mut env = Parser::parse_blocks(src).into_env();
+    let mut data = Data;
+    
+    let mut ev = Evaluator::new(&mut env, &mut data);
+    let (vars,_) = ev.next().unwrap();
+
+    assert_eq!(vars[0], Var::String("my-game".to_owned()));
+}

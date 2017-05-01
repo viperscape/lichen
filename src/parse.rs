@@ -14,7 +14,7 @@ pub struct SrcBlock {
 #[derive(Debug,PartialEq)]
 pub struct DefBlock {
     pub name: String,
-    pub defs: Vec<(String,Var)>
+    pub def: HashMap<String,Var>
 }
 
 #[derive(Debug,PartialEq)]
@@ -82,12 +82,12 @@ impl Parser {
                 
                 // determine block type
                 if block.is_none() {
-                    let name = exps.pop().unwrap();
+                    let name = exps.remove(0);
                     
                     if name == "def" {
                         let b = DefBlock {
                             name: exps.pop().unwrap(),
-                            defs: vec!()
+                            def: HashMap::new(),
                         };
                         
                         block = Some(Block::Def(b));
@@ -123,8 +123,8 @@ impl Parser {
                     
                     match block {
                         Some(Block::Def(ref mut b)) => {
-                            b.defs.push((exps[0].to_owned(),
-                                         Var::parse(exps[1].to_owned())));
+                            b.def.insert(exps[0].to_owned(),
+                                          Var::parse(exps[1].to_owned()));
                         },
                         Some(Block::Src(ref mut b)) => {
                             let mut srcs = vec![];
