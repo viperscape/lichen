@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use ::{Logic,Expect};
 use eval::Eval;
 use var::{Var,Mut};
-use parse::{Parser,Map,Def};
+use parse::{Parser,Map,Def,IR};
 
 /// delimited by new line
 #[derive(Debug,PartialEq)]
@@ -340,67 +340,73 @@ impl Src {
         }
     }
     
-    pub fn parse(mut exp: Vec<String>) -> Src {
-        if exp[0].chars().next() == Some('@') { //mutating statement
-            let (m, v, a) = Mut::parse(&mut exp);
-            return Src::Mut(m,v,a)
-        }
-        if exp[0] == "if" {
-            if exp.len() < 3 { panic!("ERROR: Invalid IF Logic {:?}",exp) }
-
-            let _ = exp.remove(0);
-            let x = exp.remove(0);
-
-            let next = Next::parse(&mut exp);
-            
-            let v = exp.drain(..).map(|n| Var::parse(n)).collect();
-
-            Src::If(Expect::parse(x),
-                    v, next)
-        }
-        else if exp[0] == "or" {
-            if exp.len() < 2 { panic!("ERROR: Invalid OR Logic {:?}",exp) }
-
-            let next = Next::parse(&mut exp);
-            
-            let v = exp.drain(1..).map(|n| Var::parse(n)).collect();
-            Src::Or(v,next)
-        }
-        else if &exp[0].split_terminator(':').next() == &Some("next") {
-            if let Some(next) = Next::parse_bare(&mut exp) {
-                Src::Next(next)
-            }
-            else { panic!("ERROR: Invalid NEXT Logic {:?}",exp) }
-        }
-        else if exp[0] == "emit" {
-            if exp.len() > 1 {
-                let mut v = vec![];
-                for e in exp.drain(1..) {
-                    v.push(Var::parse(e));
+    pub fn parse(mut exp: Vec<IR>) -> Src {
+        let ir = exp.remove(0);
+        match ir {
+            IR::Sym(ref sym) => {
+                if sym.chars().next() == Some('@') { //mutating statement
+                    let (m, v, a) = Mut::parse(&mut exp);
+                    return Src::Mut(m,v,a)
                 }
+                else if sym == "if" {
+                    if exp.len() < 3 { panic!("ERROR: Invalid IF Logic {:?}",exp) }
 
-                Src::Emit(v)
-            }
-            else { panic!("ERROR: Missing EMIT Logic {:?}",exp) }
-        }
-        else {
-            let keys = exp.remove(0);
-            let mut keys: Vec<&str> = keys.split_terminator(':').collect();
+                    let _ = exp.remove(0);
+                    let x = exp.remove(0);
 
-            if keys.len() < 2 { // regular logic
-                Src::Logic(keys.pop().unwrap().to_owned(),
-                               Logic::parse(exp))
-            }
-            else { // composite type
-                let kind = Expect::parse(keys.pop().unwrap().to_owned());
-                match kind { // only formal expected types allowed
-                    Expect::Ref(_) => { panic!("ERROR: Informal Expect found {:?}", kind) },
-                    _ => {}
+                    let next = Next::parse(&mut exp);
+                    
+                    let v = exp.drain(..).map(|n| Var::parse(n)).collect();
+
+                    Src::If(Expect::parse(x),
+                            v, next)
                 }
-                Src::Composite(keys.pop().unwrap().to_owned(),
-                                   kind,
-                                   exp)
-            }
+                else if sym == "or" {
+                    if exp.len() < 2 { panic!("ERROR: Invalid OR Logic {:?}",exp) }
+
+                    let next = Next::parse(&mut exp);
+                    
+                    let v = exp.drain(1..).map(|n| Var::parse(n)).collect();
+                    Src::Or(v,next)
+                }
+                else if &exp[0].split_terminator(':').next() == &Some("next") {
+                    if let Some(next) = Next::parse_bare(&mut exp) {
+                        Src::Next(next)
+                    }
+                    else { panic!("ERROR: Invalid NEXT Logic {:?}",exp) }
+                }
+                else if exp[0] == "emit" {
+                    if exp.len() > 1 {
+                        let mut v = vec![];
+                        for e in exp.drain(1..) {
+                            v.push(Var::parse(e));
+                        }
+
+                        Src::Emit(v)
+                    }
+                    else { panic!("ERROR: Missing EMIT Logic {:?}",exp) }
+                }
+                else {
+                    let keys = exp.remove(0);
+                    let mut keys: Vec<&str> = keys.split_terminator(':').collect();
+
+                    if keys.len() < 2 { // regular logic
+                        Src::Logic(keys.pop().unwrap().to_owned(),
+                                   Logic::parse(exp))
+                    }
+                    else { // composite type
+                        let kind = Expect::parse(keys.pop().unwrap().to_owned());
+                        match kind { // only formal expected types allowed
+                            Expect::Ref(_) => { panic!("ERROR: Informal Expect found {:?}", kind) },
+                            _ => {}
+                        }
+                        Src::Composite(keys.pop().unwrap().to_owned(),
+                                       kind,
+                                       exp)
+                    }
+                }
+            },
+            _ => {},
         }
     }
 }

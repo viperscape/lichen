@@ -43,6 +43,7 @@ impl Logic {
         
         if len == 1 {
             let mut exp = exp.pop().unwrap();
+            let _ = exp.remove(0); //remove internal marker
             let inv = exp.remove(0);
             if inv == '!' {
                 Logic::IsNot(exp)
@@ -66,7 +67,7 @@ impl Logic {
             else if sym == "<" {
                 Logic::LT(key,var)
             }
-            else { panic!("ERROR: Invalid Logic Syntax") }
+            else { panic!("ERROR: Invalid Logic Syntax {:?}", exp) }
         }
         else { panic!("ERROR: Unbalanced Logic Syntax ({:?})",exp) }
     }

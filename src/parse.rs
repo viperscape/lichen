@@ -24,6 +24,28 @@ pub enum Block {
     Def(DefBlock),
 }
 
+pub enum IR {
+    String(String),
+    Sym(String),
+}
+
+impl From<IR> for String {
+    fn from(t:IR) -> String {
+        match t {
+            IR::String(s) => s,
+            IR::Sym(s) => s,
+        }
+    }
+}
+impl<'a> From<&'a mut IR> for String {
+    fn from(t:&mut IR) -> String {
+        match t {
+            &mut IR::String(s) => s,
+            &mut IR::Sym(s) => s,
+        }
+    }
+}
+
 
 pub type Map = HashMap<String,Vec<String>>;
 
@@ -39,7 +61,7 @@ impl Parser {
     pub fn parse_blocks (src: &str) -> Parser {
         let mut v = vec!();
         let mut exp = String::new();
-        let mut exps: Vec<String> = vec!();
+        let mut exps: Vec<IR> = vec!();
         let mut block: Option<Block> = None;
 
         let mut in_string = false;
@@ -72,9 +94,9 @@ impl Parser {
                 && !in_string
             {
                 for n in exp.split_whitespace() {
-                    exps.push(n.trim().to_owned());
+                    exps.push(IR::Sym(n.trim().to_owned()));
                 }
-                if c == '}' { exps.push("}".to_owned()); } //add this back in manually
+                if c == '}' { exps.push(IR::Sym("}".to_owned())); } //add this back in manually
                 
                 exp = String::new();
 
@@ -83,11 +105,10 @@ impl Parser {
                 
                 // determine block type
                 if block.is_none() {
-                    let name = exps.remove(0);
-                    
+                    let name = exps.remove(0).into();
                     if name == "def" {
                         let b = DefBlock {
-                            name: exps.pop().unwrap(),
+                            name: exps.pop().unwrap().into(),
                             def: HashMap::new(),
                         };
                         
@@ -103,20 +124,26 @@ impl Parser {
                         
                         block = Some(Block::Src(b));
                     }
+                    
                 }
                 else { // build block type
                     let mut qsyms = vec!();
 
                     if exps.len() > 2 { //must be if/or/comp blocks
                         for n in exps.iter_mut() {
-                            if n.chars().next().expect("ERROR: Empty Eager Symbol") == '!' {
-                                let mut sym = "not_".to_owned();
-                                sym.push_str(n[1..].trim());
-                                
-                                let osym = n.trim().to_owned();
-                                
-                                qsyms.push((sym.clone(),osym));
-                                *n = sym;
+                            match n {
+                                &mut IR::Sym(ref mut s) => {
+                                    if s.chars().next().expect("ERROR: Empty Eager Symbol") == '!' {
+                                        let mut sym = "not_".to_owned();
+                                        sym.push_str(s[1..].trim());
+                                        
+                                        let osym = s.trim().to_owned();
+                                        
+                                        qsyms.push((sym.clone(),osym));
+                                        *s = sym;
+                                    }
+                                },
+                                _ => {},
                             }
                         }
                     }
@@ -124,8 +151,8 @@ impl Parser {
                     
                     match block {
                         Some(Block::Def(ref mut b)) => {
-                            b.def.insert(exps[0].to_owned(),
-                                          Var::parse(exps[1].to_owned()));
+                            b.def.insert(exps[0].into(),
+                                         Var::parse(exps[1].into()));
                         },
                         Some(Block::Src(ref mut b)) => {
                             let mut srcs = vec![];
@@ -166,7 +193,7 @@ impl Parser {
                 in_string = !in_string;
                 if in_string {
                     for n in exp.split_whitespace() {
-                        exps.push(n.trim().to_owned());
+                        exps.push(IR::Sym(n.trim().to_owned()));
                     }
                     exp = String::new();
                 }

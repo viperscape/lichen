@@ -303,11 +303,13 @@ fn parse_select_nodes() {
 #[derive(Debug)]
 struct Player {
     coins: f32,
+    name: String
 }
 impl Eval for Player {
     #[allow(unused_variables)]
     fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var> {
         if lookup == "coins" { Some(self.coins.into()) }
+        else if lookup == "name" { Some(self.name.clone().into()) }
         else { None }
     }
 
@@ -317,6 +319,14 @@ impl Eval for Player {
             match var {
                 Var::Num(n) => {
                     self.coins = n;
+                },
+                _ => {}
+            }
+        }
+        else if lookup == "name" {
+            match var {
+                Var::String(s) => {
+                    self.name = s;
                 },
                 _ => {}
             }
@@ -355,7 +365,7 @@ fn state_mut() {
 ;";
     
     let mut env = Parser::parse_blocks(src).into_env();
-    let mut data = Player { coins: 0.0 };
+    let mut data = Player { coins: 0.0, name: "Pan".to_owned() };
     
     {
         let mut ev = Evaluator::new(&mut env, &mut data);
@@ -372,7 +382,7 @@ fn parse_cust_fn() {
 ;";
     
     let mut env = Parser::parse_blocks(src).into_env();
-    let mut data = Player { coins: 0.0 };
+    let mut data = Player { coins: 0.0, name: "Pan".to_owned() };
     
     {
         let mut ev = Evaluator::new(&mut env, &mut data);
@@ -386,7 +396,7 @@ fn parse_cust_fn() {
 #[test]
 fn parse_def_block() {
     let src = "root\n
-    emit `global.name `global.size\n
+    emit global.name global.size\n
 ;\n
 \n
 def global\n
@@ -409,7 +419,10 @@ fn validate_def_block() {
     let src = "root\n
     @global.size + 0.5\n
     @global.name other-game\n
-    emit `global.name `global.size\n
+    @name global.name\n
+    @coins + global.size\n
+    emit [global.name global.size\n
+         name coins]\n
 ;\n
 \n
 def global\n
@@ -418,11 +431,14 @@ def global\n
 ;";
     
     let mut env = Parser::parse_blocks(src).into_env();
-    let mut data = Data;
+    let mut data = Player { coins: 0.0, name: "Pan".to_owned() };
     
     let mut ev = Evaluator::new(&mut env, &mut data);
     let (vars,_) = ev.next().unwrap();
 
     assert_eq!(vars[0], Var::String("other-game".to_owned()));
     assert_eq!(vars[1], Var::Num(2.0 .to_owned()));
+
+    assert_eq!(vars[2], Var::String("other-game".to_owned()));
+    assert_eq!(vars[3], Var::Num(2.0 .to_owned()));
 }

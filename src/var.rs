@@ -39,20 +39,17 @@ impl<'a> From<&'a str> for Var {
 }
 
 impl Var {
-    pub fn parse(t: String) -> Var {
-        let val;
-
+    pub fn parse(mut t: String) -> Var {
         if let Ok(v) = t.parse::<f32>() {
-            val = Var::Num(v);
+            Var::Num(v)
         }
         else if let Ok(v) = t.parse::<bool>() {
-            val = Var::Bool(v);
+            Var::Bool(v)
         }
-        else { val = Var::String(t) }
-        
-        val
+        else { Var::String(t) }
     }
 
+    /// only looks at one reference of a symbol, not a symbol referencing another symbol
     pub fn get_num<D:Eval> (&self, data: &D) -> Result<f32,&'static str> {
         let num;
         match self {
@@ -106,7 +103,10 @@ impl Mut {
         
         if exps.len() > 2 {
             v = exps.remove(0);
-            let x: &str = &exps.remove(0);
+            let mut x = exps.remove(0);
+            let _ = x.remove(0); //remove internal symbol
+            let x: &str = &x;
+            
             a = exps.drain(..).map(|n| Var::parse(n)).collect();
 
             match x {
