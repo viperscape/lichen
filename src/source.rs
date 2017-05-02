@@ -167,10 +167,8 @@ impl Src {
                 let name = name.clone();
                 match logic {
                     &Logic::Is(ref lookup) => {
-                        let r = data.get_path(&lookup);
-                        if r.is_some() {
-                            match r.unwrap() {
-
+                        if let Some(r) = data.get_path(&lookup) {
+                            match r {
                                 Var::Bool(v) => { state.insert(name,v); },
                                 _ => { state.insert(name,true); }, //if exists?
                             }

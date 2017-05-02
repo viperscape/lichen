@@ -1,3 +1,4 @@
+
 use std::collections::HashMap;
 use parse::Env;
 use var::Var;
@@ -207,10 +208,8 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                         for word in s.split_terminator(' ') {
                             if started { fs.push(' '); }
                             
-                            if word.chars().next().unwrap() == '`' {
-                                if let Some(ref v) = self.get_symbol(&word) {
-                                    fs.push_str(&v.to_string());
-                                }
+                            if let Some(ref v) = self.get_symbol(&word) {
+                                fs.push_str(&v.to_string());
                             }
                             else {
                                 fs.push_str(word);
