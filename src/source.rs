@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use ::{Logic,Expect};
 use eval::Eval;
 use var::{Var,Mut};
-use parse::{Parser,Map};
+use parse::{Parser,Map,Def};
 
 /// delimited by new line
 #[derive(Debug,PartialEq)]
@@ -108,16 +108,28 @@ impl Next {
 
 
 impl Src {
-    pub fn eval<D:Eval> (&self, state: &mut HashMap<String,bool>, data: &mut D)
-                     -> (Vec<Var>,Option<Next>)
+    pub fn eval<D:Eval> (&self, state: &mut HashMap<String,bool>,
+                         data: &mut D,
+                         def: &mut Def)
+                         -> (Vec<Var>,Option<Next>)
     {
         match self {
             &Src::Mut(ref m, ref v, ref a) => {
                 match m {
                     &Mut::Add | &Mut::Sub | &Mut::Mul | &Mut::Div => {
                         let mut num = None;
-                        if let Ok(v1) = Var::get_num(&Var::String(v.to_owned()), data) {
-                            if let Ok(v2) = Var::get_num(&a[0], data) {
+
+                        let var_name = Var::String(v.to_owned());
+                        let mut v1 = Var::get_num(&var_name, def);
+                        let is_def = v1.is_ok();
+                        if !is_def { v1 = Var::get_num(&var_name, data); }
+                        
+                        if let Ok(v1) = v1 {
+                            let var_name = &a[0];
+                            let mut v2 = Var::get_num(&var_name, def);
+                            if v2.is_err() { v2 = Var::get_num(&var_name, data); }
+                            
+                            if let Ok(v2) = v2 {
                                 match m {
                                     &Mut::Add => {
                                         num = Some(v1+v2);
@@ -137,11 +149,16 @@ impl Src {
                         }
                         
                         if let Some(num) = num {
-                            data.set_path(&v, Var::Num(num));
+                            if is_def { def.set_path(&v, Var::Num(num)); }
+                            else { data.set_path(&v, Var::Num(num)); }
                         }
                     },
                     &Mut::Swap => {
-                        data.set_path(&v, a[0].clone());
+                        let val = a[0].clone();
+                        if def.get_path(v).is_some() {
+                            def.set_path(v,val);
+                        }
+                        else { data.set_path(&v, val); }
                     },
                     &Mut::Fn(ref fun) => {
                         if let Some(var) = data.get_path(&v) {

@@ -165,7 +165,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                 }
                     
                 
-                let (mut vars, next) = src.eval(&mut state, self.data);
+                let (mut vars, next) = src.eval(&mut state, self.data, &mut self.env.def);
 
                 // reset if if was successful
                 if (vars.len() > 0) || next.is_some() { or_valid = false; }

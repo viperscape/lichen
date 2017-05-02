@@ -2,6 +2,7 @@ use std::collections::{HashMap,BTreeSet};
 
 use source::Src;
 use var::Var;
+use eval::Eval;
 
 #[derive(Debug,PartialEq)]
 pub struct SrcBlock {
@@ -254,7 +255,52 @@ impl Parser {
     }
 }
 
+
+pub type Def = HashMap<String, DefBlock>;
+
+impl Env {
+    pub fn def_contains(def: &Def, path: Option<Vec<&str>>, lookup: &str) -> bool {
+        if let Some(path) = path {
+            if let Some(ref def) = def.get(path[0]) {
+                return def.def.contains_key(lookup)
+            }
+        }
+
+        false
+    }
+}
+
 pub struct Env {
-    pub def: HashMap<String, DefBlock>,
+    pub def: Def,
     pub src: HashMap<String, SrcBlock>
+}
+
+impl Eval for Def {
+    fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var> {
+        if let Some(path) = path {
+            if let Some(ref def) = self.get(path[0]) {
+                if let Some(v) = def.def.get(lookup) {
+                    return Some(v.clone())
+                }
+            }
+        }
+
+        None
+    }
+
+    #[allow(unused_variables)]
+    fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var) {
+        if let Some(path) = path {
+            if let Some(ref mut def) = self.get_mut(path[0]) {
+                if let Some(v) = def.def.get_mut(lookup) {
+                    *v = var;
+                }
+            }
+        }
+    }
+
+    #[allow(unused_variables)]
+    fn call (&mut self, var: Var, fun: &str, vars: &Vec<Var>) -> Option<Var> {
+        None
+    }
 }
