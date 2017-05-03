@@ -24,6 +24,7 @@ pub enum Block {
     Def(DefBlock),
 }
 
+#[derive(Debug,Clone,PartialEq)]
 pub enum IR {
     String(String),
     Sym(String),
@@ -37,17 +38,10 @@ impl From<IR> for String {
         }
     }
 }
-impl<'a> From<&'a mut IR> for String {
-    fn from(t:&mut IR) -> String {
-        match t {
-            &mut IR::String(s) => s,
-            &mut IR::Sym(s) => s,
-        }
-    }
-}
 
 
-pub type Map = HashMap<String,Vec<String>>;
+
+pub type Map = HashMap<String,Vec<Var>>;
 
 pub struct Parser(Vec<Block>);
 
@@ -151,8 +145,9 @@ impl Parser {
                     
                     match block {
                         Some(Block::Def(ref mut b)) => {
-                            b.def.insert(exps[0].into(),
-                                         Var::parse(exps[1].into()));
+                            let v = exps.pop().unwrap();
+                            b.def.insert(exps.pop().unwrap().into(),
+                                         Var::parse(v));
                         },
                         Some(Block::Src(ref mut b)) => {
                             let mut srcs = vec![];
@@ -161,7 +156,8 @@ impl Parser {
                                 if usyms.contains(&qsym) { continue }
                                 usyms.insert(qsym.clone());
                                 
-                                let src = Src::parse(vec![qsym,sym]);
+                                let src = Src::parse(vec![IR::Sym(qsym),
+                                                          IR::Sym(sym)]);
                                 srcs.push(src);
                             }
 
@@ -191,14 +187,14 @@ impl Parser {
             }
             else if c == '"' && !in_comment {
                 in_string = !in_string;
-                if in_string {
+                if in_string { //starting a new quoted string? let's push this sym
                     for n in exp.split_whitespace() {
                         exps.push(IR::Sym(n.trim().to_owned()));
                     }
                     exp = String::new();
                 }
-                else if !in_string {
-                    exps.push(exp);
+                else if !in_string { //finished the quoted string?
+                    exps.push(IR::String(exp));
                     exp = String::new();
                 }
             }
@@ -238,26 +234,35 @@ impl Parser {
         Env { def: def, src: src }
     }
 
-    pub fn parse_map (exps: &mut Vec<String>) -> Option<Map> {
+    pub fn parse_map (exps: &mut Vec<IR>) -> Option<Map> {
         let mut map: Map = HashMap::new(); // optionally unbounded val-lengths
 
-        let mut arg = exps.remove(0);
-        if arg.chars().next() != Some('{') { return None }
-        let _ = arg.remove(0);
+        let arg = exps.remove(0);
+        let mut sym;
+        match arg {
+            IR::Sym(mut s) => {
+                if s.chars().next() != Some('{') { return None }
+                s.remove(0);
+                sym = s;
+            },
+            _ => { return None }
+        }
         
-        if exps.pop().expect("ERROR: Unbalanced MAP") != "}" { return None }
+        if exps.pop()
+            .expect("ERROR: Unbalanced MAP") != IR::Sym("}".to_owned())
+        { return None }
         if exps.len() < 1 { return None }
 
         let mut size_hint = 0;
         
-        if arg.chars().next() == Some('^') { //size hint provided
-            let _ = arg.remove(0);
-            if let Ok(v) = arg.parse::<usize>() {
+        if sym.chars().next() == Some('^') { //size hint provided
+            let _ = sym.remove(0);
+            if let Ok(v) = sym.parse::<usize>() {
                 size_hint = v;
             }
             else { panic!("ERROR: Invalid Size-hint provided for MAP"); }
         }
-        else { exps.insert(0,arg); } //put back if not a sizehint!
+        else { exps.insert(0,IR::Sym(sym)); } //put back if not a sizehint!
 
         if size_hint == 0 { size_hint = 1; } // single-element map is default
         
@@ -265,9 +270,17 @@ impl Parser {
         let mut vals = vec![];
         
         for n in exps.drain(..) {
-            if key.is_empty() { key = n; continue }
+            match n {
+                IR::String(s) => {
+                    if key.is_empty() { key = s; }
+                    else { vals.push(Var::String(s)); }
 
-            vals.push(n);
+                    continue
+                },
+                _=> {},
+            }
+
+            vals.push(Var::parse(n));
 
             if vals.len() == size_hint {
                 map.insert(key,vals);

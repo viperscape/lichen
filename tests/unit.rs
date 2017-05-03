@@ -1,6 +1,6 @@
 extern crate lichen;
 
-use lichen::parse::{Parser,Block,SrcBlock};
+use lichen::parse::{Parser,Block,SrcBlock,Map};
 use lichen::{Logic,Expect};
 use lichen::var::Var;
 use lichen::source::{Src,Next};
@@ -291,9 +291,9 @@ fn parse_select_nodes() {
 
     assert_eq!(select1,select2);
     
-    let mut map = HashMap::new();
-    map.insert("Head to Store?".to_owned(), vec!["store".to_owned()]);
-    map.insert("Leave the town?".to_owned(), vec!["exit-town".to_owned()]);
+    let mut map: Map = HashMap::new();
+    map.insert("Head to Store?".to_owned(), vec![Var::String("store".to_owned())]);
+    map.insert("Leave the town?".to_owned(), vec![Var::String("exit-town".to_owned())]);
     
     assert_eq!(select1, Some(Next::Select(map)));
 }

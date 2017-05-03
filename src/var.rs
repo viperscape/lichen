@@ -1,4 +1,5 @@
 use eval::Eval;
+use parse::IR;
 
 #[derive(Debug,PartialEq, Clone)]
 pub enum Var {
@@ -39,14 +40,19 @@ impl<'a> From<&'a str> for Var {
 }
 
 impl Var {
-    pub fn parse(mut t: String) -> Var {
-        if let Ok(v) = t.parse::<f32>() {
-            Var::Num(v)
+    pub fn parse(t: IR) -> Var {
+        match t {
+            IR::Sym(t) => {
+                if let Ok(v) = t.parse::<f32>() {
+                    Var::Num(v)
+                }
+                else if let Ok(v) = t.parse::<bool>() {
+                    Var::Bool(v)
+                }
+                else { Var::String(t) }
+            },
+            IR::String(s) => { Var::String(s) }
         }
-        else if let Ok(v) = t.parse::<bool>() {
-            Var::Bool(v)
-        }
-        else { Var::String(t) }
     }
 
     /// only looks at one reference of a symbol, not a symbol referencing another symbol
@@ -96,15 +102,14 @@ impl Mut {
         None
     }
     
-    pub fn parse(exps: &mut Vec<String>) -> (Mut, String, Vec<Var>) {
+    pub fn parse(exps: &mut Vec<IR>) -> (Mut, String, Vec<Var>) {
         let m;
-        let mut v;
+        let mut v: String;
         let a;
         
         if exps.len() > 2 {
-            v = exps.remove(0);
-            let mut x = exps.remove(0);
-            let _ = x.remove(0); //remove internal symbol
+            v = exps.remove(0).into();
+            let x: String = exps.remove(0).into();
             let x: &str = &x;
             
             a = exps.drain(..).map(|n| Var::parse(n)).collect();
@@ -126,7 +131,7 @@ impl Mut {
         }
         else {
             a = vec![Var::parse(exps.pop().unwrap())];
-            v = exps.pop().unwrap();
+            v = exps.pop().unwrap().into();
             m = Mut::Swap;
         }
 

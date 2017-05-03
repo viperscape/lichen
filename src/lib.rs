@@ -4,6 +4,7 @@ pub mod source;
 pub mod var;
 
 use var::Var;
+use parse::IR;
 
 #[derive(Debug,PartialEq)]
 pub enum Expect {
@@ -38,12 +39,11 @@ pub enum Logic {
 }
 
 impl Logic {
-    pub fn parse(mut exp: Vec<String>) -> Logic {
+    pub fn parse(mut exp: Vec<IR>) -> Logic {
         let len = exp.len();
         
         if len == 1 {
-            let mut exp = exp.pop().unwrap();
-            let _ = exp.remove(0); //remove internal marker
+            let mut exp: String = exp.pop().unwrap().into();
             let inv = exp.remove(0);
             if inv == '!' {
                 Logic::IsNot(exp)
@@ -57,7 +57,7 @@ impl Logic {
             let var = exp.pop().unwrap();
             let var = Var::parse(var);
 
-            let sym = exp.pop().unwrap();
+            let sym: String = exp.pop().unwrap().into();
             let key = exp.pop().unwrap();
             let key = Var::parse(key);
             

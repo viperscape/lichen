@@ -110,10 +110,10 @@ fn main() {
                     println!("\nEnter in a destination");
 
                     // we're going to invert K/V for convenience for input
-                    let mut choices = HashMap::new();
+                    let mut choices: HashMap<String,String> = HashMap::new();
                     for (key,val) in selects.iter() {
                         println!("{:?}, type {:?}", key, val[0]);
-                        choices.insert(val[0].clone(),key.clone());
+                        choices.insert(val[0].to_string(),key.clone());
                     }
                     
                     let mut line = String::new();
