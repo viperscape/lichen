@@ -3,7 +3,8 @@
 ##### Blocks
 
 Blocks are regions of code that designate logic/actions
-Currently there are two types of blocks, a block prefixed with ```def``` is for defining variables and setting meta in key/value format, each on a new line. All other blocks are considered as nodes and follows standard logic rules.
+Currently there are two types of blocks, a block prefixed with ```def``` is for defining variables and setting meta in key/value format, each on a new line.
+All other blocks are considered as nodes and follows standard logic rules.
 Defining a block starts with the name identifier and ends with a semicolon, each individually on its corresponding line.
 
 ```
@@ -11,6 +12,25 @@ some_block
 
 ;
 ```
+
+A def block offers local environment variables to define
+
+```
+def my-env
+    size 5
+;
+```
+
+##### Variables
+
+Currently there is support for basic variable types
+- Boolean
+- Float (32 bit)
+- String
+- Symbol
+
+Whole numbers are parsed in as floats. Strings are built from quoted strings in source, and any non-quoted text is considered a symbol.
+
 
 ##### Comments
 
