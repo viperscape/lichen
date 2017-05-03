@@ -6,12 +6,14 @@ pub enum Var {
     String(String),
     Num(f32),
     Bool(bool),
+    Sym(String),
 }
 
 impl ToString for Var {
     fn to_string(&self) -> String {
         match self {
             &Var::String(ref s) => s.clone(),
+            &Var::Sym(ref s) => s.clone(),
             &Var::Num(ref n) => n.to_string(),
             &Var::Bool(ref b) => b.to_string(),
         }
@@ -49,7 +51,7 @@ impl Var {
                 else if let Ok(v) = t.parse::<bool>() {
                     Var::Bool(v)
                 }
-                else { Var::String(t) }
+                else { Var::Sym(t) }
             },
             IR::String(s) => { Var::String(s) }
         }
@@ -60,7 +62,7 @@ impl Var {
         let num;
         match self {
             &Var::Num(n) => { num = n; },
-            &Var::String(ref s) => {
+            &Var::Sym(ref s) => {
                 if let Some(n) = data.get_path(s) {
                     match n {
                         Var::Num(n) => { num = n; },

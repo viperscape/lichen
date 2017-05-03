@@ -170,7 +170,20 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                 // reset if if was successful
                 if (vars.len() > 0) || next.is_some() { or_valid = false; }
 
-                for n in vars.drain(..) { r.push(n); }
+                for n in vars.drain(..) {
+                    match n {
+                        Var::Sym(s) => {
+                            if let Some(val) = self.env.def.get_path(&s) {
+                                r.push(val);
+                            }
+                            else if let Some(val) = self.data.get_path(&s) {
+                                r.push(val);
+                            }
+                            // otherwise we silently fail
+                        },
+                        _ => { r.push(n); }
+                    }
+                }
                 
                 if let Some(next) = next {
                     match next {

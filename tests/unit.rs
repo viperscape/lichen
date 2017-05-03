@@ -67,7 +67,7 @@ fn parse_block() {
                                  Logic::IsNot("some_item".to_owned())),
                       
                       Src::Logic("has_weight".to_owned(),
-                                 Logic::LT("some_weight".into(), 5.0 .into())),
+                                 Logic::LT(Var::Sym("some_weight".to_owned()), 5.0 .into())),
                       Src::Composite("some_comp".to_owned(),
                                      Expect::Any,
                                      vec!["unequipped".to_owned(),"has_weight".to_owned()]),
@@ -79,10 +79,8 @@ fn parse_block() {
                               None),
                       Src::Next(Next::Now("end".to_owned()))]
         })];
-
-    for (n,n_) in block.iter().zip(block_.iter()) {
-        assert_eq!(n,n_);
-    }
+    
+    assert_eq!(block[0],block_[0]);
 }
 
 #[test]
@@ -237,7 +235,7 @@ fn parse_compare_env_block() {
 fn parse_return_varkind() {
     let src = "root\n
     weight some_weight < other_weight\n
-    if weight `some_weight \"hi `name\"\n
+    if weight some_weight \"hi `name\"\n
 ;";
 
     let mut env = Parser::parse_blocks(src).into_env();
@@ -292,8 +290,8 @@ fn parse_select_nodes() {
     assert_eq!(select1,select2);
     
     let mut map: Map = HashMap::new();
-    map.insert("Head to Store?".to_owned(), vec![Var::String("store".to_owned())]);
-    map.insert("Leave the town?".to_owned(), vec![Var::String("exit-town".to_owned())]);
+    map.insert("Head to Store?".to_owned(), vec![Var::Sym("store".to_owned())]);
+    map.insert("Leave the town?".to_owned(), vec![Var::Sym("exit-town".to_owned())]);
     
     assert_eq!(select1, Some(Next::Select(map)));
 }
@@ -400,7 +398,7 @@ fn parse_def_block() {
 ;\n
 \n
 def global\n
-    name my-game\n
+    name \"my-game\"\n
     size 1.5\n
 ;";
     
@@ -418,15 +416,15 @@ def global\n
 fn validate_def_block() {
     let src = "root\n
     @global.size + 0.5\n
-    @global.name other-game\n
+    @global.name \"other-game\"\n
     @name global.name\n
-    @coins + global.size\n
+    @coins - global.size\n
     emit [global.name global.size\n
          name coins]\n
 ;\n
 \n
 def global\n
-    name my-game\n
+    name \"my-game\"\n
     size 1.5\n
 ;";
     
@@ -439,6 +437,6 @@ def global\n
     assert_eq!(vars[0], Var::String("other-game".to_owned()));
     assert_eq!(vars[1], Var::Num(2.0 .to_owned()));
 
-    assert_eq!(vars[2], Var::String("other-game".to_owned()));
-    assert_eq!(vars[3], Var::Num(2.0 .to_owned()));
+    assert_eq!(vars[2], Var::String("Pan".to_owned()));
+    assert_eq!(vars[3], Var::Num(-2.0 .to_owned()));
 }

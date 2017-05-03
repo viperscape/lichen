@@ -137,7 +137,7 @@ impl Src {
                     &Mut::Add | &Mut::Sub | &Mut::Mul | &Mut::Div => {
                         let mut num = None;
 
-                        let var_name = Var::String(v.to_owned());
+                        let var_name = Var::Sym(v.to_owned());
                         let mut v1 = Var::get_num(&var_name, def);
                         let is_def = v1.is_ok();
                         if !is_def { v1 = Var::get_num(&var_name, data); }
