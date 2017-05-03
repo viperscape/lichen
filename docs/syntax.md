@@ -3,7 +3,7 @@
 ##### Blocks
 
 Blocks are regions of code that designate logic/actions
-Currently there are two types of blocks, a block prefixed with ```def``` is for defining variables and setting meta in key/value format-- Note: this is not formally implemented. All other blocks are considered as nodes and follows standard logic rules.
+Currently there are two types of blocks, a block prefixed with ```def``` is for defining variables and setting meta in key/value format, each on a new line. All other blocks are considered as nodes and follows standard logic rules.
 Defining a block starts with the name identifier and ends with a semicolon, each individually on its corresponding line.
 
 ```
@@ -109,7 +109,7 @@ Emit returns variables back to the caller, and can be a multiline region.
 some_block
     emit "hi"
     emit ["here, have a number and boolean" 2.0 false]
-    emit `name  # reference an environment variable to return
+    emit name  # reference an environment variable to return
 ;
 ```
 
@@ -139,11 +139,12 @@ some_block
 
 ##### Formatting/Reference
 
-Referenced variables can be returned to the caller, as well can be formatted into strings. The ` backtick symbol is used to specify a referenced variable.
+Referenced variables can be returned to the caller, as well can be formatted into strings. The ` backtick symbol is used to specify a referenced variable when formatting a string.
 
 ```
 some_block
     if some_attrib "G'day, you look weary, `name"  # use name variable as apart of response
+    emit name    # emits the name from the environment as a variable
 ;
 ```
 
@@ -159,11 +160,15 @@ some_block
 
 ##### Mutate from Functions
 
-There are a few builtins to mutate external state. To affect data you must prefix the referenced variable with an ```@``` symbol. Currently functions are only called on the top-level of the node, node within statement regions/multilines. It's also possible to implement your own custom function, to call it you simply surround the function-name within parenthesis.
+There are a few builtins to mutate external state. To affect data you must prefix the referenced variable with an ```@``` symbol. Currently functions are only called on the top-level of the node, node within statement regions/multilines. It's also possible to implement your own custom function, to call it you simply surround the function-name within parenthesis. Note, all referenced variables will first be pulled from any ```def``` blocks within the environment, if they do not exist, then it wil be pulled from the rust environment that was originally passed into the Evaluator.
 
 ```
+def globals
+    n 5
+;
+    
 some_block
-    @coins + 1  # increment coins by one, basic math is built in
+    @coins + globals.n  # increment coins by variable in globals block, basic math is built in to lichen
     @coins 5  # swaps the value in
     @coins (inc) 1 2 3  # a custom function that takes multiple arguments
 ;
