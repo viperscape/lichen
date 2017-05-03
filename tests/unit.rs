@@ -215,7 +215,7 @@ fn parse_eval_str_block() {
     let mut ev = Evaluator::new(&mut env, &mut data);
     let (vars,_node) = ev.run("root");
     
-    assert_eq!(vars[0], "looks like you are 4 kgs heavy, Io".into());
+    assert_eq!(vars, ["looks like you are 4 kgs heavy, Io".into()]);
 }
 
 #[test]

@@ -262,7 +262,12 @@ impl Parser {
             }
             else { panic!("ERROR: Invalid Size-hint provided for MAP"); }
         }
-        else { exps.insert(0,IR::Sym(sym)); } //put back if not a sizehint!
+        else {
+            if sym.len() > 0 {
+                exps.insert(0,IR::Sym(sym));  //put back if not a sizehint!
+            }
+        }
+        
 
         if size_hint == 0 { size_hint = 1; } // single-element map is default
         

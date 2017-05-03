@@ -75,11 +75,16 @@ impl Next {
                                 _ => { panic!("ERROR: Invalid Next Type Found {:?}", next_tag) },
                             }
                         }
-                        else {
+                        else if next_tag.next().is_some() {
                             panic!("ERROR: Unknown Tag encountered {:?}", next_tag)
+                        }
+                        else {
+                            exp.push(IR::Sym(tag.to_owned()));
+                            exp.push(node);
                         }
                     },
                     _ => {
+                        exp.push(tag);
                         exp.push(node);
                     }
                 }
@@ -354,10 +359,12 @@ impl Src {
     }
     
     pub fn parse(mut exp: Vec<IR>) -> Src {
+        //println!("exp:{:?}",exp);
         let ir = exp.remove(0);
         match ir {
             IR::Sym(ref sym) => {
                 if sym.chars().next() == Some('@') { //mutating statement
+                    exp.insert(0,IR::Sym(sym.to_owned()));
                     let (m, v, a) = Mut::parse(&mut exp);
                     return Src::Mut(m,v,a)
                 }
@@ -365,12 +372,11 @@ impl Src {
                     if exp.len() < 2 { panic!("ERROR: Invalid IF Logic {:?}",exp) }
 
                     let x = exp.remove(0);
-
                     let next = Next::parse(&mut exp);
                     
                     let v = exp.drain(..).map(|n| Var::parse(n)).collect();
 
-                    Src::If(Expect::parse(x.into()), // NOTE: pass IR?
+                    Src::If(Expect::parse(x.into()),
                             v, next)
                 }
                 else if sym == "or" {
@@ -382,6 +388,7 @@ impl Src {
                     Src::Or(v,next)
                 }
                 else if &sym.split_terminator(':').next() == &Some("next") {
+                    exp.insert(0, IR::Sym(sym.to_owned()));
                     if let Some(next) = Next::parse_bare(&mut exp) {
                         Src::Next(next)
                     }
@@ -399,17 +406,12 @@ impl Src {
                     else { panic!("ERROR: Missing EMIT Logic {:?}",exp) }
                 }
                 else {
-                    let keys: String = exp.remove(0).into(); // NOTE: match IR?
-                    let mut keys: Vec<&str> = keys.split_terminator(':').collect();
-
+                    let mut keys: Vec<&str> = sym.split_terminator(':').collect();
                     if keys.len() < 2 { // regular logic
-                        exp.insert(0, IR::Sym(keys.remove(0).to_owned()));
-
                         Src::Logic(sym.to_owned(),
                                    Logic::parse(exp))
                     }
                     else { // composite type
-                        println!("{:?} {:?}",sym, keys);
                         let kind = Expect::parse(keys.pop().unwrap().to_owned());
                         match kind { // only formal expected types allowed
                             Expect::Ref(_) => { panic!("ERROR: Informal Expect found {:?}", kind) },
@@ -417,7 +419,7 @@ impl Src {
                         }
 
                         let exp = exp.drain(..).map(|n| n.into()).collect();
-                        Src::Composite(sym.to_owned(),
+                        Src::Composite(keys.pop().unwrap().to_owned(),
                                        kind,
                                        exp)
                     }
