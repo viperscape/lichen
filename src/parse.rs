@@ -69,28 +69,30 @@ impl Parser {
                             
 
         for c in src.chars() {
-            if c == '[' { in_vec = true; continue }
-            else if c == ']' { in_vec = false; }
-            else if c == '{' { in_map = true; } // we don't skip bc we incl this char
-            else if c == '}' { in_map = false; }
-            else if c == '#' && !in_string { in_comment = true; }
-            else if  c == '\n' && in_comment && !in_string {
-                in_comment = false;
-                continue;
+            if !in_comment && !in_string {
+                if c == '[' { in_vec = true; continue }
+                else if c == ']' { in_vec = false; }
+                else if c == '{' { in_map = true; } // we don't skip bc we incl this char
             }
+            
+            if c == '#' && !in_string { in_comment = true; continue }
+            else if  c == '\n' && in_comment && !in_string { in_comment = false; }
 
-            if c == '\n' && (in_vec || in_map) { continue }
+            if c == '\n' && (in_vec || in_map) && !in_comment && !in_string { continue }
             
             if (c == ']' ||
                 c == '}' ||
                 c == '#' ||
                 c == '\n')
-                && !in_string
+                && !in_string && !in_comment
             {
                 for n in exp.split_whitespace() {
                     exps.push(IR::Sym(n.trim().to_owned()));
                 }
-                if c == '}' { exps.push(IR::Sym("}".to_owned())); } //add this back in manually
+                if c == '}' && in_map && !in_comment{
+                    exps.push(IR::Sym("}".to_owned())); //add this back in manually
+                    in_map = false;
+                }
                 
                 exp = String::new();
 
@@ -200,7 +202,7 @@ impl Parser {
             }
             else if c == ';' && !in_string && !in_comment {
                 //fail otherwise, block should be built!
-                v.push(block.unwrap());
+                v.push(block.expect("ERROR: Parse Block no built!"));
                 usyms.clear(); //clear out on new block
                 block = None;
             }

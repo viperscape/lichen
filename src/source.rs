@@ -359,7 +359,6 @@ impl Src {
     }
     
     pub fn parse(mut exp: Vec<IR>) -> Src {
-        //println!("exp:{:?}",exp);
         let ir = exp.remove(0);
         match ir {
             IR::Sym(ref sym) => {
