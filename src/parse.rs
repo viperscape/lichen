@@ -24,9 +24,13 @@ pub enum Block {
     Def(DefBlock),
 }
 
+/// Intermediate Representation
+///
+/// This is used during the parsing stage
 #[derive(Debug,Clone,PartialEq)]
 pub enum IR {
     String(String),
+    /// A non-quoted string turns into a symbol/token
     Sym(String),
 }
 
@@ -40,7 +44,7 @@ impl From<IR> for String {
 }
 
 
-
+/// Map object for Selects
 pub type Map = HashMap<String,Vec<Var>>;
 
 pub struct Parser(Vec<Block>);
@@ -236,6 +240,10 @@ impl Parser {
         Env { def: def, src: src }
     }
 
+    /// Parses a map from IR
+    ///
+    /// Currently a map must be identically sized
+    /// Future versions will be parsed using commas for variable sized maps
     pub fn parse_map (exps: &mut Vec<IR>) -> Option<Map> {
         let mut map: Map = HashMap::new(); // optionally unbounded val-lengths
 
@@ -302,7 +310,7 @@ impl Parser {
     }
 }
 
-
+/// Def alias used for internal evaluation purposes
 pub type Def = HashMap<String, DefBlock>;
 
 impl Env {
@@ -317,6 +325,7 @@ impl Env {
     }
 }
 
+/// Environment containing all parsed definition and source blocks
 pub struct Env {
     pub def: Def,
     pub src: HashMap<String, SrcBlock>

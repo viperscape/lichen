@@ -4,6 +4,10 @@ use parse::Env;
 use var::Var;
 use source::{Src,Next};
 
+/// Creates a possible path from a dot-seperated string
+///
+/// Returns path, and final symbol
+/// Eg: 'items.bag.coins' becomes -> (Some(Vec['items','bag']), 'coins')
 pub fn as_path<'a> (lookup: &'a str) -> (Option<Vec<&'a str>>, &'a str) {
     let mut lookups: Vec<&'a str> = lookup.split_terminator('.').collect();
     let item = lookups.pop().unwrap();
@@ -15,7 +19,11 @@ pub fn as_path<'a> (lookup: &'a str) -> (Option<Vec<&'a str>>, &'a str) {
     (path,item)
 }
 
+/// Primary Evaluation trait must be implemented to run Evaluator
+///
+/// 
 pub trait Eval {
+    /// Get method to retrieve variable from Rust side
     fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var>;
 
     fn as_path<'a> (&self, lookup: &'a str) -> (Option<Vec<&'a str>>, &'a str) {
@@ -27,7 +35,7 @@ pub trait Eval {
         self.get(path, lookup)
     }
 
-    /// expects var to be written to underlying store
+    /// Expects var to be written to underlying mem/store in Rust
     fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var);
 
     fn set_path (&mut self, lookup: &str, v: Var) {
@@ -35,6 +43,12 @@ pub trait Eval {
         self.set(path,lookup, v);
     }
 
+    /// A custom callable function
+    ///
+    /// Var represents variable to mutate
+    /// Fun is the function name
+    /// Vars are any additional arguments
+    /// Can optionally return variable back to lichen
     fn call (&mut self, var: Var, fun: &str, vars: &Vec<Var>) -> Option<Var>;
 }
 
@@ -75,6 +89,7 @@ impl<'e, 'd, D:Eval + 'd> Iterator for Evaluator<'e, 'd, D>
     }
 
 impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
+    /// Evaluator by default starts on the node named 'root'
     pub fn new (env: &'e mut Env, data: &'d mut D) -> Evaluator<'e, 'd, D> {
         Evaluator {
             env: env, data: data,
@@ -82,6 +97,10 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
             await_node: "".to_owned()
         }
     }
+
+    /// Advances Evaluator to next node
+    ///
+    /// If you specify a node name, Evaluator will start there on next step
     pub fn advance (&mut self, node: Option<String>) {
         if let Some(b) = self.env.src.get_mut(&self.await_node) {
             b.await_idx = 0; //reset on advance
@@ -94,6 +113,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
         }
     }
 
+    /// Gets the symbol's value, to be formatted into a string
     pub fn get_symbol (&self, s: &str) -> Option<Var> {
         if s.chars().next().unwrap() == '`' {
             let (path,lookup) = as_path(&s[1..]);
@@ -116,7 +136,8 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
 
         None
     }
-    
+
+    /// Manually run the Evaluator, starting at node specified
     pub fn run (&mut self, node_name: &str)
                 -> (Vec<Var>, Option<Next>)
         where D: Eval + 'd

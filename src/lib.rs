@@ -6,14 +6,17 @@ pub mod var;
 use var::Var;
 use parse::IR;
 
+/// Expect Types for Composites
 #[derive(Debug,PartialEq)]
 pub enum Expect {
     All,
     Any,
     None,
-    
-    Ref(String) // references env variable set from logic
+
+    /// References env variable
+    Ref(String)  // NOTE: may be renamed to Sym
 }
+
 impl Expect {
     pub fn parse(s: String) -> Expect {
         match &s[..] {
@@ -26,15 +29,20 @@ impl Expect {
 }
 
 
-/// delimited by new line
-/// should resolve to boolean
+/// Logic Variants
+///
+/// These are each to be delimited by a new line
+/// Always should resolve to boolean
 #[derive(Debug,PartialEq)]
 pub enum Logic {
-    GT(Var,Var), // weight > 1
+    /// Greater Than, eg: weight > 1
+    GT(Var,Var),
+    /// Lesser Than
     LT(Var,Var),
 
-    //boolean checks
+    /// Boolean: True
     Is(String),
+    /// Boolean: False
     IsNot(String),
 }
 

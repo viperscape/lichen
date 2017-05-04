@@ -5,32 +5,48 @@ use eval::Eval;
 use var::{Var,Mut};
 use parse::{Parser,Map,Def,IR};
 
-/// delimited by new line
+/// Source block statement types
 #[derive(Debug,PartialEq)]
 pub enum Src {
-    Logic(String, Logic), // ex: item_logic has_item
+    /// Standard logic, eg: has_sword_item i
+    Logic(String, Logic),
 
-    // references logic in env and emits varkinds;
-    // logic must resolve to true
-    // ex: if item_logic give_quest
-    // Can optionally end execution and begin next node
+    /// References logic in env and emits varkinds
+    ///
+    /// Logic must resolve to true
+    /// eg: if item_logic give_quest
+    /// Can optionally end execution and begin next node
     If(Expect, Vec<Var>, Option<Next>),
-    Or(Vec<Var>,Option<Next>), //must follow an previous IF
 
-    Emit(Vec<Var>), //just emits variables
-    
+    /// Or must follow an previous If
+    ///
+    /// Or only fires when previous If logic fails
+    Or(Vec<Var>,Option<Next>),
+
+    /// Just emits variables
+    Emit(Vec<Var>), 
+
+    /// A composite logic type to group logic statements together
     Composite(String,Expect,Vec<String>),
-    Next(Next), // ends execution and begins next node
 
-    Mut(Mut, String, Vec<Var>), // mutate type, var being mutated, argument vars
+    /// Ends execution and begins next node
+    Next(Next),
+
+    /// Mutate type, var being mutated, argument vars
+    Mut(Mut, String, Vec<Var>),
 }
 
 /// Next-node action types
 #[derive(Debug,PartialEq,Clone)]
 pub enum Next {
-    Now(String),  //instantly advances
-    Await(String), //awaits for manual advancement, failure to advance continues current node
-    Select(Map), //select from a group, based on decision
+    /// Instantly advances
+    Now(String),
+
+    /// Awaits for manual advancement, failure to advance continues current node
+    Await(String),
+
+    /// Select from a group, based on decision
+    Select(Map),
 }
 impl Next {
     pub fn parse(exp: &mut Vec<IR>) -> Option<Next> {
@@ -97,7 +113,7 @@ impl Next {
         next
     }
 
-    /// used to parse a top-level next statement
+    /// Used to parse a top-level next statement
     pub fn parse_bare(exp: &mut Vec<IR>) -> Option<Next> {
         if exp.len() < 3 { return Next::parse(exp); }
         

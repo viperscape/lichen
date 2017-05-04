@@ -1,6 +1,9 @@
 use eval::Eval;
 use parse::IR;
 
+/// Supported Var Types
+///
+/// These are parsed from IR variants
 #[derive(Debug,PartialEq, Clone)]
 pub enum Var {
     String(String),
@@ -57,7 +60,9 @@ impl Var {
         }
     }
 
-    /// only looks at one reference of a symbol, not a symbol referencing another symbol
+    /// Get any underlying number
+    ///
+    /// Only looks at one reference of a symbol, not a symbol referencing another symbol
     pub fn get_num<D:Eval> (&self, data: &D) -> Result<f32,&'static str> {
         let num;
         match self {
@@ -78,6 +83,7 @@ impl Var {
     }
 }
 
+/// Mutable state functions
 #[derive(Debug,PartialEq, Clone)]
 pub enum Mut {
     Add,
@@ -85,13 +91,16 @@ pub enum Mut {
     Mul,
     Div,
 
-    Swap, // swap value
+    /// Swaps value
+    Swap,
 
+    /// Custom function reference
     Fn(String),
 }
 
 
 impl Mut {
+    /// Parses in a custom function, symbol must be surrounded by (parenthesis)
     pub fn parse_fn (mut exp: String) -> Option<String> {
         if exp.chars().next() == Some('(') {
             let _ = exp.remove(0);
