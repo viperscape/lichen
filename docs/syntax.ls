@@ -30,6 +30,11 @@ some_block
     @coins 5  # swaps the value in
     @coins (inc) 1 2 3  # a custom function that takes multiple arguments
 
+    needs_coins coins < 1
+    has_name name
+    with {needs_coins @coins + 2,  # perform addition if needs_coins is true
+         has_name @name "new-name"}  # state swap on name
+
     next:now some_block  # start over if user selects wrong entry!
 ;
 
