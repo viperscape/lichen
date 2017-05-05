@@ -1,4 +1,5 @@
 use std::collections::{HashMap,BTreeSet};
+use std::io::prelude::*;
 
 use source::Src;
 use var::Var;
@@ -389,4 +390,21 @@ impl Eval for Def {
     fn call (&mut self, var: Var, fun: &str, vars: &Vec<Var>) -> Option<Var> {
         None
     }
+}
+
+pub struct StreamParser<'a, S:Read> {
+    /// The non-parsed leftovers of a stream that is being buffered actively
+    buf: Vec<&'a str>,
+    stream: S,
+}
+
+impl<'a, S:Read> StreamParser<'a, S> {
+    pub fn new (s: S) -> StreamParser<'a, S> {
+        StreamParser {
+            buf: vec![],
+            stream: s,
+        }
+    }
+
+    
 }
