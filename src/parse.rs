@@ -392,19 +392,41 @@ impl Eval for Def {
     }
 }
 
-pub struct StreamParser<'a, S:Read> {
+pub struct StreamParser<S:Read> {
     /// The non-parsed leftovers of a stream that is being buffered actively
-    buf: Vec<&'a str>,
+    buf: String,
     stream: S,
 }
 
-impl<'a, S:Read> StreamParser<'a, S> {
-    pub fn new (s: S) -> StreamParser<'a, S> {
+impl<S:Read> StreamParser<S> {
+    pub fn new (s: S) -> StreamParser<S> {
         StreamParser {
-            buf: vec![],
+            buf: String::new(),
             stream: s,
         }
     }
 
-    
+    pub fn parse (&mut self) -> Option<Parser> {
+        let mut buf = vec![];
+        if let Ok(n) = self.stream.read(&mut buf[..]) {
+            if n > 0 {
+                if let Ok(s) = String::from_utf8(buf) {
+                    self.buf.push_str(&s);
+                }
+            }
+        }
+
+        let mut parser = None;
+        let mut block = String::new();
+        for c in self.buf.drain(..) {
+            block.push(c);
+            if c == ';' {
+                parser = Some(Parser::parse_blocks(&block));
+            }
+        }
+
+        if !block.is_empty() { self.buf.push_str(&block); } //put back anything if needed
+
+        parser
+    }
 }
