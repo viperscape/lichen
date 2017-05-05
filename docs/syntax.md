@@ -65,7 +65,12 @@ External to if-statements and logic entirely, a block can also contain standard 
 The [Next](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L13-L17) statement defines an optionally pausable region which requires advancement. The statement must be tagged with a next type: now, await or select.
 
 
-To pass multiple node entries to select on, use the [select tag](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L23-L24). Note the use of braclets ```{}``` to create the key-value map. You can optionally specify a length parameter to create a list value for the map. ```{^3 "my-list" "one" "two" "three"}```
+To pass multiple node entries to select on, use the [select tag](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L23-L24). Note the use of braclets ```{}``` to create the key-value map. The end of each value-list must be terminated with a comma. The final entry in the map does not need a comma. The internal Map type can take any Var type, and automatically converts the Key to a String for internal use.
+
+```
+{"my-list" "one" "two" "three",  # note the comma, tells the parser to start next KV group
+"other-list" "four"}
+```
 
 
 ##### Formatting/Reference

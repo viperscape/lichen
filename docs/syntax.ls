@@ -20,8 +20,8 @@ some_block
     emit name  # reference an environment variable to return
     if some_attrib "G'day, you look weary, `name"  # use name variable as apart of formatted response
 
-    next:select {"Go to store" store  # store would be the actual node name
-                "Get out of here" exit}
+    next:select {"Go to store" store,  # store would be the actual node name
+                "Get out of here" exit}  # both Keys are seperated by a comma
 
     if this.visited "hi again"
 

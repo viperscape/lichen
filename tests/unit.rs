@@ -272,12 +272,17 @@ store\n
 #[test]
 fn parse_select_nodes() {
     let src = "root\n
-    next:select {\"Head to Store?\" store\n
+    next:select {\"Head to Store?\" store,\n
                 \"Leave the town?\" exit-town}\n
 \n
     if !some_item [\"Some choices\"
-        next:select {\"Head to Store?\" store\n
+        next:select {\"Head to Store?\" store,\n
                     \"Leave the town?\" exit-town}]\n
+\n
+    next:select {\"Head to town?\" store bakery tanner,\n
+                5 hike,
+                \"Leave the town?\" exit-town}\n
+\n
     emit \"A dustball blows by\"\n
 ;";
     let mut env = Parser::parse_blocks(src).into_env();
@@ -294,6 +299,16 @@ fn parse_select_nodes() {
     map.insert("Leave the town?".to_owned(), vec![Var::Sym("exit-town".to_owned())]);
     
     assert_eq!(select1, Some(Next::Select(map)));
+
+    let (_,select) = ev.next().unwrap();
+    match select.expect("Unable to parse map") {
+        Next::Select(map) => {
+            println!("Map: {:?}",map);
+            assert!(map.contains_key("5"));
+            assert_eq!(map.get("5"), Some(&vec![Var::Sym("hike".to_owned())]));
+        },
+        _ => { panic!("Invalid Next type found") }
+    }
 }
 
 

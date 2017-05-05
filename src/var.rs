@@ -4,7 +4,7 @@ use parse::IR;
 /// Supported Var Types
 ///
 /// These are parsed from IR variants
-#[derive(Debug,PartialEq, Clone)]
+#[derive(Debug,Clone, PartialEq)]
 pub enum Var {
     String(String),
     Num(f32),

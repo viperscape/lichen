@@ -112,32 +112,6 @@ impl Next {
 
         next
     }
-
-    /// Used to parse a top-level next statement
-    pub fn parse_bare(exp: &mut Vec<IR>) -> Option<Next> {
-        if exp.len() < 3 { return Next::parse(exp); }
-        
-        let tag = exp.remove(0);
-        match tag {
-            IR::Sym(tag) => {
-                let mut tags = tag.split_terminator(':');
-                let next_tag = tags.next();
-                let is_next = next_tag == Some("next");
-                
-                if is_next {
-                    let tag_kind = tags.next().expect("ERROR: Empty Next Entry");
-                    if tag_kind != "select" { panic!("ERROR: Invalid Next Type Found {:?}", tags) }
-                }
-            },
-            _ => { return None },
-        }
-        
-
-        if let Some(selects) = Parser::parse_map(exp.pop().unwrap()) {
-            Some(Next::Select(selects))
-        }
-        else { None }
-    }
 }
 
 

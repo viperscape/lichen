@@ -298,13 +298,33 @@ impl Parser {
                 for n in exps.drain(..) {
                     if key.is_empty() { key = n.into(); continue }
 
-                    vals.push(Var::parse(n));
-                    map.insert(key,vals);
-                    vals = vec![];
-                    key = "".to_owned();
+                    match n {
+                        IR::Sym(mut s) => {
+                            if s.chars().last() == Some(',') {
+                                let _ = s.pop();
+                                vals.push(Var::parse(IR::Sym(s)));
+
+                                map.insert(key,vals);
+                                vals = vec![];
+                                key = "".to_owned();
+
+                                continue
+                            }
+
+                            vals.push(Var::parse(IR::Sym(s)));
+                        },
+                        _ => { vals.push(Var::parse(n)); },
+                    }
                 }
 
-                if !key.is_empty() { panic!("ERROR: Unbalanced MAP at: {:?}",key); }
+                if !key.is_empty() && vals.len() > 0 {
+                    map.insert(key,vals);
+                }
+                else if !key.is_empty() {
+                    panic!("ERROR: Unbalanced MAP at: {:?}",key);
+                }
+                
+                
                 
                 Some(map)
             },
