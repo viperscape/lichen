@@ -459,8 +459,8 @@ def global\n
 #[test]
 fn parse_with_block() {
     let src = "root\n
-    needs_coins coins < 1
-    has_name name
+    needs_coins coins < 1\n
+    has_name name\n
     with {needs_coins @coins + 2, \n
          has_name @name \"new-name\"}\n
 ;";
