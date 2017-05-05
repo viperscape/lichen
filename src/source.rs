@@ -36,9 +36,13 @@ pub enum Src {
     Mut(Mut, String, Vec<Var>),
 
     /// Match-like behavior for Mutations
+    ///
+    /// Map format should have Logic-Tested for the key
+    /// and Mutation Function Signature for the value
     With(WithMap),
 }
 
+/// Internal type to hold a specialized With-Mutate Map
 pub type WithMap = HashMap<String,(Mut,String,Vec<Var>)>;
 
 /// Next-node action types
