@@ -285,8 +285,7 @@ impl Parser {
 
     /// Parses a map from IR
     ///
-    /// Currently a map must be identically sized
-    /// Future versions will be parsed using commas for variable sized maps
+    /// Parsed using commas for variable sized maps
     pub fn parse_map (map_ir: IR) -> Option<Map> {
         let mut map: Map = HashMap::new(); // optionally unbounded val-lengths
 
