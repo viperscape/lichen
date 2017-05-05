@@ -455,3 +455,22 @@ def global\n
     assert_eq!(vars[2], Var::String("Pan".to_owned()));
     assert_eq!(vars[3], Var::Num(-2.0 .to_owned()));
 }
+
+#[test]
+fn parse_with_block() {
+    let src = "root\n
+    needs_coins coins < 1
+    has_name name
+    with {needs_coins @coins + 2, \n
+         has_name @name \"new-name\"}\n
+;";
+    
+    let mut env = Parser::parse_blocks(src).into_env();
+    let mut data = Player { coins: 0.0, name: "Pan".to_owned() };
+    
+    {let mut ev = Evaluator::new(&mut env, &mut data);
+     let (_,_) = ev.next().unwrap();}
+
+    assert_eq!(data.coins, 2.0);
+    assert_eq!(data.name, "new-name".to_owned());
+}

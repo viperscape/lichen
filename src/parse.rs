@@ -55,6 +55,14 @@ impl From<IR> for String {
         }
     }
 }
+impl From<Var> for IR {
+    fn from(t:Var) -> IR {
+        match t {
+            Var::String(t) => { IR::String(t) }
+            _ => { IR::Sym(t.to_string()) }
+        }
+    }
+}
 
 
 /// Map object for Selects

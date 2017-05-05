@@ -34,7 +34,12 @@ pub enum Src {
 
     /// Mutate type, var being mutated, argument vars
     Mut(Mut, String, Vec<Var>),
+
+    /// Match-like behavior for Mutations
+    With(WithMap),
 }
+
+pub type WithMap = HashMap<String,(Mut,String,Vec<Var>)>;
 
 /// Next-node action types
 #[derive(Debug,PartialEq,Clone)]
@@ -344,7 +349,18 @@ impl Src {
 
                 if if_value { return ((*v).clone(), next.clone()) }
                 else { return (vec![],None) }
-            }
+            },
+            &Src::With(ref map) => {
+                for (k, &(ref m, ref v, ref a)) in map.iter() {
+                    let mut is_true = false;
+                    if let Some(b) = state.get(k) { is_true = *b }
+                    if is_true {
+                        Src::eval(&Src::Mut(m.clone(), v.clone(), a.clone()), state, data, def);
+                    }
+                }
+                
+                return (vec![],None)
+            },
         }
     }
     
@@ -356,6 +372,26 @@ impl Src {
                     exp.insert(0,IR::Sym(sym.to_owned()));
                     let (m, v, a) = Mut::parse(&mut exp);
                     return Src::Mut(m,v,a)
+                }
+                else if sym == "with" {
+                    if exp.len() != 1 { panic!("ERROR: Invalid WITH Logic {:?}",exp) }
+                    if let Some(mut map) = Parser::parse_map(exp.pop().unwrap()) {
+                        let mut with_map: WithMap = HashMap::new();
+                        for (k,mut v) in map.drain() {
+                            let v_ir = v.drain(..).map(|n| n.into()).collect();
+                            let m = Src::parse(v_ir);
+                            match m {
+                                Src::Mut(m,v,a) => { println!("{:?}{:?}{:?}",m,v,a);
+                                    with_map.insert(k, (m,v,a));
+                                },
+                                _ => { panic!("ERROR: Invalid WITH Logic {:?}",m) }
+                            }
+                        }
+
+                        if with_map.is_empty() { panic!("ERROR: Unable to parse WITH Map into Mut") }
+                        Src::With(with_map)
+                    }
+                    else { panic!("ERROR: Invalid WITH Logic {:?}",exp) }
                 }
                 else if sym == "if" {
                     if exp.len() < 2 { panic!("ERROR: Invalid IF Logic {:?}",exp) }
