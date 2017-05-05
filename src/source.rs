@@ -66,9 +66,9 @@ impl Next {
         
         // handle nested selects as a special case
         if let Some(idx) = select_idx {
-            let mut select: Vec<IR> = exp.drain(idx..).collect();
-            let _ = select.remove(0);
-            if let Some(map) = Parser::parse_map(&mut select) {
+            let map_ir = exp.remove(idx+1);
+            let _ = exp.remove(idx); // next:select statement
+            if let Some(map) = Parser::parse_map(map_ir) {
                 return Some(Next::Select(map))
             }
             else { return None }
@@ -133,7 +133,7 @@ impl Next {
         }
         
 
-        if let Some(selects) = Parser::parse_map(exp) {
+        if let Some(selects) = Parser::parse_map(exp.pop().unwrap()) {
             Some(Next::Select(selects))
         }
         else { None }
@@ -404,7 +404,7 @@ impl Src {
                 }
                 else if &sym.split_terminator(':').next() == &Some("next") {
                     exp.insert(0, IR::Sym(sym.to_owned()));
-                    if let Some(next) = Next::parse_bare(&mut exp) {
+                    if let Some(next) = Next::parse(&mut exp) {
                         Src::Next(next)
                     }
                     else { panic!("ERROR: Invalid NEXT Logic {:?}",exp) }

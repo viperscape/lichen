@@ -32,6 +32,8 @@ pub enum IR {
     String(String),
     /// A non-quoted string turns into a symbol/token
     Sym(String),
+    /// Key-Value, pre-parsed
+    Map(Vec<IR>),
 }
 
 impl From<IR> for String {
@@ -39,6 +41,17 @@ impl From<IR> for String {
         match t {
             IR::String(s) => s,
             IR::Sym(s) => s,
+            IR::Map(mut v) => {
+                let mut s = "{".to_owned();
+                for n in v.drain(..) {
+                    let n:String = n.into();
+                    s.push_str(&n);
+                }
+
+                s.push('}');
+
+                s
+            }
         }
     }
 }
@@ -60,6 +73,7 @@ impl Parser {
         let mut v = vec!();
         let mut exp = String::new();
         let mut exps: Vec<IR> = vec!();
+        let mut map_ir: Vec<IR> = vec!(); //contains pre-parsed map
         let mut block: Option<Block> = None;
 
         let mut in_string = false;
@@ -76,7 +90,7 @@ impl Parser {
             if !in_comment && !in_string {
                 if c == '[' { in_vec = true; continue }
                 else if c == ']' { in_vec = false; }
-                else if c == '{' { in_map = true; } // we don't skip bc we incl this char
+                
             }
             
             if c == '#' && !in_string { in_comment = true; continue }
@@ -91,11 +105,15 @@ impl Parser {
                 && !in_string && !in_comment
             {
                 for n in exp.split_whitespace() {
-                    exps.push(IR::Sym(n.trim().to_owned()));
+                    let sym = IR::Sym(n.trim().to_owned());
+                    if in_map { map_ir.push(sym); }
+                    else { exps.push(sym); }
                 }
+                
                 if c == '}' && in_map && !in_comment{
-                    exps.push(IR::Sym("}".to_owned())); //add this back in manually
                     in_map = false;
+                    exps.push(IR::Map(map_ir));
+                    map_ir = vec![];
                 }
                 
                 exp = String::new();
@@ -127,20 +145,34 @@ impl Parser {
                     
                 }
                 else { // build block type
-                    let mut qsyms = vec!();
+                    let mut qsyms:Vec<(String,String)> = vec!();
+                    let adjust_sym = |qsyms: &mut Vec<(String,String)>, s: &mut String| {
+                        if s.chars().next().expect("ERROR: Empty Eager Symbol") == '!' {
+                            let mut sym = "not_".to_owned();
+                            sym.push_str(s[1..].trim());
+                            
+                            let osym = s.trim().to_owned();
+                            
+                            qsyms.push((sym.clone(),osym));
+                            *s = sym;
+                        }
+                    };
 
+                    // this builds symbol refs as a convenience
                     if exps.len() > 2 { //must be if/or/comp blocks
                         for n in exps.iter_mut() {
                             match n {
                                 &mut IR::Sym(ref mut s) => {
-                                    if s.chars().next().expect("ERROR: Empty Eager Symbol") == '!' {
-                                        let mut sym = "not_".to_owned();
-                                        sym.push_str(s[1..].trim());
-                                        
-                                        let osym = s.trim().to_owned();
-                                        
-                                        qsyms.push((sym.clone(),osym));
-                                        *s = sym;
+                                    adjust_sym(&mut qsyms,s);
+                                },
+                                &mut IR::Map(ref mut v) => {
+                                    for n in v.iter_mut() {
+                                        match n {
+                                            &mut IR::Sym(ref mut s) => {
+                                                adjust_sym(&mut qsyms,s);
+                                            },
+                                            _ => {},
+                                        }
                                     }
                                 },
                                 _ => {},
@@ -195,12 +227,16 @@ impl Parser {
                 in_string = !in_string;
                 if in_string { //starting a new quoted string? let's push this sym
                     for n in exp.split_whitespace() {
-                        exps.push(IR::Sym(n.trim().to_owned()));
+                        let sym = IR::Sym(n.trim().to_owned());
+                        if in_map { map_ir.push(sym); }
+                        else { exps.push(sym); }
                     }
                     exp = String::new();
                 }
                 else if !in_string { //finished the quoted string?
-                    exps.push(IR::String(exp));
+                    let sym = IR::String(exp);
+                    if in_map { map_ir.push(sym); }
+                    else { exps.push(sym); }
                     exp = String::new();
                 }
             }
@@ -211,7 +247,14 @@ impl Parser {
                 block = None;
             }
             else {
-                if !in_comment {
+                if c == '{' && !in_comment && !in_string {
+                    in_map = true;
+                    // push previous symbol
+                    let sym = IR::Sym(exp.trim().to_owned());
+                    exps.push(sym);
+                    exp.clear();
+                }
+                else if !in_comment {
                     exp.push(c);
                 }
             }
@@ -244,69 +287,29 @@ impl Parser {
     ///
     /// Currently a map must be identically sized
     /// Future versions will be parsed using commas for variable sized maps
-    pub fn parse_map (exps: &mut Vec<IR>) -> Option<Map> {
+    pub fn parse_map (map_ir: IR) -> Option<Map> {
         let mut map: Map = HashMap::new(); // optionally unbounded val-lengths
 
-        let arg = exps.remove(0);
-        let mut sym;
-        match arg {
-            IR::Sym(mut s) => {
-                if s.chars().next() != Some('{') { return None }
-                s.remove(0);
-                sym = s;
+        match map_ir {
+            IR::Map(mut exps) => {
+                let mut key = "".to_owned();
+                let mut vals = vec![];
+                
+                for n in exps.drain(..) {
+                    if key.is_empty() { key = n.into(); continue }
+
+                    vals.push(Var::parse(n));
+                    map.insert(key,vals);
+                    vals = vec![];
+                    key = "".to_owned();
+                }
+
+                if !key.is_empty() { panic!("ERROR: Unbalanced MAP at: {:?}",key); }
+                
+                Some(map)
             },
-            _ => { return None }
+            _=> {None}
         }
-        
-        if exps.pop()
-            .expect("ERROR: Unbalanced MAP") != IR::Sym("}".to_owned())
-        { return None }
-        if exps.len() < 1 { return None }
-
-        let mut size_hint = 0;
-        
-        if sym.chars().next() == Some('^') { //size hint provided
-            let _ = sym.remove(0);
-            if let Ok(v) = sym.parse::<usize>() {
-                size_hint = v;
-            }
-            else { panic!("ERROR: Invalid Size-hint provided for MAP"); }
-        }
-        else {
-            if sym.len() > 0 {
-                exps.insert(0,IR::Sym(sym));  //put back if not a sizehint!
-            }
-        }
-        
-
-        if size_hint == 0 { size_hint = 1; } // single-element map is default
-        
-        let mut key = "".to_owned();
-        let mut vals = vec![];
-        
-        for n in exps.drain(..) {
-            match n {
-                IR::String(s) => {
-                    if key.is_empty() { key = s; }
-                    else { vals.push(Var::String(s)); }
-
-                    continue
-                },
-                _=> {},
-            }
-
-            vals.push(Var::parse(n));
-
-            if vals.len() == size_hint {
-                map.insert(key,vals);
-                vals = vec![];
-                key = "".to_owned();
-            }
-        }
-
-        if !key.is_empty() { panic!("ERROR: Unbalanced MAP at: {:?}",key); }
-        
-        Some(map)
     }
 }
 
