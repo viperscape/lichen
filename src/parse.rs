@@ -272,6 +272,19 @@ impl Parser {
         Parser(v)
     }
 
+    pub fn sink (mut self, v: &mut Vec<Block>) -> Option<usize> {
+        if self.0.len() > 0 {
+            let start = Some(v.len());
+            for b in self.0.drain(..) {
+                v.push(b);
+            }
+
+            return start
+        }
+
+        None
+    }
+
     pub fn into_env (mut self) -> Env {
         let mut src = HashMap::new();
         let mut def = HashMap::new();
@@ -395,7 +408,16 @@ impl Eval for Def {
 pub struct StreamParser<S:Read> {
     /// The non-parsed leftovers of a stream that is being buffered actively
     buf: String,
-    stream: S,
+    pub stream: S,
+
+    pub blocks: Vec<Block>,
+}
+
+impl<S:Read> Iterator for StreamParser<S> {
+    type Item=usize;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.parse()
+    }
 }
 
 impl<S:Read> StreamParser<S> {
@@ -403,30 +425,37 @@ impl<S:Read> StreamParser<S> {
         StreamParser {
             buf: String::new(),
             stream: s,
+            blocks: vec![],
         }
     }
 
-    pub fn parse (&mut self) -> Option<Parser> {
-        let mut buf = vec![];
+    pub fn parse (&mut self) -> Option<usize> {
+        let mut buf = vec![0u8;1024];
         if let Ok(n) = self.stream.read(&mut buf[..]) {
             if n > 0 {
+                let _ = buf.truncate(n);
                 if let Ok(s) = String::from_utf8(buf) {
                     self.buf.push_str(&s);
+
+                    let mut block = String::new();
+                    let mut start = None;
+                    for c in self.buf.drain(..) {
+                        block.push(c);
+                        if c == ';' {
+                            start = Parser::parse_blocks(&block).sink(&mut self.blocks);
+                            block.clear();
+                        }
+                    }
+
+                    if !block.is_empty() { self.buf = block; } //put back anything if needed
+                    
+                    return start
                 }
             }
         }
 
-        let mut parser = None;
-        let mut block = String::new();
-        for c in self.buf.drain(..) {
-            block.push(c);
-            if c == ';' {
-                parser = Some(Parser::parse_blocks(&block));
-            }
-        }
-
-        if !block.is_empty() { self.buf.push_str(&block); } //put back anything if needed
-
-        parser
+        
+        None
     }
+
 }

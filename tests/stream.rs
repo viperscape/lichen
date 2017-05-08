@@ -1,14 +1,10 @@
 extern crate lichen;
 
 use std::io::Cursor;
-use std::io::prelude::*;
-use std::io::BufReader;
 
-use lichen::parse::{Parser,StreamParser,Block,SrcBlock,Map};
-use lichen::{Logic,Expect};
+use lichen::parse::{StreamParser,Block};
+use lichen::source::Src;
 use lichen::var::Var;
-use lichen::source::{Src,Next};
-use lichen::eval::{Eval,Evaluator};
 
 #[test]
 fn stream_parser() {
@@ -19,30 +15,46 @@ some_block\n
 \n
 emi";  //unfinished source
 
-
-
     let bytes = src.as_bytes();
-    let mut c = Cursor::new(&bytes[..]);
-    let mut r = BufReader::new(c);
-
-    let mut s = StreamParser::new(r);
-    let parser = s.parse();
-    assert!(parser.is_some());
-    if let Some(p) = parser{
-        let _ = p.into_env();
+    let c = Cursor::new(&bytes[..]);
+    
+    let mut s = StreamParser::new(c);
+    let idx = s.parse();
+    
+    assert!(idx.is_some());
+    if let Some(idx) = idx {
+        let b = s.blocks.get(idx).expect("ERROR: No block");
+        match b {
+            &Block::Src(ref b) => {
+                assert_eq!(b.name, "root".to_owned());
+                assert_eq!(b.src.get(0), Some(&Src::Emit(vec![Var::String("hi".to_owned())])));
+                assert!(b.src.len() < 2);
+            },
+            _ => { panic!("ERROR: Invalid block type") }
+        }
+            
     }
 
-        let src = "t \"hi again\"\n
-;";
+    let src = "t \"hi again\"\n
+;"; //finish source to parse
 
     let bytes = src.as_bytes();
-    let mut c = Cursor::new(&bytes[..]);
-    let mut r = BufReader::new(c);
-
-    let mut s = StreamParser::new(r);
-    let parser = s.parse();
-    //assert!(parser.is_some());
-    if let Some(p) = parser {
-        let _ = p.into_env();
+    let c = Cursor::new(&bytes[..]);
+    
+    s.stream = c; //swap in new 'stream'
+    let idx = s.parse();
+    
+    assert!(idx.is_some());
+    if let Some(idx) = idx {
+        let b = s.blocks.get(idx).expect("ERROR: No block");
+        match b {
+            &Block::Src(ref b) => {
+                assert_eq!(b.name, "some_block".to_owned());
+                assert_eq!(b.src.get(0), Some(&Src::Emit(vec![Var::String("hi again".to_owned())])))
+            },
+            _ => { panic!("ERROR: Invalid block type") }
+        }
     }
+
+    assert_eq!(s.blocks.len(), 2);
 }
