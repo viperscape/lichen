@@ -367,6 +367,10 @@ impl Env {
 
         false
     }
+
+    pub fn empty () -> Env {
+        Env { src: HashMap::new(), def: HashMap::new() }
+    }
 }
 
 /// Environment containing all parsed definition and source blocks
@@ -429,6 +433,22 @@ impl<S:Read> StreamParser<S> {
         }
     }
 
+    pub fn sink (&mut self, v: &mut Env) {
+        if self.blocks.len() > 0 {
+            for b in self.blocks.drain(..) {
+                match b {
+                    Block::Src(b) => { v.src.insert(b.name.clone(), b); },
+                    Block::Def(b) => { v.def.insert(b.name.clone(), b); },
+                }
+            }
+        }
+    }
+
+    pub fn into_env (&mut self) -> Env {
+        let blocks = self.blocks.drain(..).collect();
+        Parser(blocks).into_env()
+    }
+    
     pub fn parse (&mut self) -> Option<usize> {
         let mut buf = vec![0u8;1024];
         if let Ok(n) = self.stream.read(&mut buf[..]) {

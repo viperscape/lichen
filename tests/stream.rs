@@ -35,6 +35,9 @@ emi";  //unfinished source
             
     }
 
+    //let mut env = s.clone().into_env();
+    
+
     let src = "t \"hi again\"\n
 ;"; //finish source to parse
 
@@ -57,4 +60,6 @@ emi";  //unfinished source
     }
 
     assert_eq!(s.blocks.len(), 2);
+
+    
 }
