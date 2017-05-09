@@ -4,14 +4,14 @@
 
 Blocks are regions of code that designate logic/actions
 Currently there are two types of blocks, a block prefixed with ```def``` is for defining variables and setting meta in key/value format, each on a new line.
-All other [blocks](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L1-L34) are considered as nodes and follows standard logic rules.
+All other [blocks](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L) are considered as nodes and follows standard logic rules.
 Defining a block starts with the name identifier and ends with a semicolon, each individually on its corresponding line.
 
-A [def block](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L36-L38) offers local environment variables to define
+A [def block](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L41) offers local environment variables to define
 
 ##### Variables
 
-Currently there is support for basic [variable](https://github.com/viperscape/lichen/blob/master/src/var.rs#L5-L10) types
+Currently there is support for basic [variable](https://github.com/viperscape/lichen/blob/master/src/var.rs#L7) types
 - Boolean
 - Float (32 bit)
 - String
@@ -58,7 +58,7 @@ The resulting logic types become local variables for use in flow-logic.
 ##### Other/Non-Logic
 
 External to if-statements and logic entirely, a block can also contain standard responses.  
-[Emi](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L19) returns variables back to the caller, and can be a multiline region.
+[Emit](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L19) returns variables back to the caller, and can be a multiline region.
 
 ##### Next
 
@@ -83,7 +83,7 @@ Each node tracks its [visited-status](https://github.com/viperscape/lichen/blob/
 
 ##### Mutate from Functions
 
-There are a few builtins to mutate external state. To affect data you must prefix the referenced variable with an [```@``` symbol](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L29). Currently functions are only called on the top-level of the node, node within statement regions/multilines. It's also possible to implement your own custom function, to call it you simply surround the function-name within parenthesis. Note, all referenced variables will first be pulled from any [```def``` blocks](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L36-L38) within the environment, if they do not exist, then it wil be pulled from the rust environment that was originally passed into the Evaluator.
+There are a few builtins to mutate external state. To affect data you must prefix the referenced variable with an [```@``` symbol](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L29). Currently functions are only called on the top-level of the node, node within statement regions/multilines. It's also possible to implement your own custom function, to call it you simply surround the function-name within parenthesis. Note, all referenced variables will first be pulled from any [```def``` blocks](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L41) within the environment, if they do not exist, then it wil be pulled from the rust environment that was originally passed into the Evaluator.
 
 
 When the node is reached, these side-affect functions will run immediately. The [custom ```inc``` function](https://github.com/viperscape/lichen/blob/master/tests/samples.rs#L22-L40) must be built on the rust side of things as apart of the Eval implementation.
