@@ -272,6 +272,9 @@ impl Parser {
         Parser(v)
     }
 
+    /// Consumes parser, pushes blocks onto existing vec
+    ///
+    /// Returns starting index of where it was pushed onto vec
     pub fn sink (mut self, v: &mut Vec<Block>) -> Option<usize> {
         if self.0.len() > 0 {
             let start = Some(v.len());
@@ -285,24 +288,11 @@ impl Parser {
         None
     }
 
-    pub fn into_env (mut self) -> Env {
-        let mut src = HashMap::new();
-        let mut def = HashMap::new();
-        
-        for b in self.0.drain(..) {
-            match b {
-                Block::Def(db) => {
-                    def.insert(db.name.clone(), db);
-                },
-                Block::Src(sb) => {
-                    src.insert(sb.name.clone(), sb);
-                },
-            }
-
-            
-        }
-
-        Env { def: def, src: src }
+    /// Consumes parser, builds environment
+    pub fn into_env (self) -> Env {
+        let mut env = Env::empty();
+        env.insert(self.0);
+        env
     }
 
     /// Parses a map from IR
@@ -371,6 +361,19 @@ impl Env {
     pub fn empty () -> Env {
         Env { src: HashMap::new(), def: HashMap::new() }
     }
+
+    pub fn insert (&mut self, mut v: Vec<Block>) {
+        for b in v.drain(..) {
+            match b {
+                Block::Def(db) => {
+                    self.def.insert(db.name.clone(), db);
+                },
+                Block::Src(sb) => {
+                    self.src.insert(sb.name.clone(), sb);
+                },
+            }
+        }
+    }
 }
 
 /// Environment containing all parsed definition and source blocks
@@ -413,7 +416,7 @@ pub struct StreamParser<S:Read> {
     /// The non-parsed leftovers of a stream that is being buffered actively
     buf: String,
     pub stream: S,
-
+    size: usize,
     pub blocks: Vec<Block>,
 }
 
@@ -425,32 +428,32 @@ impl<S:Read> Iterator for StreamParser<S> {
 }
 
 impl<S:Read> StreamParser<S> {
-    pub fn new (s: S) -> StreamParser<S> {
+    /// Creates a new Parser for readable streams
+    ///
+    /// Optionally specify chunk size on buffering
+    pub fn new (s: S, size: Option<usize>) -> StreamParser<S> {
         StreamParser {
             buf: String::new(),
             stream: s,
             blocks: vec![],
+            size: { if let Some(size) = size { size }
+                    else { 1024 } }
         }
     }
 
+    /// Moves parsed blocks into existing environment
     pub fn sink (&mut self, v: &mut Env) {
-        if self.blocks.len() > 0 {
             for b in self.blocks.drain(..) {
                 match b {
                     Block::Src(b) => { v.src.insert(b.name.clone(), b); },
                     Block::Def(b) => { v.def.insert(b.name.clone(), b); },
                 }
             }
-        }
     }
 
-    pub fn into_env (&mut self) -> Env {
-        let blocks = self.blocks.drain(..).collect();
-        Parser(blocks).into_env()
-    }
-    
+    /// Parses blocks from stream, returns the index of the new starting block
     pub fn parse (&mut self) -> Option<usize> {
-        let mut buf = vec![0u8;1024];
+        let mut buf = vec![0u8;self.size];
         if let Ok(n) = self.stream.read(&mut buf[..]) {
             if n > 0 {
                 let _ = buf.truncate(n);
