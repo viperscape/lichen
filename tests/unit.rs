@@ -457,11 +457,11 @@ def global\n
 }
 
 #[test]
-fn parse_with_block() {
+fn parse_when_block() {
     let src = "root\n
     needs_coins coins < 1\n
     has_name name\n
-    with {needs_coins @coins + 2, \n
+    when {needs_coins @coins + 2, \n
          has_name @name \"new-name\"}\n
 ;";
     

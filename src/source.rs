@@ -39,11 +39,11 @@ pub enum Src {
     ///
     /// Map format should have Logic-Tested for the key
     /// and Mutation Function Signature for the value
-    With(WithMap),
+    When(WhenMap),
 }
 
-/// Internal type to hold a specialized With-Mutate Map
-pub type WithMap = HashMap<String,(Mut,String,Vec<Var>)>;
+/// Internal type to hold a specialized When-Mutate Map
+pub type WhenMap = HashMap<String,(Mut,String,Vec<Var>)>;
 
 /// Next-node action types
 #[derive(Debug,PartialEq,Clone)]
@@ -354,7 +354,7 @@ impl Src {
                 if if_value { return ((*v).clone(), next.clone()) }
                 else { return (vec![],None) }
             },
-            &Src::With(ref map) => {
+            &Src::When(ref map) => {
                 for (k, &(ref m, ref v, ref a)) in map.iter() {
                     let mut is_true = false;
                     if let Some(b) = state.get(k) { is_true = *b }
@@ -377,23 +377,23 @@ impl Src {
                     let (m, v, a) = Mut::parse(&mut exp);
                     return Src::Mut(m,v,a)
                 }
-                else if sym == "with" {
-                    if exp.len() != 1 { panic!("ERROR: Invalid WITH Logic {:?}",exp) }
+                else if sym == "when" {
+                    if exp.len() != 1 { panic!("ERROR: Invalid WHEN Logic {:?}",exp) }
                     if let Some(mut map) = Parser::parse_map(exp.pop().unwrap()) {
-                        let mut with_map: WithMap = HashMap::new();
+                        let mut when_map: WhenMap = HashMap::new();
                         for (k,mut v) in map.drain() {
                             let v_ir = v.drain(..).map(|n| n.into()).collect();
                             let m = Src::parse(v_ir);
                             match m {
                                 Src::Mut(m,v,a) => { println!("{:?}{:?}{:?}",m,v,a);
-                                    with_map.insert(k, (m,v,a));
+                                    when_map.insert(k, (m,v,a));
                                 },
                                 _ => { panic!("ERROR: Invalid WITH Logic {:?}",m) }
                             }
                         }
 
-                        if with_map.is_empty() { panic!("ERROR: Unable to parse WITH Map into Mut") }
-                        Src::With(with_map)
+                        if when_map.is_empty() { panic!("ERROR: Unable to parse WITH Map into Mut") }
+                        Src::When(when_map)
                     }
                     else { panic!("ERROR: Invalid WITH Logic {:?}",exp) }
                 }

@@ -88,6 +88,6 @@ There are a few builtins to mutate external state. To affect data you must prefi
 
 When the node is reached, these side-affect functions will run immediately. The [custom ```inc``` function](https://github.com/viperscape/lichen/blob/master/tests/samples.rs#L22-L40) must be built on the rust side of things as apart of the Eval implementation.
 
-##### With Mutate on Logic
+##### When Mutate on Logic
 
-[With example](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L35) shows how to control flow of mutations based on logic results. With takes a Map object, where the key points to the logic tested, and the value is a mutation function.
+[When example](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L35) shows how to control flow of mutations based on logic results. When takes a Map object, where the key points to the logic tested, and the value is a mutation function.

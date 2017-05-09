@@ -32,7 +32,7 @@ some_block
 
     needs_coins coins < 1
     has_name name
-    with {needs_coins @coins + 2,  # perform addition if needs_coins is true
+    when {needs_coins @coins + 2,  # perform addition if needs_coins is true
          has_name @name "new-name"}  # state swap on name
 
     next:now some_block  # start over if user selects wrong entry!
