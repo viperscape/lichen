@@ -42,11 +42,14 @@ impl Eval for Data {
 
 #[test]
 fn bitrot() {
-    let mut src = vec![String::from_utf8_lossy(include_bytes!("../examples/basic.ls")),
-                       String::from_utf8_lossy(include_bytes!("../examples/contrived.ls")),
-                       String::from_utf8_lossy(include_bytes!("../docs/syntax.ls"))];
+    let mut src = vec![("basic", String::from_utf8_lossy(include_bytes!("../examples/basic.ls"))),
+                       ("contrived", String::from_utf8_lossy(include_bytes!("../examples/contrived.ls"))),
+                       ("syntax", String::from_utf8_lossy(include_bytes!("../docs/syntax.ls")))];
 
-    for mut src in src.drain(..) {
-        let _ = Parser::parse_blocks(src.to_mut()).into_env();
+    for (file, mut src) in src.drain(..) {
+        match Parser::parse_blocks(src.to_mut()) {
+            Ok(p) => { p.into_env(); },
+            Err(e) => { panic!("ERROR: Unable to parse source, {:} -- {:}", file, e) }
+        }
     }
 }

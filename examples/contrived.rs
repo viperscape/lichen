@@ -67,7 +67,7 @@ impl Eval for Player {
 fn main() {
     let bytes = include_bytes!("contrived.ls");
     let mut src = String::from_utf8_lossy(bytes);
-    let mut env = Parser::parse_blocks(src.to_mut()).into_env();
+    let mut env = Parser::parse_blocks(src.to_mut()).expect("ERROR: Unable to parse source").into_env();
 
     let mut items = HashMap::new();
     items.insert("Valerium-Great-Sword".to_owned(),Items::Sword);

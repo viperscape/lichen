@@ -27,7 +27,7 @@ fn main() {
     let bytes = include_bytes!("basic.ls");
     let mut src = String::from_utf8_lossy(bytes);
     
-    let mut env = Parser::parse_blocks(src.to_mut()).into_env(); //parse the source and build the environment
+    let mut env = Parser::parse_blocks(src.to_mut()).expect("ERROR: Unable to parse source").into_env(); //parse the source and build the environment
 
     let mut data = Data;
     let mut ev = Evaluator::new(&mut env, &mut data); // build the evaluator based on the environment and any data

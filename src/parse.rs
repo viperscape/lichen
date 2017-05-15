@@ -78,7 +78,7 @@ impl Deref for Parser {
 }
 
 impl Parser {
-    pub fn parse_blocks (src: &str) -> Parser {
+    pub fn parse_blocks (src: &str) -> Result<Parser,&'static str> {
         let mut v = vec!();
         let mut exp = String::new();
         let mut exps: Vec<IR> = vec!();
@@ -156,7 +156,7 @@ impl Parser {
                 else { // build block type
                     let mut qsyms:Vec<(String,String)> = vec!();
                     let adjust_sym = |qsyms: &mut Vec<(String,String)>, s: &mut String| {
-                        if s.chars().next().expect("ERROR: Empty Eager Symbol") == '!' {
+                        if s.chars().next() == Some('!') {
                             let mut sym = "not_".to_owned();
                             sym.push_str(s[1..].trim());
                             
@@ -216,7 +216,7 @@ impl Parser {
                                     &Src::If(_,_,_) => { was_if = true; },
                                     &Src::Or(_,_) => {
                                         if !was_if {
-                                            panic!("ERROR: IF must prepend OR");
+                                            return Err("If must prepend Or")
                                         }
                                     },
                                     _ => { was_if = false; },
@@ -251,9 +251,12 @@ impl Parser {
             }
             else if c == ';' && !in_string && !in_comment {
                 //fail otherwise, block should be built!
-                v.push(block.expect("ERROR: Parse Block no built!"));
-                usyms.clear(); //clear out on new block
-                block = None;
+                if let Some(block_) = block {
+                    v.push(block_);
+                    usyms.clear(); //clear out on new block
+                    block = None;
+                }
+                else { return Err("Parse Block not built!")}
             }
             else {
                 if c == '{' && !in_comment && !in_string {
@@ -269,7 +272,7 @@ impl Parser {
             }
         }
         
-        Parser(v)
+        Ok(Parser(v))
     }
 
     /// Consumes parser, pushes blocks onto existing vec
@@ -332,7 +335,7 @@ impl Parser {
                     map.insert(key,vals);
                 }
                 else if !key.is_empty() {
-                    panic!("ERROR: Unbalanced MAP at: {:?}",key);
+                    return None // unbalanced braclets?
                 }
                 
                 
@@ -465,7 +468,10 @@ impl<S:Read> StreamParser<S> {
                     for c in self.buf.drain(..) {
                         block.push(c);
                         if c == ';' {
-                            start = Parser::parse_blocks(&block).sink(&mut self.blocks);
+                            if let Ok(p) = Parser::parse_blocks(&block) {
+                                start = p.sink(&mut self.blocks);
+                            }
+                            
                             block.clear();
                         }
                     }

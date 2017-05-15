@@ -56,7 +56,7 @@ fn parse_block() {
     next:now end\n
 ;";
     
-    let block = Parser::parse_blocks(src);
+    let block = Parser::parse_blocks(src).expect("ERROR: Unable to parse source");
 
     let block_ = [Block::Src(
         SrcBlock {
@@ -88,7 +88,7 @@ fn parse_qsym_block() {
     let src = "root\n
     if !some_item \"you're looking for something?\"\n
 ;";
-    let block = Parser::parse_blocks(src);
+    let block = Parser::parse_blocks(src).expect("ERROR: Unable to parse source");
     match &block[0] {
         &Block::Src(ref b) => {
             let r;
@@ -120,7 +120,7 @@ fn parse_qsym_comp_block() {
     some_comp:any [has_weight !some_item ]\n
     ;";
     
-    let block = Parser::parse_blocks(src);
+    let block = Parser::parse_blocks(src).expect("ERROR: Unable to parse source");
 
     match &block[0] {
         &Block::Src(ref b) => {
@@ -147,7 +147,7 @@ fn validate_qsym_block() {
     if other_item next:await store\n
     ;";
     
-    let mut env = Parser::parse_blocks(src).into_env();
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
 
     let mut ev = Evaluator::new(&mut env, &mut data);
@@ -166,7 +166,7 @@ fn validate_reflection_block() {
     if comp next:await store\n
     ;";
     
-    let mut env = Parser::parse_blocks(src).into_env();
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
 
     let mut ev = Evaluator::new(&mut env, &mut data);
@@ -184,7 +184,7 @@ fn parse_if_vec_block() {
         next:now store]\n
 ;";
     
-    let block = Parser::parse_blocks(src);
+    let block = Parser::parse_blocks(src).expect("ERROR: Unable to parse source");
     
     match &block[0] {
         &Block::Src(ref b) => {
@@ -207,7 +207,7 @@ fn parse_eval_str_block() {
     if some_comp \"looks like you are `some_weight kgs heavy, `name\"\n
 ;";
     
-    let mut env = Parser::parse_blocks(src).into_env();
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
     
     let mut ev = Evaluator::new(&mut env, &mut data);
@@ -222,7 +222,7 @@ fn parse_compare_env_block() {
     weight some_weight < other_weight\n
     if weight next:now store\n
 ;";
-    let mut env = Parser::parse_blocks(src).into_env();
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
 
     let mut ev = Evaluator::new(&mut env, &mut data);
@@ -238,7 +238,7 @@ fn parse_return_varkind() {
     if weight some_weight \"hi `name\"\n
 ;";
 
-    let mut env = Parser::parse_blocks(src).into_env();
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
 
     let mut ev = Evaluator::new(&mut env, &mut data);
@@ -259,7 +259,7 @@ store\n
     if !some_item \"welcome, \nlook around\"\n
 ;";
 
-    let mut env = Parser::parse_blocks(src).into_env();
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
 
     let mut ev = Evaluator::new(&mut env, &mut data);
@@ -285,7 +285,7 @@ fn parse_select_nodes() {
 \n
     emit \"A dustball blows by\"\n
 ;";
-    let mut env = Parser::parse_blocks(src).into_env();
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
 
     let mut ev = Evaluator::new(&mut env, &mut data);
@@ -377,7 +377,7 @@ fn state_mut() {
     @coins 5\n
 ;";
     
-    let mut env = Parser::parse_blocks(src).into_env();
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Player { coins: 0.0, name: "Pan".to_owned() };
     
     {
@@ -394,7 +394,7 @@ fn parse_cust_fn() {
     @coins (inc) 1 2 3\n
 ;";
     
-    let mut env = Parser::parse_blocks(src).into_env();
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Player { coins: 0.0, name: "Pan".to_owned() };
     
     {
@@ -417,7 +417,7 @@ def global\n
     size 1.5\n
 ;";
     
-    let mut env = Parser::parse_blocks(src).into_env();
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
     
     let mut ev = Evaluator::new(&mut env, &mut data);
@@ -443,7 +443,7 @@ def global\n
     size 1.5\n
 ;";
     
-    let mut env = Parser::parse_blocks(src).into_env();
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Player { coins: 0.0, name: "Pan".to_owned() };
     
     let mut ev = Evaluator::new(&mut env, &mut data);
@@ -465,7 +465,7 @@ fn parse_when_block() {
          has_name @name \"new-name\"}\n
 ;";
     
-    let mut env = Parser::parse_blocks(src).into_env();
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Player { coins: 0.0, name: "Pan".to_owned() };
     
     {let mut ev = Evaluator::new(&mut env, &mut data);
