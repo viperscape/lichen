@@ -45,18 +45,18 @@ impl<'a> From<&'a str> for Var {
 }
 
 impl Var {
-    pub fn parse(t: IR) -> Var {
+    pub fn parse(t: IR) -> Result<Var,&'static str> {
         match t {
             IR::Sym(t) => {
                 if let Ok(v) = t.parse::<f32>() {
-                    Var::Num(v)
+                    Ok(Var::Num(v))
                 }
                 else if let Ok(v) = t.parse::<bool>() {
-                    Var::Bool(v)
+                    Ok(Var::Bool(v))
                 }
-                else { Var::Sym(t) }
+                else { Ok(Var::Sym(t)) }
             },
-            IR::String(s) => { Var::String(s) },
+            IR::String(s) => { Ok(Var::String(s)) },
             _ => { panic!("ERROR: No Var type represents a Map") },
         }
     }
@@ -114,17 +114,20 @@ impl Mut {
         None
     }
     
-    pub fn parse(exps: &mut Vec<IR>) -> (Mut, String, Vec<Var>) {
+    pub fn parse(exps: &mut Vec<IR>) -> Result<(Mut, String, Vec<Var>), &'static str> {
         let m;
         let mut v: String;
-        let a;
+        let mut a = vec![];
         
         if exps.len() > 2 {
             v = exps.remove(0).into();
             let x: String = exps.remove(0).into();
             let x: &str = &x;
             
-            a = exps.drain(..).map(|n| Var::parse(n)).collect();
+            for n in exps.drain(..) {
+                let r = try!(Var::parse(n));
+                a.push(r);
+            }
 
             match x {
                 "+" => { m = Mut::Add },
@@ -136,18 +139,19 @@ impl Mut {
                         m = Mut::Fn(fun)
                     }
                     else {
-                        panic!("ERROR: Unimplemented function {:?}", x)
+                        return Err("Unimplemented function")
                     }
                 }
             }
         }
         else {
-            a = vec![Var::parse(exps.pop().unwrap())];
+            let r = try!(Var::parse(exps.pop().unwrap()));
+            a.push(r);
             v = exps.pop().unwrap().into();
             m = Mut::Swap;
         }
 
         let _ = v.remove(0); // remove @ in var name
-        (m,v,a)
+        Ok((m,v,a))
     }
 }

@@ -58,7 +58,7 @@ pub enum Next {
     Select(Map),
 }
 impl Next {
-    pub fn parse(exp: &mut Vec<IR>) -> Option<Next> {
+    pub fn parse(exp: &mut Vec<IR>) -> Result<Next,&'static str> {
         let mut select_idx = None;
         for (i,n) in exp.iter().enumerate() {
             match n {
@@ -77,14 +77,14 @@ impl Next {
         if let Some(idx) = select_idx {
             let map_ir = exp.remove(idx+1);
             let _ = exp.remove(idx); // next:select statement
-            if let Some(map) = Parser::parse_map(map_ir) {
-                return Some(Next::Select(map))
+            if let Ok(map) = Parser::parse_map(map_ir) {
+                return Ok(Next::Select(map))
             }
-            else { return None }
+            else { return Err("Cannot parse map") }
         }
         
 
-        let mut next = None;
+        let next;
         if let Some(node) = exp.pop() {
             if let Some(tag) = exp.pop() {
                 match tag {
@@ -93,33 +93,37 @@ impl Next {
                         let is_next = next_tag.next() == Some("next");
                         
                         if is_next {
-                            let next_tag = next_tag.next().expect("ERROR: Empty Next Entry");
+                            let next_tag = next_tag.next();
                             match next_tag {
-                                "now" => { next = Some(Next::Now(node.into())) },
-                                "await" => { next = Some(Next::Await(node.into())) },
-                                _ => { panic!("ERROR: Invalid Next Type Found {:?}", next_tag) },
+                                Some("now") => { next = Next::Now(node.into()) },
+                                Some("await") => { next = Next::Await(node.into()) },
+                                _ => { return Err("Invalid Next Type Found") },
                             }
                         }
                         else if next_tag.next().is_some() {
-                            panic!("ERROR: Unknown Tag encountered {:?}", next_tag)
+                            return Err("Unknown Tag encountered")
                         }
                         else {
                             exp.push(IR::Sym(tag.to_owned()));
                             exp.push(node);
+                            return Err("Invalid Tag type")
                         }
                     },
                     _ => {
                         exp.push(tag);
                         exp.push(node);
+                        return Err("Invalid Tag type")
                     }
                 }
             }
             else {
                 exp.push(node);
+                return Err("Missing Tag type")
             }
         }
+        else { return Err("No Next type found") }
 
-        next
+        Ok(next)
     }
 }
 
@@ -305,7 +309,7 @@ impl Src {
                             state.insert(name.clone(),true);
                         }
                     },
-                    &Expect::Ref(_) => panic!("ERROR: Unexpected parsing") // this should never hit
+                    &Expect::Ref(_) => {} // this should never hit
                 }
 
                 return (vec![],None) // composite does not return anything
@@ -368,93 +372,104 @@ impl Src {
         }
     }
     
-    pub fn parse(mut exp: Vec<IR>) -> Src {
+    pub fn parse(mut exp: Vec<IR>) -> Result<Src,&'static str> {
         let ir = exp.remove(0);
         match ir {
             IR::Sym(ref sym) => {
                 if sym.chars().next() == Some('@') { //mutating statement
                     exp.insert(0,IR::Sym(sym.to_owned()));
-                    let (m, v, a) = Mut::parse(&mut exp);
-                    return Src::Mut(m,v,a)
+                    let (m, v, a) = try!(Mut::parse(&mut exp));
+                    return Ok(Src::Mut(m,v,a))
                 }
                 else if sym == "when" {
-                    if exp.len() != 1 { panic!("ERROR: Invalid WHEN Logic {:?}",exp) }
-                    if let Some(mut map) = Parser::parse_map(exp.pop().unwrap()) {
+                    if exp.len() != 1 { return Err("Invalid WHEN Logic") }
+                    if let Ok(mut map) = Parser::parse_map(exp.pop().unwrap()) {
                         let mut when_map: WhenMap = HashMap::new();
                         for (k,mut v) in map.drain() {
                             let v_ir = v.drain(..).map(|n| n.into()).collect();
-                            let m = Src::parse(v_ir);
+                            let m = try!(Src::parse(v_ir));
                             match m {
-                                Src::Mut(m,v,a) => { println!("{:?}{:?}{:?}",m,v,a);
+                                Src::Mut(m,v,a) => {
                                     when_map.insert(k, (m,v,a));
                                 },
-                                _ => { panic!("ERROR: Invalid WITH Logic {:?}",m) }
+                                _ => { return Err("Invalid WHEN Logic"); }
                             }
                         }
 
-                        if when_map.is_empty() { panic!("ERROR: Unable to parse WITH Map into Mut") }
-                        Src::When(when_map)
+                        if when_map.is_empty() { return Err("Unable to parse WHEN Map into Mut") }
+                        Ok(Src::When(when_map))
                     }
-                    else { panic!("ERROR: Invalid WITH Logic {:?}",exp) }
+                    else { Err(" Invalid WHEN Logic") }
                 }
                 else if sym == "if" {
-                    if exp.len() < 2 { panic!("ERROR: Invalid IF Logic {:?}",exp) }
+                    if exp.len() < 2 { return Err("Invalid IF Logic") }
 
                     let x = exp.remove(0);
                     let next = Next::parse(&mut exp);
                     
-                    let v = exp.drain(..).map(|n| Var::parse(n)).collect();
+                    let mut v = vec![];
+                    for n in exp.drain(..) {
+                        let r = try!(Var::parse(n));
+                        v.push(r);
+                    }
 
-                    Src::If(Expect::parse(x.into()),
-                            v, next)
+                    Ok(Src::If(Expect::parse(x.into()),
+                               v, next.ok()))
                 }
                 else if sym == "or" {
-                    if exp.len() < 1 { panic!("ERROR: Invalid OR Logic {:?}",exp) }
+                    if exp.len() < 1 { return Err("Invalid OR Logic") }
 
                     let next = Next::parse(&mut exp);
                     
-                    let v = exp.drain(..).map(|n| Var::parse(n)).collect();
-                    Src::Or(v,next)
+                    let mut v = vec![];
+                    for n in exp.drain(..) {
+                        let r = try!(Var::parse(n));
+                        v.push(r);
+                    }
+                    
+                    Ok(Src::Or(v,next.ok()))
                 }
                 else if &sym.split_terminator(':').next() == &Some("next") {
                     exp.insert(0, IR::Sym(sym.to_owned()));
-                    if let Some(next) = Next::parse(&mut exp) {
-                        Src::Next(next)
+                    if let Ok(next) = Next::parse(&mut exp) {
+                        Ok(Src::Next(next))
                     }
-                    else { panic!("ERROR: Invalid NEXT Logic {:?}",exp) }
+                    else { Err("Invalid NEXT Logic") }
                 }
                 else if sym == "emit" {
                     if exp.len() > 0 {
                         let mut v = vec![];
                         for e in exp.drain(..) {
-                            v.push(Var::parse(e));
+                            let r = try!(Var::parse(e));
+                            v.push(r);
                         }
 
-                        Src::Emit(v)
+                        Ok(Src::Emit(v))
                     }
-                    else { panic!("ERROR: Missing EMIT Logic {:?}",exp) }
+                    else { Err("Missing EMIT Logic") }
                 }
                 else {
                     let mut keys: Vec<&str> = sym.split_terminator(':').collect();
                     if keys.len() < 2 { // regular logic
-                        Src::Logic(sym.to_owned(),
-                                   Logic::parse(exp))
+                        let r = try!(Logic::parse(exp));
+                        Ok(Src::Logic(sym.to_owned(),
+                                      r))
                     }
                     else { // composite type
                         let kind = Expect::parse(keys.pop().unwrap().to_owned());
                         match kind { // only formal expected types allowed
-                            Expect::Ref(_) => { panic!("ERROR: Informal Expect found {:?}", kind) },
+                            Expect::Ref(_) => { return Err("Informal Expect found") },
                             _ => {}
                         }
 
                         let exp = exp.drain(..).map(|n| n.into()).collect();
-                        Src::Composite(keys.pop().unwrap().to_owned(),
-                                       kind,
-                                       exp)
+                        Ok(Src::Composite(keys.pop().unwrap().to_owned(),
+                                          kind,
+                                          exp))
                     }
                 }
             },
-            _ => { panic!("ERROR: Encountered Non-Symbol Token {:?}",ir) },
+            _ => { Err("Encountered Non-Symbol Token") },
         }
     }
 }

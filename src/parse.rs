@@ -193,22 +193,23 @@ impl Parser {
                     match block {
                         Some(Block::Def(ref mut b)) => {
                             let v = exps.pop().unwrap();
+                            let r = try!(Var::parse(v));
                             b.def.insert(exps.pop().unwrap().into(),
-                                         Var::parse(v));
+                                         r);
                         },
                         Some(Block::Src(ref mut b)) => {
-                            let mut srcs = vec![];
+                            let mut srcs: Vec<Src> = vec![];
                             
                             for (qsym,sym) in qsyms.drain(..) {
                                 if usyms.contains(&qsym) { continue }
                                 usyms.insert(qsym.clone());
                                 
-                                let src = Src::parse(vec![IR::Sym(qsym),
-                                                          IR::Sym(sym)]);
+                                let src = try!(Src::parse(vec![IR::Sym(qsym),
+                                                               IR::Sym(sym)]));
                                 srcs.push(src);
                             }
 
-                            let src = Src::parse(exps);
+                            let src = try!(Src::parse(exps));
                             srcs.push(src);
 
                             for src in srcs.drain(..) {
@@ -256,7 +257,7 @@ impl Parser {
                     usyms.clear(); //clear out on new block
                     block = None;
                 }
-                else { return Err("Parse Block not built!")}
+                else { return Err("Parse Block not built")}
             }
             else {
                 if c == '{' && !in_comment && !in_string {
@@ -301,7 +302,7 @@ impl Parser {
     /// Parses a map from IR
     ///
     /// Parsed using commas for variable sized maps
-    pub fn parse_map (map_ir: IR) -> Option<Map> {
+    pub fn parse_map (map_ir: IR) -> Result<Map,&'static str> {
         let mut map: Map = HashMap::new(); // optionally unbounded val-lengths
 
         match map_ir {
@@ -316,7 +317,8 @@ impl Parser {
                         IR::Sym(mut s) => {
                             if s.chars().last() == Some(',') {
                                 let _ = s.pop();
-                                vals.push(Var::parse(IR::Sym(s)));
+                                let var = Var::parse(IR::Sym(s))?;
+                                vals.push(var);
 
                                 map.insert(key,vals);
                                 vals = vec![];
@@ -325,9 +327,10 @@ impl Parser {
                                 continue
                             }
 
-                            vals.push(Var::parse(IR::Sym(s)));
+                            let var = Var::parse(IR::Sym(s))?;
+                            vals.push(var);
                         },
-                        _ => { vals.push(Var::parse(n)); },
+                        _ => { vals.push(Var::parse(n)?); },
                     }
                 }
 
@@ -335,14 +338,14 @@ impl Parser {
                     map.insert(key,vals);
                 }
                 else if !key.is_empty() {
-                    return None // unbalanced braclets?
+                    return Err("Map contains unbalanced braclets")
                 }
                 
                 
                 
-                Some(map)
+                Ok(map)
             },
-            _=> {None}
+            _=> { return Err("Map type not found") }
         }
     }
 }

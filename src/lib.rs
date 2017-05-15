@@ -47,36 +47,36 @@ pub enum Logic {
 }
 
 impl Logic {
-    pub fn parse(mut exp: Vec<IR>) -> Logic {
+    pub fn parse(mut exp: Vec<IR>) -> Result<Logic,&'static str> {
         let len = exp.len();
         
         if len == 1 {
             let mut exp: String = exp.pop().unwrap().into();
             let inv = exp.remove(0);
             if inv == '!' {
-                Logic::IsNot(exp)
+                Ok(Logic::IsNot(exp))
             }
             else {
                 exp.insert(0,inv);
-                Logic::Is(exp)
+                Ok(Logic::Is(exp))
             }
         }
         else if len == 3 {
             let var = exp.pop().unwrap();
-            let var = Var::parse(var);
+            let var = Var::parse(var)?;
 
             let sym: String = exp.pop().unwrap().into();
             let key = exp.pop().unwrap();
-            let key = Var::parse(key);
+            let key = Var::parse(key)?;
             
             if sym == ">" {
-                Logic::GT(key,var)
+                Ok(Logic::GT(key,var))
             }
             else if sym == "<" {
-                Logic::LT(key,var)
+                Ok(Logic::LT(key,var))
             }
-            else { panic!("ERROR: Invalid Logic Syntax {:?}", exp) }
+            else { Err("Invalid Logic Syntax") }
         }
-        else { panic!("ERROR: Unbalanced Logic Syntax ({:?})",exp) }
+        else { Err("Unbalanced Logic Syntax") }
     }
 }
