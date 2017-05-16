@@ -57,7 +57,7 @@ impl Var {
                 else { Ok(Var::Sym(t)) }
             },
             IR::String(s) => { Ok(Var::String(s)) },
-            _ => { panic!("ERROR: No Var type represents a Map") },
+            _ => { Err("No Var type represents a Map") },
         }
     }
 

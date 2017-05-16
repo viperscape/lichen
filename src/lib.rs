@@ -63,11 +63,11 @@ impl Logic {
         }
         else if len == 3 {
             let var = exp.pop().unwrap();
-            let var = Var::parse(var)?;
+            let var = try!(Var::parse(var));
 
             let sym: String = exp.pop().unwrap().into();
             let key = exp.pop().unwrap();
-            let key = Var::parse(key)?;
+            let key = try!(Var::parse(key));
             
             if sym == ">" {
                 Ok(Logic::GT(key,var))
