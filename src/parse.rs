@@ -424,6 +424,7 @@ pub struct StreamParser<S:Read> {
     pub stream: S,
     size: usize,
     pub blocks: Vec<Block>,
+    curr_block: String,
 }
 
 impl<S:Read> Iterator for StreamParser<S> {
@@ -443,18 +444,23 @@ impl<S:Read> StreamParser<S> {
             stream: s,
             blocks: vec![],
             size: { if let Some(size) = size { size }
-                    else { 1024 } }
+                    else { 1024 } },
+            curr_block: "".to_owned(),
         }
     }
 
     /// Moves parsed blocks into existing environment
-    pub fn sink (&mut self, v: &mut Env) {
-            for b in self.blocks.drain(..) {
-                match b {
-                    Block::Src(b) => { v.src.insert(b.name.clone(), b); },
-                    Block::Def(b) => { v.def.insert(b.name.clone(), b); },
-                }
+    pub fn sink (&mut self, v: &mut Env) -> Result<(),&str> {
+        if !self.curr_block.is_empty() { return Err(&self.curr_block) }
+            
+        for b in self.blocks.drain(..) {
+            match b {
+                Block::Src(b) => { v.src.insert(b.name.clone(), b); },
+                Block::Def(b) => { v.def.insert(b.name.clone(), b); },
             }
+        }
+
+        Ok(())
     }
 
     /// Parses blocks from stream, returns the index of the new starting block
@@ -470,10 +476,16 @@ impl<S:Read> StreamParser<S> {
                     let mut start = None;
                     for c in self.buf.drain(..) {
                         block.push(c);
+                        if self.curr_block.is_empty() && c == '\n' {
+                            self.curr_block = block.clone();
+                        }
+                        
                         if c == ';' {
                             if let Ok(p) = Parser::parse_blocks(&block) {
                                 start = p.sink(&mut self.blocks);
+                                self.curr_block.clear();
                             }
+                            else { return None } //end iteration when parsing fails
                             
                             block.clear();
                         }

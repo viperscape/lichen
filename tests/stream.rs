@@ -56,8 +56,8 @@ emi";  //unfinished source
     }
 
     let mut env = Env::empty();
-    s.sink(&mut env);
-    assert_eq!(s.blocks.len(), 0);
+    assert!(s.sink(&mut env).is_err());
+    assert_eq!(s.blocks.len(), 1);
 
     let src = "t \"hi again\"\n
 ;"; //finish source to parse
@@ -80,8 +80,9 @@ emi";  //unfinished source
         }
     }
 
-    assert_eq!(s.blocks.len(), 1);
-    s.sink(&mut env);
+    assert_eq!(s.blocks.len(), 2);
+    assert!(s.sink(&mut env).is_ok());
+    assert_eq!(s.blocks.len(), 0);
 
     let mut data = Data;
     let mut ev = Evaluator::new(&mut env, &mut data);
