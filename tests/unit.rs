@@ -474,3 +474,46 @@ fn parse_when_block() {
     assert_eq!(data.coins, 2.0);
     assert_eq!(data.name, "new-name".to_owned());
 }
+
+#[test]
+fn save_state() {
+    let src = "root\n
+    next:now other\n
+;\n
+\n
+other\n
+    @coins 1\n
+    next:await end\n
+    emit \"bye\"\n
+;\n
+\n
+end\n
+    emit true\n
+;";
+    
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
+    let mut data = Player { coins: 0.0, name: "Pan".to_owned() };
+
+    
+    let state = {
+        let mut ev = Evaluator::new(&mut env, &mut data);
+        let (_,_) = ev.next().unwrap();
+        ev.save()
+    };
+
+    assert_eq!(data.coins, 0.0);
+
+    let state = {
+        let mut ev = state.to_eval(&mut env, &mut data);
+        let (_,_) = ev.next().unwrap();
+        ev.save()
+    };
+
+    assert_eq!(data.coins, 1.0);
+
+    { //check if we held our place within node after await
+        let mut ev = state.to_eval(&mut env, &mut data);
+        let (vars,_) = ev.next().unwrap();
+        assert_eq!(vars[0],"bye".into());
+    }
+}

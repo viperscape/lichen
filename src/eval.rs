@@ -98,6 +98,16 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
         }
     }
 
+    /// Consumes Evaluator for saving state
+    ///
+    /// You should save the Env state as well, as it's external to the Evaluator
+    pub fn save (self) -> EvaluatorState {
+        EvaluatorState {
+            next_node: self.next_node,
+            await_node: self.await_node,
+        }
+    }
+
     /// Advances Evaluator to next node
     ///
     /// If you specify a node name, Evaluator will start there on next step
@@ -263,5 +273,20 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
         }
         
         return (r,node)
+    }
+}
+
+pub struct EvaluatorState {
+    next_node: String,
+    await_node: String,
+}
+
+impl EvaluatorState {
+    pub fn to_eval<'e, 'd, D:Eval + 'd> (self, env: &'e mut Env, data: &'d mut D) -> Evaluator<'e, 'd, D> {
+        Evaluator {
+            env: env, data: data,
+            next_node: self.next_node,
+            await_node: self.await_node
+        }
     }
 }
