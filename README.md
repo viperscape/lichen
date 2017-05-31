@@ -1,5 +1,6 @@
 [![Current Version](http://meritbadge.herokuapp.com/lichen)](https://crates.io/crates/lichen)
 [![License: Apache-2.0](https://img.shields.io/crates/l/lichen.svg)](LICENSE)
+[![Build Status](https://travis-ci.org/viperscape/lichen.svg?branch=master)](https://travis-ci.org/viperscape/lichen)
 
 ### Scripting DSL (for Dialogue Graphs, et al)
 
