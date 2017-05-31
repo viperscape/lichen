@@ -276,6 +276,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
     }
 }
 
+#[derive(Clone,Debug)]
 pub struct EvaluatorState {
     next_node: String,
     await_node: String,
@@ -288,5 +289,9 @@ impl EvaluatorState {
             next_node: self.next_node,
             await_node: self.await_node
         }
+    }
+
+    pub fn as_eval<'e, 'd, D:Eval + 'd> (&self, env: &'e mut Env, data: &'d mut D) -> Evaluator<'e, 'd, D> {
+        self.clone().to_eval(env,data)
     }
 }
