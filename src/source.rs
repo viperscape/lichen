@@ -182,13 +182,31 @@ impl Src {
                         else { data.set_path(&v, val); }
                     },
                     &Mut::Fn(ref fun) => {
+                        let mut args = vec![]; //collect symbols' value
+                        for n in a {
+                            match n {
+                                &Var::Sym(ref n) => {
+                                    if let Some(var) = def.get_path(n) {
+                                        args.push(var);
+                                    }
+                                    else {
+                                        if let Some(var) = data.get_path(n) {
+                                            args.push(var);
+                                        }
+                                    }
+                                },
+                                _ => { args.push(n.clone()) }
+                            }
+                        }
+
+                        
                         if let Some(var) = def.get_path(v) {
-                            if let Some(r) = data.call(var, fun, a) {
+                            if let Some(r) = data.call(var, fun, &args) {
                                 def.set_path(&v, r);
                             }
                         }
                         else if let Some(var) = data.get_path(&v) {
-                            if let Some(r) = data.call(var, fun, a) {
+                            if let Some(r) = data.call(var, fun, &args) {
                                 data.set_path(&v, r);
                             }
                         }

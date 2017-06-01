@@ -361,6 +361,15 @@ impl Eval for Player {
                     return Some(Var::Num(r))
                 }
             },
+            "wrap" => {
+                if let Some(w) = vars.get(0) {
+                    let mut s = w.to_string();
+                    s.push_str(&var.to_string());
+                    s.push_str(&w.to_string());
+
+                    return Some(Var::String(s));
+                }
+            },
             _ => { }
         }
 
@@ -516,4 +525,27 @@ end\n
         let (vars,_) = ev.next().unwrap();
         assert_eq!(vars[0],"bye".into());
     }
+}
+
+
+#[test]
+fn parse_sym_call_value() {
+    let src = "def root\n
+    tag \"--\"\n
+;\n
+\n
+root\n
+    @name (wrap) root.tag\n
+    emit name\n
+;";
+
+    let p = Parser::parse_blocks(src).expect("ERROR: Unable to parse source");
+    let mut env = p.into_env();
+   
+    let mut data = Player { coins: 0.0, name: "Pan".to_owned() };
+    
+    let mut ev = Evaluator::new(&mut env, &mut data);
+    let (vars,_) = ev.next().unwrap();
+
+    assert_eq!(vars[0], Var::String("--Pan--".to_owned()));
 }
