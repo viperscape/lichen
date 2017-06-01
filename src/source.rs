@@ -182,7 +182,12 @@ impl Src {
                         else { data.set_path(&v, val); }
                     },
                     &Mut::Fn(ref fun) => {
-                        if let Some(var) = data.get_path(&v) {
+                        if let Some(var) = def.get_path(v) {
+                            if let Some(r) = data.call(var, fun, a) {
+                                def.set_path(&v, r);
+                            }
+                        }
+                        else if let Some(var) = data.get_path(&v) {
                             if let Some(r) = data.call(var, fun, a) {
                                 data.set_path(&v, r);
                             }
