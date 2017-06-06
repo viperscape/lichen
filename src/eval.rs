@@ -2,7 +2,7 @@
 use std::collections::HashMap;
 use parse::Env;
 use var::Var;
-use source::{Src,Next};
+use source::{Next};
 
 /// Creates a possible path from a dot-seperated string
 ///
@@ -95,134 +95,77 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
         self.node_stack.push(node);
     }
 
-    /// Gets the symbol's value, to be formatted into a string
-    pub fn get_symbol (&self, s: &str) -> Option<Var> {
-        if s.chars().next().unwrap() == '`' {
-            let (path,lookup) = as_path(&s[1..]);
-            if let Some(path) = path {
-                if let Some(ref def) = self.env.def.get(path[0]) {
-                    if let Some(v) = def.def.get(&lookup[..]) {
-                        return Some(v.clone())
-                    }
-                }
-                else {
-                    let v = self.data.get(Some(path),lookup);
-                    if v.is_some() { return v }
-                }
-            }
-            else {
-                let v = self.data.get_path(&s[1..]);
-                if v.is_some() { return v }
-            }
-        }
-
-        None
-    }
-
     /// Manually run the Evaluator, starting at node specified
     pub fn run (&mut self, node_name: &str)
                 -> (Vec<Var>, Option<Next>)
         where D: Eval + 'd
     {
-        let mut r = vec!();
-        let mut node: Option<Next> = None;
-        
-        let mut or_valid = false; //track for OR
-        
         if let Some(b) = self.env.src.get_mut(node_name) {
-            self.node_stack.push(b.name.clone());
-            
             let mut state: HashMap<String,bool> = HashMap::new();
             state.insert("this.visited".to_owned(), b.visited);
             b.visited = true;
-
-            let await_idx = b.await_idx;
-            b.await_idx = 0;
             
-            for (i,src) in b.src[await_idx..].iter().enumerate() {
-                match src {
-                    &Src::Or(_,_) => {
-                        if !or_valid {
-                            continue
-                        }
-                        else { or_valid = false; }
-                    }
-                    &Src::If(_,_,_) => { or_valid = true; }
-                    _ => { or_valid = false; },
-                }
-                    
+            if let Some(src) = b.src.get(b.await_idx) {
+                self.node_stack.push(node_name.to_owned()); //more to iterate through?
                 
                 let (mut vars, next) = src.eval(&mut state, self.data, &mut self.env.def);
-                
-                // reset when if is successful
-                if (vars.len() > 0) || next.is_some() { or_valid = false; }
+                b.await_idx += 1;
 
-                for n in vars.drain(..) {
-                    match n {
-                        Var::Sym(s) => { // resolve symbol refs
-                            if let Some(val) = self.env.def.get_path(&s) {
-                                r.push(val);
+                for var in vars.iter_mut() {
+                    let mut val = None;
+                    match var {
+                        &mut Var::Sym(ref mut s) => { // resolve symbol refs
+                            if let Some(val_) = self.env.def.get_path(s) {
+                                val = Some(val_);
                             }
-                            else if let Some(val) = self.data.get_path(&s) {
-                                r.push(val);
+                            else if let Some(val_) = self.data.get_path(s) {
+                                val = Some(val_);
                             }
                             // NOTE: otherwise we silently fail
                         },
-                        _ => { r.push(n); }
+                        &mut Var::String(ref mut s) => { //format string
+                            let mut fs = String::new();
+                            
+                            for word in s.split_terminator(' ') {
+                                if !fs.is_empty() { fs.push(' '); } //seperate symbols by spaces
+
+                                if s.chars().next().unwrap() == '`' {
+                                    let sym = &s[1..];
+                                    
+                                    if let Some(v) = self.env.def.get_path(sym) {
+                                        fs.push_str(&v.to_string());
+                                    }
+                                    else if let Some(v) = self.data.get_path(sym) {
+                                        fs.push_str(&v.to_string());
+                                    }
+                                    // NOTE: we silently fail and the string is missing elements now!
+                                }
+                                else {
+                                    fs.push_str(word);
+                                }
+                            }
+                            
+                            *s = fs;
+                        },
+                        _ => {}
+                    }
+
+                    if let Some(val) = val {
+                        *var = val;
                     }
                 }
                 
-                if let Some(next) = next {
-                    b.await_idx = i+1;
+                if let Some(ref next) = next {
                     match next {
-                        Next::Now(ref nn) => { self.node_stack.push(nn.clone()) },
+                        &Next::Now(ref nn) => { self.node_stack.push(nn.clone()) },
                         _ => { },
                     }
-
-                    node = Some(next);
-                    
-                    break;
                 }
+                return (vars,next)
             }
         }
 
-        for var in r.iter_mut() {
-            let mut val = None;
-            match var {
-                &mut Var::String(ref mut s) => { //format string
-                    let mut fs = String::new();
-                    let mut started = false;
-
-                    // NOTE: we should move this out to a SYM varkind instead
-                    // (parsed earlier)
-                    if s.split_terminator(' ').count() == 1 {
-                        val = self.get_symbol(&s);
-                    }
-                    else {
-                        for word in s.split_terminator(' ') {
-                            if started { fs.push(' '); }
-                            
-                            if let Some(ref v) = self.get_symbol(&word) {
-                                fs.push_str(&v.to_string());
-                            }
-                            else {
-                                fs.push_str(word);
-                            }
-
-                            started = true;
-                        }
-                        *s = fs;
-                    }
-                },
-                _ => {}
-            }
-
-            if let Some(val) = val {
-                *var = val;
-            }
-        }
-        
-        return (r,node)
+        (vec![],None)
     }
 }
 

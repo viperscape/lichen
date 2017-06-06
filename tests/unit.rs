@@ -159,10 +159,10 @@ fn validate_qsym_block() {
 #[test]
 fn validate_reflection_block() {
     let src =  "root\n
-    has other_item
-    hasnt some_item
-    hasnt-too !hasnt
-    comp:all has hasnt-too
+    has other_item\n
+    hasnt some_item\n
+    hasnt-too !hasnt\n
+    comp:all has hasnt-too\n
     if comp next:await store\n
     ;";
     
