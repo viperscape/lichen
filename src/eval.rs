@@ -55,46 +55,27 @@ pub trait Eval {
 pub struct Evaluator<'e, 'd, D:Eval + 'd> {
     data: &'d mut D,
     env: &'e mut Env,
-    next_node: String,
-    await_node: String,
+    node_stack: Vec<String>,
 }
 
 impl<'e, 'd, D:Eval + 'd> Iterator for Evaluator<'e, 'd, D>
     where D: Eval + 'd {
         
-        type Item = (Vec<Var>, Option<Next>); //here we only return node name as an option to advance
-        fn next(&mut self) -> Option<Self::Item> {
-            let nn = {
-                if !self.await_node.is_empty() {
-                    self.await_node.clone()
-                }
-                else if !self.next_node.is_empty() {
-                    self.next_node.clone()
-                }
-                else { return None }
-            };
-
-            
-            self.next_node.clear();
-            self.await_node.clear();
-
-            let r = self.run(&nn);
-            match r.1 {
-                Some(Next::Now(ref node)) => { self.next_node = node.clone(); },
-                _ => {},
-            }
-            
-            Some(r)
+    type Item = (Vec<Var>, Option<Next>); //here we only return node name as an option to advance
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(nn) = self.node_stack.pop() {
+            Some(self.run(&nn))
         }
+        else { None }
     }
+}
 
 impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
     /// Evaluator by default starts on the node named 'root'
     pub fn new (env: &'e mut Env, data: &'d mut D) -> Evaluator<'e, 'd, D> {
         Evaluator {
             env: env, data: data,
-            next_node: "root".to_owned(),
-            await_node: "".to_owned()
+            node_stack: vec!["root".to_owned()],
         }
     }
 
@@ -103,24 +84,15 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
     /// You should save the Env state as well, as it's external to the Evaluator
     pub fn save (self) -> EvaluatorState {
         EvaluatorState {
-            next_node: self.next_node,
-            await_node: self.await_node,
+            node_stack: self.node_stack,
         }
     }
 
     /// Advances Evaluator to next node
     ///
     /// If you specify a node name, Evaluator will start there on next step
-    pub fn advance (&mut self, node: Option<String>) {
-        if let Some(b) = self.env.src.get_mut(&self.await_node) {
-            b.await_idx = 0; //reset on advance
-        }
-        
-        self.await_node.clear();
-
-        if let Some(node) = node {
-            self.next_node = node;
-        }
+    pub fn advance (&mut self, node: String) {
+        self.node_stack.push(node);
     }
 
     /// Gets the symbol's value, to be formatted into a string
@@ -158,6 +130,8 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
         let mut or_valid = false; //track for OR
         
         if let Some(b) = self.env.src.get_mut(node_name) {
+            self.node_stack.push(b.name.clone());
+            
             let mut state: HashMap<String,bool> = HashMap::new();
             state.insert("this.visited".to_owned(), b.visited);
             b.visited = true;
@@ -167,24 +141,6 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
             
             for (i,src) in b.src[await_idx..].iter().enumerate() {
                 match src {
-                    &Src::Next(ref next) => {
-                        match next {
-                            &Next::Await(ref nn) => {
-                                b.await_idx = i+1;
-                                node = Some(next.clone());
-                                self.await_node = node_name.to_owned();
-                                self.next_node = nn.to_owned();
-                                break
-                            },
-                            &Next::Select(_) => {
-                                b.await_idx = i+1;
-                                node = Some(next.clone());
-                                self.await_node = node_name.to_owned();
-                                break
-                            },
-                            _ => {}
-                        }
-                    },
                     &Src::Or(_,_) => {
                         if !or_valid {
                             continue
@@ -198,39 +154,33 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                 
                 let (mut vars, next) = src.eval(&mut state, self.data, &mut self.env.def);
                 
-                // reset if if was successful
+                // reset when if is successful
                 if (vars.len() > 0) || next.is_some() { or_valid = false; }
 
                 for n in vars.drain(..) {
                     match n {
-                        Var::Sym(s) => {
+                        Var::Sym(s) => { // resolve symbol refs
                             if let Some(val) = self.env.def.get_path(&s) {
                                 r.push(val);
                             }
                             else if let Some(val) = self.data.get_path(&s) {
                                 r.push(val);
                             }
-                            // otherwise we silently fail
+                            // NOTE: otherwise we silently fail
                         },
                         _ => { r.push(n); }
                     }
                 }
                 
                 if let Some(next) = next {
+                    b.await_idx = i+1;
                     match next {
-                        Next::Await(ref nn) => {
-                            b.await_idx = i+1;
-                            self.await_node = node_name.to_owned();
-                            self.next_node = nn.to_owned();
-                        },
-                        Next::Select(_) => {
-                            b.await_idx = i+1;
-                            self.await_node = node_name.to_owned();
-                        },
-                        Next::Now(_) => { }
+                        Next::Now(ref nn) => { self.node_stack.push(nn.clone()) },
+                        _ => { },
                     }
-                    
+
                     node = Some(next);
+                    
                     break;
                 }
             }
@@ -278,16 +228,14 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
 
 #[derive(Clone,Debug)]
 pub struct EvaluatorState {
-    next_node: String,
-    await_node: String,
+    node_stack: Vec<String>,
 }
 
 impl EvaluatorState {
     pub fn to_eval<'e, 'd, D:Eval + 'd> (self, env: &'e mut Env, data: &'d mut D) -> Evaluator<'e, 'd, D> {
         Evaluator {
             env: env, data: data,
-            next_node: self.next_node,
-            await_node: self.await_node
+            node_stack: self.node_stack,
         }
     }
 

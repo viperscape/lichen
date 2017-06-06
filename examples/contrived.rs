@@ -98,7 +98,7 @@ fn main() {
                         Ok(_) => {
                             match line.trim() {
                                 "y" | "Y" => {
-                                    ev.advance(None);
+                                    ev.advance(node);
                                 },
                                 _ => {}
                             }
@@ -122,7 +122,7 @@ fn main() {
                         Ok(_) => {
                             let line = line.trim();
                             if let Some(_) = choices.remove(line) {
-                                ev.advance(Some(line.to_owned()));
+                                ev.advance(line.to_owned());
                             }
                         },
                         Err(_) => panic!()

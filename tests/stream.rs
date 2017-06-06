@@ -80,6 +80,7 @@ emi";  //unfinished source
         }
     }
 
+    // assert we can sink parsed blocks into an environment
     assert_eq!(s.blocks.len(), 2);
     assert!(s.sink(&mut env).is_ok());
     assert_eq!(s.blocks.len(), 0);
@@ -89,5 +90,5 @@ emi";  //unfinished source
     let (vars,_) = ev.run("root");
     assert_eq!(vars.get(0), Some(&Var::String("hi".to_owned())));
     let (vars,_) = ev.next().expect("ERROR: Block failed to transition");
-    assert_eq!(vars.get(0), Some(&Var::String("hi".to_owned())));
+    assert_eq!(vars.get(0), Some(&Var::String("hi again".to_owned())));
 }
