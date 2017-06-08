@@ -171,8 +171,8 @@ fn validate_reflection_block() {
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
 
-    let mut ev = Evaluator::new(&mut env, &mut data);
-    let (_,nn) = ev.nth(4).unwrap();
+    let ev = Evaluator::new(&mut env, &mut data);
+    let (_,nn) = ev.last().unwrap();
     
     assert_eq!(nn, Some(Next::Await("store".into())));
 }
@@ -291,7 +291,7 @@ fn parse_select_nodes() {
 
     let mut ev = Evaluator::new(&mut env, &mut data);
     let (_vars,select1) = ev.next().unwrap();
-    let (_vars,select2) = ev.nth(1).unwrap();
+    let (_vars,select2) = ev.next().unwrap();
 
     assert_eq!(select1,select2);
     
@@ -408,8 +408,8 @@ fn parse_cust_fn() {
     let mut data = Player { coins: 0.0, name: "Pan".to_owned() };
     
     {
-        let mut ev = Evaluator::new(&mut env, &mut data);
-        let (_,_) = ev.next().unwrap();
+        let ev = Evaluator::new(&mut env, &mut data);
+        let _ = ev.last();
     }
 
     assert_eq!(data.coins, 6.0);
@@ -521,11 +521,10 @@ end\n
 
     assert_eq!(data.coins, 1.0);
 
-    { //check if we held our place within node after await
-        let mut ev = state.to_eval(&mut env, &mut data);
-        let (vars,_) = ev.nth(1).unwrap();
-        assert_eq!(vars[0],"bye".into());
-    }
+    //check if we held our place within node after await
+    let ev = state.to_eval(&mut env, &mut data);
+    let (vars,_) = ev.last().unwrap();
+    assert_eq!(vars[0],"bye".into());
 }
 
 
