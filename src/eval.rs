@@ -62,7 +62,9 @@ impl<'e, 'd, D:Eval + 'd> Iterator for Evaluator<'e, 'd, D>
     type Item = (Vec<Var>, Option<Next>); //here we only return node name as an option to advance
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(nn) = self.node_stack.pop() {
-            self.run(&nn)
+            let r = self.run(&nn);
+            if r.is_none() { self.next() }
+            else { r }
         }
         else { None }
     }
@@ -118,9 +120,10 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                 }
 
                 let (mut vars, next) = src.eval(&mut b.state, self.data, &mut self.env.def);
+                let has_return = (vars.len() > 0) || next.is_some();
                 
                 // reset when if is successful
-                if (vars.len() > 0) || next.is_some() { b.or_valid = false; }
+                if has_return { b.or_valid = false; }
                 
 
                 for var in vars.iter_mut() {
@@ -196,8 +199,13 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                         _ => { },
                     }
                 }
-                
-                return Some((vars,next))
+
+                if has_return {
+                    return Some((vars,next))
+                }
+                else {
+                    return None
+                }
             }
         }
 
