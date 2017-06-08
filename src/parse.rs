@@ -386,6 +386,14 @@ impl Env {
             }
         }
     }
+
+    pub fn insert_var (&mut self, block: &str, name: String, var: Var) -> Option<Var> {
+        if let Some(b) = self.def.get_mut(block) {
+            return b.def.insert(name, var)
+        }
+
+        None
+    }
 }
 
 /// Environment containing all parsed definition and source blocks

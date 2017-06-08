@@ -230,3 +230,21 @@ impl EvaluatorState {
         self.clone().to_eval(env,data)
     }
 }
+
+
+pub struct Empty;
+impl Eval for Empty {
+    #[allow(unused_variables)]
+    fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var> {
+        None
+    }
+
+    #[allow(unused_variables)]
+    fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var) {
+    }
+
+    #[allow(unused_variables)]
+    fn call (&mut self, var: Var, fun: &str, vars: &Vec<Var>) -> Option<Var> {
+        None
+    }
+}
