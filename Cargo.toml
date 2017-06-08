@@ -1,6 +1,6 @@
 [package]
 name = "lichen"
-version = "0.2.27"
+version = "0.2.28"
 authors = ["viperscape <chrisfgill@gmail.com>"]
 license = "Apache-2.0"
 repository = "https://github.com/viperscape/lichen"
