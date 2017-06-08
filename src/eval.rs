@@ -1,6 +1,6 @@
 use parse::Env;
 use var::Var;
-use source::{Next};
+use source::{Src,Next};
 
 /// Creates a possible path from a dot-seperated string
 ///
@@ -106,7 +106,22 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                 self.node_stack.push(node_name.to_owned()); //more to iterate through?
                 b.idx += 1;
 
+                match src {
+                    &Src::Or(_,_) => {
+                        if !b.or_valid {
+                            return None
+                        }
+                        else { b.or_valid = false; } //reset
+                    }
+                    &Src::If(_,_,_) => { b.or_valid = true; }
+                    _ => { b.or_valid = false; },
+                }
+
                 let (mut vars, next) = src.eval(&mut b.state, self.data, &mut self.env.def);
+                
+                // reset when if is successful
+                if (vars.len() > 0) || next.is_some() { b.or_valid = false; }
+                
 
                 for var in vars.iter_mut() {
                     let mut val = None;

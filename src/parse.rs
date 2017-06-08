@@ -11,7 +11,10 @@ pub struct SrcBlock {
     pub src: Vec<Src>,
     pub idx: usize,
     pub visited: bool,
-    pub state: HashMap<String,bool>, //LOGIC state
+    pub or_valid: bool,
+
+    /// LOGIC state
+    pub state: HashMap<String,bool>,
 }
 
 #[derive(Debug,PartialEq)]
@@ -148,6 +151,7 @@ impl Parser {
                             src: vec!(),
                             idx: 0,
                             visited: false,
+                            or_valid: false,
                             state: HashMap::new()
                         };
                         

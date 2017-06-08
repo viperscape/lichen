@@ -62,6 +62,7 @@ fn parse_block() {
         SrcBlock {
             idx: 0,
             visited: false,
+            or_valid: false,
             name: "root".to_owned(),
             src: vec![Src::Logic("unequipped".to_owned(),
                                  Logic::IsNot("some_item".to_owned())),
