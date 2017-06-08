@@ -87,8 +87,8 @@ emi";  //unfinished source
 
     let mut data = Data;
     let mut ev = Evaluator::new(&mut env, &mut data);
-    let (vars,_) = ev.run("root");
+    let (vars,_) = ev.next().unwrap();
     assert_eq!(vars.get(0), Some(&Var::String("hi".to_owned())));
-    let (vars,_) = ev.next().expect("ERROR: Block failed to transition");
+    let (vars,_) = ev.nth(1).expect("ERROR: Block failed to transition");
     assert_eq!(vars.get(0), Some(&Var::String("hi again".to_owned())));
 }

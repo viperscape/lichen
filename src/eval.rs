@@ -1,5 +1,3 @@
-
-use std::collections::HashMap;
 use parse::Env;
 use var::Var;
 use source::{Next};
@@ -64,7 +62,7 @@ impl<'e, 'd, D:Eval + 'd> Iterator for Evaluator<'e, 'd, D>
     type Item = (Vec<Var>, Option<Next>); //here we only return node name as an option to advance
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(nn) = self.node_stack.pop() {
-            Some(self.run(&nn))
+            self.run(&nn)
         }
         else { None }
     }
@@ -97,22 +95,22 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
 
     /// Manually run the Evaluator, starting at node specified
     pub fn run (&mut self, node_name: &str)
-                -> (Vec<Var>, Option<Next>)
+                -> Option<(Vec<Var>, Option<Next>)>
         where D: Eval + 'd
     {
         if let Some(b) = self.env.src.get_mut(node_name) {
-            let mut state: HashMap<String,bool> = HashMap::new();
-            state.insert("this.visited".to_owned(), b.visited);
+            b.state.insert("this.visited".to_owned(), b.visited);
             b.visited = true;
             
-            if let Some(src) = b.src.get(b.await_idx) {
+            if let Some(src) = b.src.get(b.idx) {
                 self.node_stack.push(node_name.to_owned()); //more to iterate through?
-                
-                let (mut vars, next) = src.eval(&mut state, self.data, &mut self.env.def);
-                b.await_idx += 1;
+                b.idx += 1;
+
+                let (mut vars, next) = src.eval(&mut b.state, self.data, &mut self.env.def);
 
                 for var in vars.iter_mut() {
                     let mut val = None;
+                    
                     match var {
                         &mut Var::Sym(ref mut s) => { // resolve symbol refs
                             if let Some(val_) = self.env.def.get_path(s) {
@@ -125,26 +123,48 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                         },
                         &mut Var::String(ref mut s) => { //format string
                             let mut fs = String::new();
+                            let mut sym = String::new();
+                            let mut in_sym = false;
                             
-                            for word in s.split_terminator(' ') {
-                                if !fs.is_empty() { fs.push(' '); } //seperate symbols by spaces
+                            for c in s.chars() {
+                                if (c == ' ' || c == '`') && !sym.is_empty() {
+                                    if let Some(v) = self.env.def.get_path(&sym) {
+                                        fs.push_str(&v.to_string());
+                                    }
+                                    else if let Some(v) = self.data.get_path(&sym) {
+                                        fs.push_str(&v.to_string());
+                                    }
+                                    else {
+                                        fs.push_str(&sym); //push as non-ref sym again
+                                        // NOTE: we should consider failing silently (dont push)
+                                    }
 
-                                if s.chars().next().unwrap() == '`' {
-                                    let sym = &s[1..];
-                                    
-                                    if let Some(v) = self.env.def.get_path(sym) {
-                                        fs.push_str(&v.to_string());
+                                    if c == '`' { in_sym = true; }
+                                    else {
+                                        in_sym = false;
+                                        sym.clear();
+                                        fs.push(' ');
                                     }
-                                    else if let Some(v) = self.data.get_path(sym) {
-                                        fs.push_str(&v.to_string());
-                                    }
-                                    // NOTE: we silently fail and the string is missing elements now!
                                 }
+                                else if c == '`' { in_sym = true; }
                                 else {
-                                    fs.push_str(word);
+                                    if in_sym { sym.push(c); }
+                                    else { fs.push(c); }
                                 }
                             }
-                            
+
+                            if !sym.is_empty() {
+                                if let Some(v) = self.env.def.get_path(&sym) {
+                                    fs.push_str(&v.to_string());
+                                }
+                                else if let Some(v) = self.data.get_path(&sym) {
+                                    fs.push_str(&v.to_string());
+                                }
+                                else {
+                                    fs.push_str(&sym); //push as non-ref sym again
+                                }
+                            }
+
                             *s = fs;
                         },
                         _ => {}
@@ -161,11 +181,12 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                         _ => { },
                     }
                 }
-                return (vars,next)
+                
+                return Some((vars,next))
             }
         }
 
-        (vec![],None)
+        None
     }
 }
 

@@ -60,7 +60,7 @@ fn parse_block() {
 
     let block_ = [Block::Src(
         SrcBlock {
-            await_idx: 0,
+            idx: 0,
             visited: false,
             name: "root".to_owned(),
             src: vec![Src::Logic("unequipped".to_owned(),
@@ -77,7 +77,8 @@ fn parse_block() {
                       Src::If(Expect::All,
                               vec!["welcome, \nlook around".into()],
                               None),
-                      Src::Next(Next::Now("end".to_owned()))]
+                      Src::Next(Next::Now("end".to_owned()))],
+            state: HashMap::new()
         })];
     
     assert_eq!(block[0],block_[0]);
@@ -170,7 +171,7 @@ fn validate_reflection_block() {
     let mut data = Data;
 
     let mut ev = Evaluator::new(&mut env, &mut data);
-    let (_,nn) = ev.next().unwrap();
+    let (_,nn) = ev.nth(4).unwrap();
     
     assert_eq!(nn, Some(Next::Await("store".into())));
 }
@@ -210,8 +211,8 @@ fn parse_eval_str_block() {
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
     
-    let mut ev = Evaluator::new(&mut env, &mut data);
-    let (vars,_node) = ev.run("root");
+    let ev = Evaluator::new(&mut env, &mut data);
+    let (vars,_node) = ev.last().unwrap();
     
     assert_eq!(vars, ["looks like you are 4 kgs heavy, Io".into()]);
 }
@@ -225,8 +226,8 @@ fn parse_compare_env_block() {
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
 
-    let mut ev = Evaluator::new(&mut env, &mut data);
-    let (_vars,node) = ev.run("root");
+    let ev = Evaluator::new(&mut env, &mut data);
+    let (_vars,node) = ev.last().unwrap();
     
     assert_eq!(node, Some(Next::Now("store".to_string())));
 }
@@ -241,8 +242,8 @@ fn parse_return_varkind() {
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
 
-    let mut ev = Evaluator::new(&mut env, &mut data);
-    let (vars,_) = ev.run("root");
+    let ev = Evaluator::new(&mut env, &mut data);
+    let (vars,_) = ev.last().unwrap();
     
     assert_eq!(vars[0], 4.0 .into());
     assert_eq!(vars[1], "hi Io" .into());
@@ -262,9 +263,8 @@ store\n
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
 
-    let mut ev = Evaluator::new(&mut env, &mut data);
-    ev.next(); // runs root
-    let (vars,_) = ev.next().unwrap();
+    let ev = Evaluator::new(&mut env, &mut data);
+    let (vars,_) = ev.last().unwrap();
     
     assert_eq!(vars[0], "welcome, \nlook around".into());
 }
@@ -290,7 +290,7 @@ fn parse_select_nodes() {
 
     let mut ev = Evaluator::new(&mut env, &mut data);
     let (_vars,select1) = ev.next().unwrap();
-    let (_vars,select2) = ev.next().unwrap();
+    let (_vars,select2) = ev.nth(1).unwrap();
 
     assert_eq!(select1,select2);
     
@@ -390,8 +390,8 @@ fn state_mut() {
     let mut data = Player { coins: 0.0, name: "Pan".to_owned() };
     
     {
-        let mut ev = Evaluator::new(&mut env, &mut data);
-        let (_vars,_) = ev.next().unwrap();
+        let ev = Evaluator::new(&mut env, &mut data);
+        let _ = ev.last();
     }
 
     assert_eq!(data.coins, 5.0);
@@ -455,8 +455,8 @@ def global\n
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Player { coins: 0.0, name: "Pan".to_owned() };
     
-    let mut ev = Evaluator::new(&mut env, &mut data);
-    let (vars,_) = ev.next().unwrap();
+    let ev = Evaluator::new(&mut env, &mut data);
+    let (vars,_) = ev.last().unwrap();
 
     assert_eq!(vars[0], Var::String("other-game".to_owned()));
     assert_eq!(vars[1], Var::Num(2.0 .to_owned()));
@@ -477,8 +477,8 @@ fn parse_when_block() {
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Player { coins: 0.0, name: "Pan".to_owned() };
     
-    {let mut ev = Evaluator::new(&mut env, &mut data);
-     let (_,_) = ev.next().unwrap();}
+    {let ev = Evaluator::new(&mut env, &mut data);
+     let _ = ev.last();}
 
     assert_eq!(data.coins, 2.0);
     assert_eq!(data.name, "new-name".to_owned());
@@ -522,7 +522,7 @@ end\n
 
     { //check if we held our place within node after await
         let mut ev = state.to_eval(&mut env, &mut data);
-        let (vars,_) = ev.next().unwrap();
+        let (vars,_) = ev.nth(1).unwrap();
         assert_eq!(vars[0],"bye".into());
     }
 }
@@ -544,8 +544,8 @@ root\n
    
     let mut data = Player { coins: 0.0, name: "Pan".to_owned() };
     
-    let mut ev = Evaluator::new(&mut env, &mut data);
-    let (vars,_) = ev.next().unwrap();
+    let ev = Evaluator::new(&mut env, &mut data);
+    let (vars,_) = ev.last().unwrap();
 
     assert_eq!(vars[0], Var::String("--Pan--".to_owned()));
 }

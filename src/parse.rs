@@ -9,8 +9,9 @@ use eval::Eval;
 pub struct SrcBlock {
     pub name: String,
     pub src: Vec<Src>,
-    pub await_idx: usize,
+    pub idx: usize,
     pub visited: bool,
+    pub state: HashMap<String,bool>, //LOGIC state
 }
 
 #[derive(Debug,PartialEq)]
@@ -145,8 +146,9 @@ impl Parser {
                         let b = SrcBlock {
                             name: name,
                             src: vec!(),
-                            await_idx: 0,
+                            idx: 0,
                             visited: false,
+                            state: HashMap::new()
                         };
                         
                         block = Some(Block::Src(b));
