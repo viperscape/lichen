@@ -91,7 +91,6 @@ impl Next {
         
 
         let next;
-        println!("{:?}",exp);
         if let Some(node) = exp.pop() {
             if let Some(tag) = exp.pop() {
                 match tag {
@@ -480,7 +479,7 @@ impl Src {
                     if let Ok(next) = next {
                         Ok(Src::Next(next))
                     }
-                    else { println!("{:?}",next); Err("Invalid NEXT Logic") }
+                    else { Err("Invalid NEXT Logic") }
                 }
                 else if sym == "emit" {
                     if exp.len() > 0 {
