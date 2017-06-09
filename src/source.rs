@@ -51,6 +51,12 @@ pub enum Next {
     /// Instantly advances
     Now(String),
 
+    /// Restarts current node
+    Restart,
+
+    /// Heads back to previous node visited
+    Back,
+
     /// Awaits for manual advancement, failure to advance continues current node
     Await(String),
 
@@ -97,6 +103,8 @@ impl Next {
                             match next_tag {
                                 Some("now") => { next = Next::Now(node.into()) },
                                 Some("await") => { next = Next::Await(node.into()) },
+                                Some("back") => { next = Next::Back },
+                                Some("restart") => { next = Next::Restart },
                                 _ => { return Err("Invalid Next Type Found") },
                             }
                         }

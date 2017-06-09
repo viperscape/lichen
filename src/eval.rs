@@ -195,7 +195,9 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                 
                 if let Some(ref next) = next {
                     match next {
-                        &Next::Now(ref nn) => { self.node_stack.push(nn.clone()) },
+                        &Next::Now(ref nn) => { self.node_stack.push(nn.clone()); },
+                        &Next::Back => { self.node_stack.pop(); },
+                        &Next::Restart => { b.idx = 0; },
                         _ => { },
                     }
                 }
