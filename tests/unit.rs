@@ -575,5 +575,5 @@ step2
     assert_eq!(next, Some(Next::Back));
 
     let (_,next) = ev.next().unwrap();
-    assert_eq!(next, Some(Next::Restart));
+    assert_eq!(next, Some(Next::Restart(None)));
 }

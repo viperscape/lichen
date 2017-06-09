@@ -51,17 +51,23 @@ pub enum Next {
     /// Instantly advances
     Now(String),
 
-    /// Restarts current node
-    Restart,
+    /// Restarts current node, optionally another node -- heads immediately to this node on next evaluation
+    Restart(Option<String>),
 
     /// Heads back to previous node visited
     Back,
+
+    /// Clears out Node stack, pushes current node for further evaluation
+    Clear,
 
     /// Awaits for manual advancement, failure to advance continues current node
     Await(String),
 
     /// Select from a group, based on decision
     Select(Map),
+
+    /// Exits evaluation completely
+    Exit
 }
 impl Next {
     pub fn parse(exp: &mut Vec<IR>) -> Result<Next,&'static str> {
@@ -103,6 +109,7 @@ impl Next {
                             match next_tag {
                                 Some("now") => { next = Next::Now(node.into()) },
                                 Some("await") => { next = Next::Await(node.into()) },
+                                Some("restart") => { next = Next::Restart(Some(node.into())) },
                                 _ => { return Err("Invalid Next Type Found") },
                             }
                         }
@@ -128,7 +135,9 @@ impl Next {
                         let tag: &str = &tag;
                         match tag {
                             "next:back" => { next = Next::Back },
-                            "next:restart" => { next = Next::Restart },
+                            "next:restart" => { next = Next::Restart(None) },
+                            "next:exit" => { next = Next::Exit },
+                            "next:clear" => { next = Next::Clear },
                             _ => {
                                 exp.push(IR::Sym(tag.to_owned()));
                                 return Err("Invalid Tag type")

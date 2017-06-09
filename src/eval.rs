@@ -59,16 +59,31 @@ pub struct Evaluator<'e, 'd, D:Eval + 'd> {
 impl<'e, 'd, D:Eval + 'd> Iterator for Evaluator<'e, 'd, D>
     where D: Eval + 'd {
         
-    type Item = (Vec<Var>, Option<Next>); //here we only return node name as an option to advance
-    fn next(&mut self) -> Option<Self::Item> {
-        if let Some(nn) = self.node_stack.pop() {
-            let r = self.run(&nn);
-            if r.is_none() { self.next() }
-            else { r }
+        type Item = (Vec<Var>, Option<Next>); //here we only return node name as an option to advance
+        fn next(&mut self) -> Option<Self::Item> {
+            if let Some(nn) = self.node_stack.pop() {
+                if let Some(r) = self.run(&nn) {
+                    // reset node if necessary
+                    if let Some(ref next) = r.1 {
+                        match next {
+                            &Next::Restart(ref nn) => {
+                                if let &Some(ref nn) = nn {
+                                    if let Some(b) = self.env.src.get_mut(nn) {
+                                        b.idx = 0;
+                                    }
+                                }
+                            }
+                            _ => {}, // we handle the rest during Run, for convenience
+                        }
+                    }
+                    
+                    Some(r)
+                }
+                else { self.next() }
+            }
+            else { None }
         }
-        else { None }
     }
-}
 
 impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
     /// Evaluator by default starts on the node named 'root'
@@ -197,8 +212,16 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                     match next {
                         &Next::Now(ref nn) => { self.node_stack.push(nn.clone()); },
                         &Next::Back => { self.node_stack.pop(); },
-                        &Next::Restart => { b.idx = 0; },
-                        _ => { },
+                        &Next::Restart(ref nn) => {
+                            if nn.is_none() { b.idx = 0; }
+                            // NOTE: see iterator for other side of this
+                        },
+                        &Next::Clear => {
+                            self.node_stack.clear();
+                            self.node_stack.push(b.name.to_owned());
+                        },
+                        &Next::Exit => { self.node_stack.clear(); },
+                        _ => {},
                     }
                 }
 
