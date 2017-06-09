@@ -549,3 +549,31 @@ root\n
 
     assert_eq!(vars[0], Var::String("--Pan--".to_owned()));
 }
+
+
+#[test]
+fn parse_next_back_restart() {
+    let src = "root\n
+    next:now step2
+    next:restart\n
+;\n
+step2
+    next:back\n
+;\n";
+
+    let p = Parser::parse_blocks(src).expect("ERROR: Unable to parse source");
+    let mut env = p.into_env();
+   
+    let mut data = Player { coins: 0.0, name: "Pan".to_owned() };
+    
+    let mut ev = Evaluator::new(&mut env, &mut data);
+    
+    let (_,next) = ev.next().unwrap();
+    assert_eq!(next, Some(Next::Now("step2".to_owned())));
+
+    let (_,next) = ev.next().unwrap();
+    assert_eq!(next, Some(Next::Back));
+
+    let (_,next) = ev.next().unwrap();
+    assert_eq!(next, Some(Next::Restart));
+}

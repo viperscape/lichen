@@ -91,6 +91,7 @@ impl Next {
         
 
         let next;
+        println!("{:?}",exp);
         if let Some(node) = exp.pop() {
             if let Some(tag) = exp.pop() {
                 match tag {
@@ -103,8 +104,6 @@ impl Next {
                             match next_tag {
                                 Some("now") => { next = Next::Now(node.into()) },
                                 Some("await") => { next = Next::Await(node.into()) },
-                                Some("back") => { next = Next::Back },
-                                Some("restart") => { next = Next::Restart },
                                 _ => { return Err("Invalid Next Type Found") },
                             }
                         }
@@ -125,8 +124,23 @@ impl Next {
                 }
             }
             else {
-                exp.push(node);
-                return Err("Missing Tag type")
+                match node {
+                    IR::Sym(ref tag) => {
+                        let tag: &str = &tag;
+                        match tag {
+                            "next:back" => { next = Next::Back },
+                            "next:restart" => { next = Next::Restart },
+                            _ => {
+                                exp.push(IR::Sym(tag.to_owned()));
+                                return Err("Invalid Tag type")
+                            },
+                        }
+                    },
+                    _ => {
+                        exp.push(node);
+                        return Err("Missing Tag type")
+                    }
+                }
             }
         }
         else { return Err("No Next type found") }
@@ -462,10 +476,11 @@ impl Src {
                 }
                 else if &sym.split_terminator(':').next() == &Some("next") {
                     exp.insert(0, IR::Sym(sym.to_owned()));
-                    if let Ok(next) = Next::parse(&mut exp) {
+                    let next = Next::parse(&mut exp);
+                    if let Ok(next) = next {
                         Ok(Src::Next(next))
                     }
-                    else { Err("Invalid NEXT Logic") }
+                    else { println!("{:?}",next); Err("Invalid NEXT Logic") }
                 }
                 else if sym == "emit" {
                     if exp.len() > 0 {
