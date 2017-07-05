@@ -8,6 +8,7 @@ use lichen::var::Var;
 #[allow(dead_code)]
 struct Data;
 
+// we define this for the docs/syntax.ls to be tested against
 impl Eval for Data {
     #[allow(unused_variables)]
     fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var> {
