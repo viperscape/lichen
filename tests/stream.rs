@@ -5,23 +5,7 @@ use std::io::Cursor;
 use lichen::parse::{StreamParser,Block, Env};
 use lichen::source::Src;
 use lichen::var::Var;
-use lichen::eval::{Eval,Evaluator};
-
-struct Data;
-impl Eval for Data {
-    #[allow(unused_variables)]
-    fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var> {
-        None
-    }
-
-    #[allow(unused_variables)]
-    fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var) {}
-
-    #[allow(unused_variables)]
-    fn call (&mut self, var: Var, fun: &str, vars: &Vec<Var>) -> Option<Var> {
-        None
-    }
-}
+use lichen::eval::{Evaluator,Empty};
 
 
 
@@ -85,7 +69,7 @@ emi";  //unfinished source
     assert!(s.sink(&mut env).is_ok());
     assert_eq!(s.blocks.len(), 0);
 
-    let mut data = Data;
+    let mut data = Empty;
     let mut ev = Evaluator::new(&mut env, &mut data);
     let (vars,_) = ev.next().unwrap();
     assert_eq!(vars.get(0), Some(&Var::String("hi".to_owned())));
