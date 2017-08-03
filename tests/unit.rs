@@ -340,3 +340,20 @@ step2
     let (_,next) = ev.next().unwrap();
     assert_eq!(next, Some(Next::Restart(None)));
 }
+
+#[test]
+fn parse_or_logic() {
+    let src = "root\n
+    weight some_weight < other_weight\n
+    if !weight false\n
+    or true\n
+;\n";
+
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
+    let mut data = Data;
+
+    let mut ev = Evaluator::new(&mut env, &mut data);
+    let (vars,_) = ev.next().unwrap();
+    
+    assert_eq!(vars[0], true.into());
+}

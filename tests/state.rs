@@ -245,3 +245,31 @@ root\n
 
     assert_eq!(vars[0], Var::String("--Pan--".to_owned()));
 }
+
+#[test]
+fn validate_or_block() {
+    let src = "root\n
+    if !global.drunk \"not drunk\"\n
+    or \"is drunk\"\n
+\n
+    @global.drunk true\n
+\n
+    if !global.drunk \"not drunk\"\n
+    or \"is drunk\"\n
+;\n
+\n
+def global\n
+    drunk false
+;";
+    
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
+    let mut data = Player { coins: 0.0, name: "Pan".to_owned() };
+    
+    let mut ev = Evaluator::new(&mut env, &mut data);
+    let (vars,_) = ev.next().unwrap();
+    
+    assert_eq!(vars[0], "not drunk".into());
+
+    let (vars,_) = ev.next().unwrap();
+    assert_eq!(vars[0], "is drunk".into());
+}
