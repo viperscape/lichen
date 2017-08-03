@@ -91,7 +91,7 @@ fn main() {
         if let Some(next) = next {
             match next {
                 Next::Await(node) => {
-                    println!("\nContinue to {:?}\n", node);
+                    println!("\nContinue to {:}\n", node);
                     let mut line = String::new();
                     
                     match io::stdin().read_line(&mut line) {
@@ -112,7 +112,7 @@ fn main() {
                     // we're going to invert K/V for convenience for input
                     let mut choices: HashMap<String,String> = HashMap::new();
                     for (key,val) in selects.iter() {
-                        println!("{:?}, type {:?}", key, val[0]);
+                        println!("{:}, type {:?}", key, val[0].to_string());
                         choices.insert(val[0].to_string(),key.clone());
                     }
                     

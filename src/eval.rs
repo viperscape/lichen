@@ -232,6 +232,9 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                     return None
                 }
             }
+            else if b.idx > 0 { // we've been here, but node is finished?
+                b.idx = 0; //reset
+            }
         }
 
         None

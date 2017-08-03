@@ -2,8 +2,7 @@ root
     has_weight weight < 100.0
     
     if has_weight next:now town
-    
-    emit "You look overloaded, `name"
+    or "You look overloaded, `name"
 ;
 
 store
@@ -21,14 +20,11 @@ store
     if comp "You are quite the master, I see!"
 
     emit "See you later!"
-    next:now town
 ;
 
 info-dragonscale
     emit ["There is a long history of Dragonscale"
          "It all started.."]
-
-    next:now store
 ;
 
 town
@@ -36,9 +32,10 @@ town
                 "Leave the town?" exit-town}
 
     emit "A dustball blows by"
-    next:now town
+    next:restart
 ;
 
 exit-town
     emit "`name heads off into the sunset"
+    next:exit
 ;
