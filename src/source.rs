@@ -164,7 +164,7 @@ impl Src {
                          def: &mut Def)
                          -> (Vec<Var>,Option<Next>)
     {
-        println!("{:?}",self);
+        println!("{:?} {:?}",self, state);
         match self {
             &Src::Mut(ref m, ref v, ref a) => {
                 match m {
@@ -277,10 +277,8 @@ impl Src {
                         }
                     },
                     &Logic::IsNot(ref lookup) => { //inverse state
-                        let r = data.get_path(&lookup);
-                        
-                        if r.is_some() {
-                            match r.unwrap() {
+                        if let Some(r) = data.get_path(&lookup) {
+                            match r {
                                 Var::Bool(v) => {
                                     if !v { state.insert(name,true); }
                                 },
@@ -295,6 +293,16 @@ impl Src {
 
                             if let Some(val) = val {
                                 state.insert(name,val);
+                            }
+                            else {
+                                if let Some(r) = def.get_path(lookup) {
+                                    match r {
+                                        Var::Bool(v) => {
+                                            if !v { state.insert(name,true); }
+                                        },
+                                        _ => { state.insert(name,false); },
+                                    }
+                                }
                             }
                         }
                     },
@@ -388,17 +396,21 @@ impl Src {
                             else { if_value = true; break }
                         }
                     },
-                    &Expect::Ref(ref lookup) => { println!("{:?}",def);
+                    &Expect::Ref(ref lookup) => {
                         let val = state.get(lookup);
                         if let Some(val) = val {
                             if_value = *val;
                         }
-                        else {
-                            if let Some(val) = data.get_path(lookup) {
-                                match val {
-                                    Var::Bool(v) => { if_value = v; },
-                                    _ => { if_value = true; }
-                                }
+                        else if let Some(val) = def.get_path(lookup) {
+                            match val {
+                                Var::Bool(v) => { if_value = v; },
+                                _ => { if_value = true; }
+                            }
+                        }
+                        else if let Some(val) = data.get_path(lookup) {
+                            match val {
+                                Var::Bool(v) => { if_value = v; },
+                                _ => { if_value = true; }
                             }
                         }
                     },

@@ -245,17 +245,17 @@ root\n
 #[test]
 fn validate_or_block() {
     let src = "root\n
-    if global.drunk \"not drunk\"\n
+    if !global.drunk \"not drunk\"\n
     or \"is drunk\"\n
 \n
     @global.drunk true\n
 \n
-    if global.drunk \"not drunk\"\n
+    if !global.drunk \"not drunk\"\n
     or \"is drunk\"\n
 ;\n
 \n
 def global\n
-    drunk true
+    drunk false
 ;";
     
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
