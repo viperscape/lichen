@@ -2,6 +2,8 @@
 [![License: Apache-2.0](https://img.shields.io/crates/l/lichen.svg)](LICENSE)
 [![Build Status](https://travis-ci.org/viperscape/lichen.svg?branch=master)](https://travis-ci.org/viperscape/lichen)
 
+###### note: I am currently debating an overhaul of design and interface, this crate is likely to undergo change
+
 ### Scripting DSL (for Dialogue Graphs, et al)
 
 - provide binding to rust structure and methods
