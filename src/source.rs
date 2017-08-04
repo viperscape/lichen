@@ -164,6 +164,7 @@ impl Src {
                          def: &mut Def)
                          -> (Vec<Var>,Option<Next>)
     {
+        println!("{:?}",self);
         match self {
             &Src::Mut(ref m, ref v, ref a) => {
                 match m {
@@ -387,17 +388,12 @@ impl Src {
                             else { if_value = true; break }
                         }
                     },
-                    &Expect::Ref(ref lookup) => {
-                        let has_val = {
-                            let val = state.get(lookup);
-                            if let Some(val) = val {
-                                if_value = *val;
-                            }
-
-                            val.is_some()
-                        };
-
-                        if !has_val {
+                    &Expect::Ref(ref lookup) => { println!("{:?}",def);
+                        let val = state.get(lookup);
+                        if let Some(val) = val {
+                            if_value = *val;
+                        }
+                        else {
                             if let Some(val) = data.get_path(lookup) {
                                 match val {
                                     Var::Bool(v) => { if_value = v; },

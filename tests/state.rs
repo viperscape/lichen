@@ -1,12 +1,8 @@
 extern crate lichen;
 
-use lichen::parse::{Parser,Block,SrcBlock,Map};
-use lichen::{Logic,Expect};
+use lichen::parse::Parser;
 use lichen::var::Var;
-use lichen::source::{Src,Next};
 use lichen::eval::{Eval,Evaluator,Empty};
-
-use std::collections::HashMap;
 
 
 // Test for mutable state
@@ -249,17 +245,17 @@ root\n
 #[test]
 fn validate_or_block() {
     let src = "root\n
-    if !global.drunk \"not drunk\"\n
+    if global.drunk \"not drunk\"\n
     or \"is drunk\"\n
 \n
     @global.drunk true\n
 \n
-    if !global.drunk \"not drunk\"\n
+    if global.drunk \"not drunk\"\n
     or \"is drunk\"\n
 ;\n
 \n
 def global\n
-    drunk false
+    drunk true
 ;";
     
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();

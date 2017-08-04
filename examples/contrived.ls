@@ -1,41 +1,64 @@
-root
-    has_weight weight < 100.0
+def meta
+
+;
+
+def player
+    drunk false
+
+;
+
+tavern-enter
+    if !this.visited "Welcome to the tavern"
+    or "The tavern door swings open"
+
+    if player.drunk "Back so soon? (bar tender)"
+
+    next:now tavern
+;
+
+tavern
+    next:select {"Have a drink" bar,
+                "Look around" tavern-look,
+                "Leave" tavern-exit}
     
-    if has_weight next:now town
-    or "You look overloaded, `name"
-;
+    if player.drunk ["Talk to cloaked figure?"
+       next:await tavern-cloaked-figure]
 
-store
-    if !this.visited "G'day, you look weary, `name"
-    or "Welcome back my friend, `name"
-
-    comp:all !items.Dragonscale-Great-Sword !this.visited
-    if comp [
-      "Let me tell you about the rare Dragonscale Great Sword"
-      "Are you interested?"
-      next:await info-dragonscale
-    ]
-
-    comp:all this.visited items.Valerium-Great-Sword
-    if comp "You are quite the master, I see!"
-
-    emit "See you later!"
-;
-
-info-dragonscale
-    emit ["There is a long history of Dragonscale"
-         "It all started.."]
-;
-
-town
-    next:select {"Head to Store?" store,
-                "Leave the town?" exit-town}
-
-    emit "A dustball blows by"
     next:restart
 ;
 
-exit-town
-    emit "`name heads off into the sunset"
+tavern-look
+    emit "You see a bartender, taking her time to make drinks. She seems to have a sour face on."
+    if player.drunk "You see a cloaked figure sitting in the corner."
+
+;
+
+tavern-cloaked-figure
+    emit "What do you want, fool"
+
+;
+
+tavern-exit
+    emit "See ya, stranger (bar tender)"
+    next:now town
+;
+
+town
+    emit "You see a small tavern"
+    next:select {"Sleep?" sleep,
+                "Enter tavern?" tavern-enter}
+;
+
+sleep
     next:exit
+
+;
+
+root
+    next:now tavern-enter
+;
+
+bar
+    @player.drunk true
+    emit "You drink a strong fermented spirit"
 ;
