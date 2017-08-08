@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use logic::{Logic,Expect};
+use logic::{Logic,Expect,LogicFn};
 use eval::Eval;
 use var::{Var,Mut};
 use parse::{Parser,Map,Def,IR};
@@ -161,6 +161,7 @@ impl Next {
 impl Src {
     // TODO: only take D or Def, not both
     pub fn eval<D:Eval> (&self,
+                         logic: &HashMap<String,LogicFn>,
                          data: &mut D,
                          def: &mut Def)
                          -> (Vec<Var>,Option<Next>)
@@ -296,12 +297,12 @@ impl Src {
 
                 return (vec![],None) // composite does not return anything
             },
-            &Src::If(ref _x, ref _v, ref _next) => {
+            &Src::If(ref x, ref v, ref next) => {
                 // TODO: run logic eval on call
                 
-               /* let mut if_value = false;
+                let mut if_value = false;
                 match x {
-                    &Expect::All => {
+                    /*&Expect::All => {
                         for n in state.values() {
                             if !n { if_value = false; break }
                             else { if_value = true; }
@@ -317,11 +318,13 @@ impl Src {
                             if !n { if_value = true; }
                             else { if_value = true; break }
                         }
-                    },
+                    },*/
                     &Expect::Ref(ref lookup) => {
-                        let val = state.get(lookup);
+                        let val = logic.get(lookup);
                         if let Some(val) = val {
-                            if_value = *val;
+                            if let Some(val) = val.run(def) {
+                                if_value = val;
+                            }
                         }
                         else if let Some(val) = def.get_path(lookup) {
                             match val {
@@ -336,12 +339,11 @@ impl Src {
                             }
                         }
                     },
+                    _ => {},
                 }
 
                 if if_value { return ((*v).clone(), next.clone()) }
-                else { return (vec![],None) }*/
-
-                return (vec![],None)
+                else { return (vec![],None) }
             },
             &Src::When(ref _map) => {
                 /*for (k, &(ref m, ref v, ref a)) in map.iter() {

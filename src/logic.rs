@@ -43,6 +43,11 @@ pub enum Logic {
 }
 
 pub struct LogicFn(Box<Fn(&Def) -> Option<bool>>);
+impl LogicFn {
+    pub fn run(&self, def: &Def) -> Option<bool> {
+        self.0(def)
+    }
+}
 
 // NOTE: we don't actually impl this, but satisfy checker
 impl PartialEq for LogicFn {
