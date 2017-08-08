@@ -95,8 +95,6 @@ impl Logic {
 
     /// Evaluate Logic into Functions
     pub fn eval (&self) -> LogicFn {
-        //eg: let lfn: Box<LogicFn<D>> = Box::new(|| { Some(false) });
-
         match self {
             &Logic::Is(ref lookup) => {
                 let lookup = lookup.clone();
