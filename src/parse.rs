@@ -4,6 +4,7 @@ use std::io::prelude::*;
 use source::Src;
 use var::Var;
 use eval::Eval;
+use logic::LogicFn;
 
 #[derive(Debug,PartialEq)]
 pub struct SrcBlock {
@@ -12,6 +13,8 @@ pub struct SrcBlock {
     pub idx: usize,
     pub visited: bool,
     pub or_valid: bool,
+
+    //pub logic: HashMap<String,LogicFn<D>>,
 }
 
 #[derive(Debug,PartialEq)]

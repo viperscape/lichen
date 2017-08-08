@@ -130,6 +130,12 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                         else { b.or_valid = false; } //reset
                     }
                     &Src::If(_,_,_) => { b.or_valid = true; }
+                    // anything else resets above or logic
+                    &Src::Logic(ref _name, ref logic) => {
+                        let lfn = logic.eval::<D>();
+                        
+                        b.or_valid = false;
+                    },
                     _ => { b.or_valid = false; },
                 }
 

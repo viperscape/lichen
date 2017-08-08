@@ -1,5 +1,6 @@
 use var::Var;
 use parse::IR;
+use eval::Eval;
 
 /// Expect Types for Composites
 #[derive(Debug,PartialEq)]
@@ -41,6 +42,8 @@ pub enum Logic {
     IsNot(String),
 }
 
+pub type LogicFn<D> = Fn(&D) -> bool;
+
 impl Logic {
     pub fn parse(mut exp: Vec<IR>) -> Result<Logic,&'static str> {
         let len = exp.len();
@@ -73,5 +76,82 @@ impl Logic {
             else { Err("Invalid Logic Syntax") }
         }
         else { Err("Unbalanced Logic Syntax") }
+    }
+
+    /// Evaluate Logic into Functions
+    pub fn eval<D:Eval> (&self) -> Box<LogicFn<D>> {
+        //eg: let lfn: Box<LogicFn<D>> = Box::new(|| { false });
+        
+        match self {
+            &Logic::Is(ref lookup) => {
+                let lookup = lookup.clone();
+                let lfn: Box<LogicFn<D>> = Box::new(move |data: &D| {
+                    if let Some(r) = data.get_path(&lookup) {
+                        match r {
+                            Var::Bool(v) => {
+                                 v
+                            },
+                            _ => { //if exists?
+                                true
+                            },
+                        }
+                    }
+                    else { false }
+                });
+
+                lfn
+            },
+            &Logic::IsNot(ref lookup) => { //inverse state
+                let lookup = lookup.clone();
+                let lfn: Box<LogicFn<D>> = Box::new(move |data: &D| {
+                    if let Some(r) = data.get_path(&lookup) {
+                        match r {
+                            Var::Bool(v) => {
+                                !v
+                            },
+                            _ => {
+                                false
+                            },
+                        }
+                    }
+                    else { false }
+                });
+
+                lfn
+            },
+
+            &Logic::GT(ref left, ref right) => {
+                let left = left.clone();
+                let right = right.clone();
+                let lfn: Box<LogicFn<D>> = Box::new(move |data: &D| {
+                    let right = Var::get_num::<D>(&right,data);
+                    let left = Var::get_num::<D>(&left,data);
+                
+                    if left.is_ok() && right.is_ok() {
+                        left.unwrap() > right.unwrap()
+                    }
+                    else { false }
+                });
+
+                lfn
+            },
+            &Logic::LT(ref left, ref right) => {
+                let left = left.clone();
+                let right = right.clone();
+                let lfn: Box<LogicFn<D>> = Box::new(move |data: &D| {
+                    let right = Var::get_num::<D>(&right,data);
+                    let left = Var::get_num::<D>(&left,data);
+                    
+                    if left.is_ok() && right.is_ok() {
+                        left.unwrap() < right.unwrap()
+                    }
+                    else { false }
+                });
+
+                lfn
+            },
+        }
+                 
+        
     }
 }

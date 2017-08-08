@@ -254,76 +254,7 @@ impl Src {
             &Src::Emit(ref vars) => {
                 return (vars.clone(),None)
             },
-            &Src::Logic(ref _name, ref _logic) => {
-                /*let name = name.clone();
-                match logic {
-                    &Logic::Is(ref lookup) => {
-                        if let Some(r) = data.get_path(&lookup) {
-                            match r {
-                                Var::Bool(v) => { state.insert(name,v); },
-                                _ => { state.insert(name,true); }, //if exists?
-                            }
-                        }
-                        else { //check state table: some_thing !some_otherthing
-                            let mut val = None;
-                            if let Some(r) = state.get(lookup) {
-                                val = Some(*r);
-                            }
-
-                            if let Some(val) = val {
-                                state.insert(name,val);
-                            }
-                        }
-                    },
-                    &Logic::IsNot(ref lookup) => { //inverse state
-                        if let Some(r) = data.get_path(&lookup) {
-                            match r {
-                                Var::Bool(v) => {
-                                    if !v { state.insert(name,true); }
-                                },
-                                _ => { state.insert(name,false); },
-                            }
-                        }
-                        else {
-                            let mut val = None;
-                            if let Some(r) = state.get(lookup) {
-                                val = Some(!r);
-                            }
-
-                            if let Some(val) = val {
-                                state.insert(name,val);
-                            }
-                            else {
-                                if let Some(r) = def.get_path(lookup) {
-                                    match r {
-                                        Var::Bool(v) => {
-                                            if !v { state.insert(name,true); }
-                                        },
-                                        _ => { state.insert(name,false); },
-                                    }
-                                }
-                            }
-                        }
-                    },
-
-                    &Logic::GT(ref left, ref right) => {
-                        let right = Var::get_num::<D>(right,data);
-                        let left = Var::get_num::<D>(left,data);
-                        
-                        if left.is_ok() && right.is_ok() {
-                            state.insert(name, left.unwrap() > right.unwrap());
-                        }
-                    },
-                    &Logic::LT(ref left, ref right) => {
-                        let right = Var::get_num::<D>(right,data);
-                        let left = Var::get_num::<D>(left,data);
-                        
-                        if left.is_ok() && right.is_ok() {
-                            state.insert(name, left.unwrap() < right.unwrap());
-                        }
-                    },
-                }
-                 */
+            &Src::Logic(_,_) => {
                 return (vec![],None) // logic does not return anything
             },
             &Src::Composite(ref _name, ref x, ref lookups) => {
