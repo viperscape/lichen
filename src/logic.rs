@@ -42,7 +42,7 @@ pub enum Logic {
     IsNot(String),
 }
 
-pub type LogicFn<D> = Fn(&D) -> bool;
+pub type LogicFn<D> = Fn(&D) -> Option<bool>;
 
 impl Logic {
     pub fn parse(mut exp: Vec<IR>) -> Result<Logic,&'static str> {
@@ -80,7 +80,7 @@ impl Logic {
 
     /// Evaluate Logic into Functions
     pub fn eval<D:Eval> (&self) -> Box<LogicFn<D>> {
-        //eg: let lfn: Box<LogicFn<D>> = Box::new(|| { false });
+        //eg: let lfn: Box<LogicFn<D>> = Box::new(|| { Some(false) });
         
         match self {
             &Logic::Is(ref lookup) => {
@@ -89,14 +89,14 @@ impl Logic {
                     if let Some(r) = data.get_path(&lookup) {
                         match r {
                             Var::Bool(v) => {
-                                 v
+                                 Some(v)
                             },
                             _ => { //if exists?
-                                true
+                                Some(true)
                             },
                         }
                     }
-                    else { false }
+                    else { None }
                 });
 
                 lfn
@@ -107,14 +107,14 @@ impl Logic {
                     if let Some(r) = data.get_path(&lookup) {
                         match r {
                             Var::Bool(v) => {
-                                !v
+                                Some(!v)
                             },
                             _ => {
-                                false
+                                Some(false)
                             },
                         }
                     }
-                    else { false }
+                    else { None }
                 });
 
                 lfn
@@ -128,9 +128,9 @@ impl Logic {
                     let left = Var::get_num::<D>(&left,data);
                 
                     if left.is_ok() && right.is_ok() {
-                        left.unwrap() > right.unwrap()
+                        Some(left.unwrap() > right.unwrap())
                     }
-                    else { false }
+                    else { None }
                 });
 
                 lfn
@@ -143,9 +143,9 @@ impl Logic {
                     let left = Var::get_num::<D>(&left,data);
                     
                     if left.is_ok() && right.is_ok() {
-                        left.unwrap() < right.unwrap()
+                        Some(left.unwrap() < right.unwrap())
                     }
-                    else { false }
+                    else { None }
                 });
 
                 lfn
