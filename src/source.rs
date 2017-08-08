@@ -159,6 +159,7 @@ impl Next {
 
 
 impl Src {
+    // TODO: only take D or Def, not both
     pub fn eval<D:Eval> (&self,
                          data: &mut D,
                          def: &mut Def)
