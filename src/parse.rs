@@ -14,7 +14,7 @@ pub struct SrcBlock {
     pub visited: bool,
     pub or_valid: bool,
 
-    //pub logic: HashMap<String,LogicFn<D>>,
+    pub logic: HashMap<String,LogicFn>,
 }
 
 #[derive(Debug,PartialEq)]
@@ -152,6 +152,7 @@ impl Parser {
                             idx: 0,
                             visited: false,
                             or_valid: false,
+                            logic: HashMap::new()
                         };
                         
                         block = Some(Block::Src(b));

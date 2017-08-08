@@ -130,9 +130,13 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                         else { b.or_valid = false; } //reset
                     }
                     &Src::If(_,_,_) => { b.or_valid = true; }
-                    // anything else resets above or logic
-                    &Src::Logic(ref _name, ref logic) => {
-                        let lfn = logic.eval::<D>();
+                    // anything else resets above or-logic
+                    &Src::Logic(ref name, ref logic) => {
+                        // NOTE: we only add logicfn if not compiled yet!
+                        if !b.logic.contains_key(name) {
+                            let lfn = logic.eval();
+                            b.logic.insert(name.clone(),lfn);
+                        }
                         
                         b.or_valid = false;
                     },
