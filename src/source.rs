@@ -159,12 +159,11 @@ impl Next {
 
 
 impl Src {
-    pub fn eval<D:Eval> (&self, state: &mut HashMap<String,bool>,
+    pub fn eval<D:Eval> (&self,
                          data: &mut D,
                          def: &mut Def)
                          -> (Vec<Var>,Option<Next>)
     {
-        println!("{:?} {:?}",self, state);
         match self {
             &Src::Mut(ref m, ref v, ref a) => {
                 match m {
@@ -255,8 +254,8 @@ impl Src {
             &Src::Emit(ref vars) => {
                 return (vars.clone(),None)
             },
-            &Src::Logic(ref name, ref logic) => { //logic updates state
-                let name = name.clone();
+            &Src::Logic(ref _name, ref _logic) => {
+                /*let name = name.clone();
                 match logic {
                     &Logic::Is(ref lookup) => {
                         if let Some(r) = data.get_path(&lookup) {
@@ -324,33 +323,22 @@ impl Src {
                         }
                     },
                 }
-
+                 */
                 return (vec![],None) // logic does not return anything
             },
-            &Src::Composite(ref name, ref x, ref lookups) => {
+            &Src::Composite(ref _name, ref x, ref lookups) => {
                 // track if any lookups are false or true
                 let mut comp_false = false;
                 let mut comp_true = false;
                 
                 for lookup in lookups.iter() {
-                    let val = state.get(lookup);
-                    if val.is_some() && *val.unwrap() {
-                        comp_true = true;
-                    }
-                    else {
-                        if val.is_some() { //found it but it's false
-                            comp_false = true;
-                        }
-                        else { //check data for delayed reference
-                            if let Some(val) = data.get_path(lookup) {
-                                match val {
-                                    Var::Bool(b) => {
-                                        if b { comp_true = true; }
-                                        else { comp_false = true; }
-                                    }
-                                    _ => { comp_true = true; } //identity/exists, true
-                                }
+                    if let Some(val) = data.get_path(lookup) {
+                        match val {
+                            Var::Bool(b) => {
+                                if b { comp_true = true; }
+                                else { comp_false = true; }
                             }
+                            _ => { comp_true = true; } //identity/exists, true
                         }
                     }
                 }
@@ -358,17 +346,17 @@ impl Src {
                 match x {
                     &Expect::All => { // all must pass as true
                         if comp_true && !comp_false {
-                            state.insert(name.clone(),true);
+                            //state.insert(name.clone(),true);
                         }
                     },
                     &Expect::Any => { // first truth passes for set
                         if comp_true {
-                            state.insert(name.clone(),true);
+                            //state.insert(name.clone(),true);
                         }
                     },
                     &Expect::None => { // inverse of any, none must be true
                         if !comp_true && comp_false {
-                            state.insert(name.clone(),true);
+                            //state.insert(name.clone(),true);
                         }
                     },
                     &Expect::Ref(_) => {} // this should never hit
@@ -376,8 +364,10 @@ impl Src {
 
                 return (vec![],None) // composite does not return anything
             },
-            &Src::If(ref x, ref v, ref next) => {
-                let mut if_value = false;
+            &Src::If(ref _x, ref _v, ref _next) => {
+                // TODO: run logic eval on call
+                
+               /* let mut if_value = false;
                 match x {
                     &Expect::All => {
                         for n in state.values() {
@@ -417,16 +407,18 @@ impl Src {
                 }
 
                 if if_value { return ((*v).clone(), next.clone()) }
-                else { return (vec![],None) }
+                else { return (vec![],None) }*/
+
+                return (vec![],None)
             },
-            &Src::When(ref map) => {
-                for (k, &(ref m, ref v, ref a)) in map.iter() {
+            &Src::When(ref _map) => {
+                /*for (k, &(ref m, ref v, ref a)) in map.iter() {
                     let mut is_true = false;
                     if let Some(b) = state.get(k) { is_true = *b }
                     if is_true {
                         Src::eval(&Src::Mut(m.clone(), v.clone(), a.clone()), state, data, def);
                     }
-                }
+                }*/
                 
                 return (vec![],None)
             },

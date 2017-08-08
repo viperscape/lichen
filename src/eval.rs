@@ -116,7 +116,6 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
         where D: Eval + 'd
     {
         if let Some(b) = self.env.src.get_mut(node_name) {
-            b.state.insert("this.visited".to_owned(), b.visited);
             b.visited = true;
             
             if let Some(src) = b.src.get(b.idx) {
@@ -134,7 +133,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                     _ => { b.or_valid = false; },
                 }
 
-                let (mut vars, next) = src.eval(&mut b.state, self.data, &mut self.env.def);
+                let (mut vars, next) = src.eval(self.data, &mut self.env.def);
                 let has_return = (vars.len() > 0) || next.is_some();
                
                 // reset when if is successful
