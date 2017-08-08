@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use ::{Logic,Expect};
+use logic::{Logic,Expect};
 use eval::Eval;
 use var::{Var,Mut};
 use parse::{Parser,Map,Def,IR};
