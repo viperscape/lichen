@@ -69,17 +69,7 @@ fn main() {
     let mut src = String::from_utf8_lossy(bytes);
     let mut env = Parser::parse_blocks(src.to_mut()).expect("ERROR: Unable to parse source").into_env();
 
-    let mut items = HashMap::new();
-    items.insert("Valerium-Great-Sword".to_owned(),Items::Sword);
-    
-    let mut player = Player {
-        name: "Io".to_owned(),
-        weight: 45.0,
-        items: items,
-        coins: 0.0,
-    };
-
-    let mut ev = Evaluator::new(&mut env, &mut player);
+    let mut ev = Evaluator::new(&mut env);
     
     while let Some((vars,next)) = ev.next() {
         for var in vars {

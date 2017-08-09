@@ -2,7 +2,7 @@ extern crate lichen;
 
 use lichen::parse::Parser;
 use lichen::var::Var;
-use lichen::eval::{Evaluator,Empty};
+use lichen::eval::Evaluator;
 
 
 fn main() {
@@ -12,8 +12,7 @@ fn main() {
     
     let mut env = Parser::parse_blocks(src.to_mut()).expect("ERROR: Unable to parse source").into_env(); //parse the source and build the environment
 
-    let mut empty = Empty;
-    let mut ev = Evaluator::new(&mut env, &mut empty); // build the evaluator based on the environment and any data
+    let mut ev = Evaluator::new(&mut env); // build the evaluator based on the environment
     
     while let Some((vars, _next_node)) = ev.next() { // here we loop through the evaluator steps
         for var in vars {

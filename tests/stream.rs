@@ -69,8 +69,7 @@ emi";  //unfinished source
     assert!(s.sink(&mut env).is_ok());
     assert_eq!(s.blocks.len(), 0);
 
-    let mut data = Empty;
-    let mut ev = Evaluator::new(&mut env, &mut data);
+    let mut ev = Evaluator::new(&mut env);
     let (vars,_) = ev.next().unwrap();
     assert_eq!(vars.get(0), Some(&Var::String("hi".to_owned())));
     let (vars,_) = ev.nth(1).expect("ERROR: Block failed to transition");

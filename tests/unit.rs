@@ -147,7 +147,7 @@ fn validate_qsym_block() {
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
 
-    let mut ev = Evaluator::new(&mut env, &mut data);
+    let mut ev = Evaluator::new(&mut env);
     let (_,nn) = ev.next().unwrap();
     
     assert_eq!(nn, Some(Next::Await("store".into())));
@@ -166,7 +166,7 @@ fn validate_reflection_block() {
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
 
-    let ev = Evaluator::new(&mut env, &mut data);
+    let ev = Evaluator::new(&mut env);
     let (_,nn) = ev.last().unwrap();
     
     assert_eq!(nn, Some(Next::Await("store".into())));
@@ -207,7 +207,7 @@ fn parse_eval_str_block() {
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
     
-    let ev = Evaluator::new(&mut env, &mut data);
+    let ev = Evaluator::new(&mut env);
     let (vars,_node) = ev.last().unwrap();
     
     assert_eq!(vars, ["looks like you are 4 kgs heavy, Io".into()]);
@@ -222,7 +222,7 @@ fn parse_compare_env_block() {
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
 
-    let ev = Evaluator::new(&mut env, &mut data);
+    let ev = Evaluator::new(&mut env);
     let (_vars,node) = ev.last().unwrap();
     
     assert_eq!(node, Some(Next::Now("store".to_string())));
@@ -238,7 +238,7 @@ fn parse_return_varkind() {
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
 
-    let ev = Evaluator::new(&mut env, &mut data);
+    let ev = Evaluator::new(&mut env);
     let (vars,_) = ev.last().unwrap();
     
     assert_eq!(vars[0], 4.0 .into());
@@ -259,7 +259,7 @@ store\n
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
 
-    let ev = Evaluator::new(&mut env, &mut data);
+    let ev = Evaluator::new(&mut env);
     let (vars,_) = ev.last().unwrap();
     
     assert_eq!(vars[0], "welcome, \nlook around".into());
@@ -284,7 +284,7 @@ fn parse_select_nodes() {
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
 
-    let mut ev = Evaluator::new(&mut env, &mut data);
+    let mut ev = Evaluator::new(&mut env);
     let (_vars,select1) = ev.next().unwrap();
     let (_vars,select2) = ev.next().unwrap();
 
@@ -324,7 +324,7 @@ step2
    
     let mut data = Data;
     
-    let mut ev = Evaluator::new(&mut env, &mut data);
+    let mut ev = Evaluator::new(&mut env);
     
     let (_,next) = ev.next().unwrap();
     assert_eq!(next, Some(Next::Now("step2".to_owned())));
@@ -347,7 +347,7 @@ fn parse_or_logic() {
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let mut data = Data;
 
-    let mut ev = Evaluator::new(&mut env, &mut data);
+    let mut ev = Evaluator::new(&mut env);
     let (vars,_) = ev.next().unwrap();
     
     assert_eq!(vars[0], true.into());

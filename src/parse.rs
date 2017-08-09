@@ -419,8 +419,15 @@ impl Eval for Def {
     fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var) {
         if let Some(path) = path {
             if let Some(ref mut def) = self.get_mut(path[0]) {
+                let set;
                 if let Some(v) = def.def.get_mut(lookup) {
                     *v = var;
+                    set = None;
+                }
+                else { set = Some(var); }
+                
+                if let Some(var) = set { // NOTE: we're building this from scratch, this should be considered explicit instead
+                    def.def.insert(lookup.to_owned(), var);
                 }
             }
         }

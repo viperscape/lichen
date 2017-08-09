@@ -50,14 +50,12 @@ pub trait Eval {
     fn call (&mut self, var: Var, fun: &str, vars: &Vec<Var>) -> Option<Var>;
 }
 
-pub struct Evaluator<'e, 'd, D:Eval + 'd> {
-    data: &'d mut D,
+pub struct Evaluator<'e> {
     env: &'e mut Env,
     node_stack: Vec<String>,
 }
 
-impl<'e, 'd, D:Eval + 'd> Iterator for Evaluator<'e, 'd, D>
-    where D: Eval + 'd {
+impl<'e> Iterator for Evaluator<'e> {
         
         type Item = (Vec<Var>, Option<Next>); //here we only return node name as an option to advance
         fn next(&mut self) -> Option<Self::Item> {
@@ -85,11 +83,11 @@ impl<'e, 'd, D:Eval + 'd> Iterator for Evaluator<'e, 'd, D>
         }
     }
 
-impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
+impl<'e> Evaluator<'e> {
     /// Evaluator by default starts on the node named 'root'
-    pub fn new (env: &'e mut Env, data: &'d mut D) -> Evaluator<'e, 'd, D> {
+    pub fn new (env: &'e mut Env) -> Evaluator<'e> {
         Evaluator {
-            env: env, data: data,
+            env: env,
             node_stack: vec!["root".to_owned()],
         }
     }
@@ -113,7 +111,6 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
     /// Manually run the Evaluator, starting at node specified
     pub fn run (&mut self, node_name: &str)
                 -> Option<(Vec<Var>, Option<Next>)>
-        where D: Eval + 'd
     {
         if let Some(b) = self.env.src.get_mut(node_name) {
             b.visited = true;
@@ -158,9 +155,6 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                             if let Some(val_) = self.env.def.get_path(s) {
                                 val = Some(val_);
                             }
-                            else if let Some(val_) = self.data.get_path(s) {
-                                val = Some(val_);
-                            }
                             // NOTE: otherwise we silently fail
                         },
                         &mut Var::String(ref mut s) => { //format string
@@ -171,9 +165,6 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                             for c in s.chars() {
                                 if (c == ' ' || c == '`') && !sym.is_empty() {
                                     if let Some(v) = self.env.def.get_path(&sym) {
-                                        fs.push_str(&v.to_string());
-                                    }
-                                    else if let Some(v) = self.data.get_path(&sym) {
                                         fs.push_str(&v.to_string());
                                     }
                                     else {
@@ -197,9 +188,6 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
 
                             if !sym.is_empty() {
                                 if let Some(v) = self.env.def.get_path(&sym) {
-                                    fs.push_str(&v.to_string());
-                                }
-                                else if let Some(v) = self.data.get_path(&sym) {
                                     fs.push_str(&v.to_string());
                                 }
                                 else {
@@ -256,15 +244,15 @@ pub struct EvaluatorState {
 }
 
 impl EvaluatorState {
-    pub fn to_eval<'e, 'd, D:Eval + 'd> (self, env: &'e mut Env, data: &'d mut D) -> Evaluator<'e, 'd, D> {
+    pub fn to_eval<'e> (self, env: &'e mut Env) -> Evaluator<'e> {
         Evaluator {
-            env: env, data: data,
+            env: env,
             node_stack: self.node_stack,
         }
     }
 
-    pub fn as_eval<'e, 'd, D:Eval + 'd> (&self, env: &'e mut Env, data: &'d mut D) -> Evaluator<'e, 'd, D> {
-        self.clone().to_eval(env,data)
+    pub fn as_eval<'e> (&self, env: &'e mut Env) -> Evaluator<'e> {
+        self.clone().to_eval(env)
     }
 }
 
