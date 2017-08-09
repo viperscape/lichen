@@ -8,9 +8,6 @@ pub enum Expect {
     All,
     Any,
     None,
-
-    /// References env variable
-    Ref(String)  // NOTE: may be renamed to Sym
 }
 
 impl Expect {
@@ -19,7 +16,7 @@ impl Expect {
             "all" => Expect::All,
             "any" => Expect::Any,
             "none" => Expect::None,
-            _ => Expect::Ref(s),
+            _ => Expect::None,
         }
     }
 }

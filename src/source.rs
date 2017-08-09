@@ -16,7 +16,7 @@ pub enum Src {
     /// Logic must resolve to true
     /// eg: if item_logic give_quest
     /// Can optionally end execution and begin next node
-    If(Expect, Vec<Var>, Option<Next>),
+    If(String, Vec<Var>, Option<Next>),
 
     /// Or must follow an previous If
     ///
@@ -292,54 +292,31 @@ impl Src {
                             //state.insert(name.clone(),true);
                         }
                     },
-                    &Expect::Ref(_) => {} // this should never hit
                 }
 
                 return (vec![],None) // composite does not return anything
             },
-            &Src::If(ref x, ref v, ref next) => {
+            &Src::If(ref lookup, ref v, ref next) => {
                 // TODO: run logic eval on call
                 
                 let mut if_value = false;
-                match x {
-                    /*&Expect::All => {
-                        for n in state.values() {
-                            if !n { if_value = false; break }
-                            else { if_value = true; }
-                        }
-                    },
-                    &Expect::Any => {
-                        for n in state.values() {
-                            if *n { if_value = true; break }
-                        }
-                    },
-                    &Expect::None => {
-                        for n in state.values() {
-                            if !n { if_value = true; }
-                            else { if_value = true; break }
-                        }
-                    },*/
-                    &Expect::Ref(ref lookup) => {
-                        let val = logic.get(lookup);
-                        if let Some(val) = val {
-                            if let Some(val) = val.run(def) {
-                                if_value = val;
-                            }
-                        }
-                        else if let Some(val) = def.get_path(lookup) {
-                            match val {
-                                Var::Bool(v) => { if_value = v; },
-                                _ => { if_value = true; }
-                            }
-                        }
-                        else if let Some(val) = data.get_path(lookup) {
-                            match val {
-                                Var::Bool(v) => { if_value = v; },
-                                _ => { if_value = true; }
-                            }
-                        }
-                    },
-                    _ => {},
+                let val = logic.get(lookup);
+                if let Some(val) = val {
+                    if let Some(val) = val.run(def) {
+                        if_value = val;
+                    }
+                }
+                else if let Some(val) = def.get_path(lookup) {
+                    match val {
+                        Var::Bool(v) => { if_value = v; },
+                        _ => { if_value = true; }
+                    }
+                }
+                else if let Some(val) = data.get_path(lookup) {
+                    match val {
+                        Var::Bool(v) => { if_value = v; },
+                        _ => { if_value = true; }
+                    }
                 }
 
                 if if_value { return ((*v).clone(), next.clone()) }
@@ -400,7 +377,7 @@ impl Src {
                         v.push(r);
                     }
 
-                    Ok(Src::If(Expect::parse(x.into()),
+                    Ok(Src::If(x.into(), // NOTE: x.into() might cause errors, not all IR is acceptable
                                v, next.ok()))
                 }
                 else if sym == "or" {
@@ -445,10 +422,6 @@ impl Src {
                     }
                     else { // composite type
                         let kind = Expect::parse(keys.pop().unwrap().to_owned());
-                        match kind { // only formal expected types allowed
-                            Expect::Ref(_) => { return Err("Informal Expect found") },
-                            _ => {}
-                        }
 
                         let exp = exp.drain(..).map(|n| n.into()).collect();
                         Ok(Src::Composite(keys.pop().unwrap().to_owned(),

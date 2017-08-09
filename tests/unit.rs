@@ -52,7 +52,7 @@ fn parse_block() {
 \n
     if unequipped \"you're looking for something?\"\n
 \n
-    if all \"welcome, \nlook around\"\n
+    if some_comp \"welcome, \nlook around\"\n
     next:now end\n
 ;";
     
@@ -72,10 +72,10 @@ fn parse_block() {
                       Src::Composite("some_comp".to_owned(),
                                      Expect::Any,
                                      vec!["unequipped".to_owned(),"has_weight".to_owned()]),
-                      Src::If(Expect::Ref("unequipped".to_owned()),
+                      Src::If("unequipped".to_owned(),
                               vec!["you're looking for something?".into()],
                               None),
-                      Src::If(Expect::All,
+                      Src::If("some_comp".to_owned(),
                               vec!["welcome, \nlook around".into()],
                               None),
                       Src::Next(Next::Now("end".to_owned()))],
@@ -100,13 +100,8 @@ fn parse_qsym_block() {
             }
 
             match b.src[1] {
-                Src::If(ref x,_,_) => {
-                    match x {
-                        &Expect::Ref(ref r_) => {
-                            assert_eq!(r,r_);
-                        },
-                        _ => panic!("unknown expect found")
-                    }
+                Src::If(ref r_,_,_) => {
+                    assert_eq!(r,r_);
                 },
                 _ => panic!("unknown source found")
             }
