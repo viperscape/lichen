@@ -1,7 +1,7 @@
 extern crate lichen;
 
 use lichen::parse::{Parser,Block,SrcBlock,Map};
-use lichen::{Logic,Expect};
+use lichen::logic::{Logic,Expect};
 use lichen::var::Var;
 use lichen::source::{Src,Next};
 use lichen::eval::{Eval,Evaluator};
@@ -79,7 +79,7 @@ fn parse_block() {
                               vec!["welcome, \nlook around".into()],
                               None),
                       Src::Next(Next::Now("end".to_owned()))],
-            state: HashMap::new()
+            logic: HashMap::new(),
         })];
     
     assert_eq!(block[0],block_[0]);
