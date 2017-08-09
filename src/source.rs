@@ -421,6 +421,7 @@ impl Src {
                                       r))
                     }
                     else { // composite type
+                        // NOTE: we may want to inspect what happened if the kind was not found
                         let kind = Expect::parse(keys.pop().unwrap().to_owned());
 
                         let exp = exp.drain(..).map(|n| n.into()).collect();
