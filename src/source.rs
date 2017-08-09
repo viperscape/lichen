@@ -159,12 +159,10 @@ impl Next {
 
 
 impl Src {
-    // TODO: only take D or Def, not both
-    pub fn eval<D:Eval> (&self,
-                         logic: &HashMap<String,LogicFn>,
-                         data: &mut D,
-                         def: &mut Def)
-                         -> (Vec<Var>,Option<Next>)
+    pub fn eval (&self,
+                 logic: &HashMap<String,LogicFn>,
+                 def: &mut Def)
+                 -> (Vec<Var>,Option<Next>)
     {
         match self {
             &Src::Mut(ref m, ref v, ref a) => {
@@ -173,14 +171,11 @@ impl Src {
                         let mut num = None;
 
                         let var_name = Var::Sym(v.to_owned());
-                        let mut v1 = Var::get_num(&var_name, def);
-                        let is_def = v1.is_ok();
-                        if !is_def { v1 = Var::get_num(&var_name, data); }
+                        let v1 = Var::get_num(&var_name, def);
                         
                         if let Ok(v1) = v1 {
                             let var_name = &a[0];
-                            let mut v2 = Var::get_num(&var_name, def);
-                            if v2.is_err() { v2 = Var::get_num(&var_name, data); }
+                            let v2 = Var::get_num(&var_name, def);
                             
                             if let Ok(v2) = v2 {
                                 match m {
@@ -202,29 +197,23 @@ impl Src {
                         }
                         
                         if let Some(num) = num {
-                            if is_def { def.set_path(&v, Var::Num(num)); }
-                            else { data.set_path(&v, Var::Num(num)); }
+                            def.set_path(&v, Var::Num(num));
                         }
                     },
                     &Mut::Swap => {
                         let val = a[0].clone();
-                        if def.get_path(v).is_some() {
-                            def.set_path(v,val);
-                        }
-                        else { data.set_path(&v, val); }
+                        def.set_path(v,val); // NOTE: this will also build a var from scratch
                     },
-                    &Mut::Fn(ref fun) => {
+                    &Mut::Fn(ref _fun) => { // FIXME: this is now defunct and needs to be rethought!
+                        unimplemented!();
+
+                        /*
                         let mut args = vec![]; //collect symbols' value
                         for n in a {
                             match n {
                                 &Var::Sym(ref n) => {
                                     if let Some(var) = def.get_path(n) {
                                         args.push(var);
-                                    }
-                                    else {
-                                        if let Some(var) = data.get_path(n) {
-                                            args.push(var);
-                                        }
                                     }
                                 },
                                 _ => { args.push(n.clone()) }
@@ -237,11 +226,7 @@ impl Src {
                                 def.set_path(&v, r);
                             }
                         }
-                        else if let Some(var) = data.get_path(&v) {
-                            if let Some(r) = data.call(var, fun, &args) {
-                                data.set_path(&v, r);
-                            }
-                        }
+                        */
                     },
                 }
                 
@@ -259,13 +244,17 @@ impl Src {
             &Src::Logic(_,_) => {
                 return (vec![],None) // logic does not return anything
             },
-            &Src::Composite(ref _name, ref x, ref lookups) => {
+            &Src::Composite(ref _name, ref _x, ref _lookups) => {
+                // TODO: reimplement as some sort of LogicFn closure
+                unimplemented!();
+
+                /*
                 // track if any lookups are false or true
                 let mut comp_false = false;
                 let mut comp_true = false;
                 
                 for lookup in lookups.iter() {
-                    if let Some(val) = data.get_path(lookup) {
+                    if let Some(val) = def.get_path(lookup) {
                         match val {
                             Var::Bool(b) => {
                                 if b { comp_true = true; }
@@ -293,15 +282,14 @@ impl Src {
                         }
                     },
                 }
-
-                return (vec![],None) // composite does not return anything
-            },
-            &Src::If(ref lookup, ref v, ref next) => {
-                // TODO: run logic eval on call
                 
+                return (vec![],None) // composite does not return anything
+                 */
+            },
+            &Src::If(ref lookup, ref v, ref next) => {                
                 let mut if_value = false;
-                let val = logic.get(lookup);
-                if let Some(val) = val {
+                
+                if let Some(val) = logic.get(lookup) {
                     if let Some(val) = val.run(def) {
                         if_value = val;
                     }
@@ -312,24 +300,29 @@ impl Src {
                         _ => { if_value = true; }
                     }
                 }
-                else if let Some(val) = data.get_path(lookup) {
-                    match val {
-                        Var::Bool(v) => { if_value = v; },
-                        _ => { if_value = true; }
-                    }
-                }
-
+                
                 if if_value { return ((*v).clone(), next.clone()) }
                 else { return (vec![],None) }
             },
-            &Src::When(ref _map) => {
-                /*for (k, &(ref m, ref v, ref a)) in map.iter() {
+            &Src::When(ref map) => {
+                for (k, &(ref m, ref v, ref a)) in map.iter() {
                     let mut is_true = false;
-                    if let Some(b) = state.get(k) { is_true = *b }
-                    if is_true {
-                        Src::eval(&Src::Mut(m.clone(), v.clone(), a.clone()), state, data, def);
+                    if let Some(val) = logic.get(k) {
+                        if let Some(val) = val.run(def) {
+                            is_true = val;
+                        }
                     }
-                }*/
+                    else if let Some(val) = def.get_path(k) {
+                        match val {
+                            Var::Bool(v) => { is_true = v; },
+                            _ => { is_true = true; }
+                        }
+                    }
+                    
+                    if is_true {
+                        Src::eval(&Src::Mut(m.clone(), v.clone(), a.clone()), logic, def);
+                    }
+                }
                 
                 return (vec![],None)
             },

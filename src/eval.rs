@@ -143,7 +143,7 @@ impl<'e, 'd, D:Eval> Evaluator<'e, 'd, D> {
                     _ => { b.or_valid = false; },
                 }
 
-                let (mut vars, next) = src.eval(&b.logic, self.data, &mut self.env.def);
+                let (mut vars, next) = src.eval(&b.logic, &mut self.env.def);
                 let has_return = (vars.len() > 0) || next.is_some();
                
                 // reset when if is successful
