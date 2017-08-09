@@ -145,7 +145,6 @@ fn validate_qsym_block() {
     ;";
     
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
-    let mut data = Data;
 
     let mut ev = Evaluator::new(&mut env);
     let (_,nn) = ev.next().unwrap();
@@ -164,7 +163,6 @@ fn validate_reflection_block() {
     ;";
     
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
-    let mut data = Data;
 
     let ev = Evaluator::new(&mut env);
     let (_,nn) = ev.last().unwrap();
@@ -205,7 +203,6 @@ fn parse_eval_str_block() {
 ;";
     
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
-    let mut data = Data;
     
     let ev = Evaluator::new(&mut env);
     let (vars,_node) = ev.last().unwrap();
@@ -220,7 +217,6 @@ fn parse_compare_env_block() {
     if weight next:now store\n
 ;";
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
-    let mut data = Data;
 
     let ev = Evaluator::new(&mut env);
     let (_vars,node) = ev.last().unwrap();
@@ -236,7 +232,6 @@ fn parse_return_varkind() {
 ;";
 
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
-    let mut data = Data;
 
     let ev = Evaluator::new(&mut env);
     let (vars,_) = ev.last().unwrap();
@@ -257,7 +252,6 @@ store\n
 ;";
 
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
-    let mut data = Data;
 
     let ev = Evaluator::new(&mut env);
     let (vars,_) = ev.last().unwrap();
@@ -282,7 +276,6 @@ fn parse_select_nodes() {
     emit \"A dustball blows by\"\n
 ;";
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
-    let mut data = Data;
 
     let mut ev = Evaluator::new(&mut env);
     let (_vars,select1) = ev.next().unwrap();
@@ -321,8 +314,7 @@ step2
 
     let p = Parser::parse_blocks(src).expect("ERROR: Unable to parse source");
     let mut env = p.into_env();
-   
-    let mut data = Data;
+
     
     let mut ev = Evaluator::new(&mut env);
     
@@ -345,10 +337,27 @@ fn parse_or_logic() {
 ;\n";
 
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
-    let mut data = Data;
 
     let mut ev = Evaluator::new(&mut env);
     let (vars,_) = ev.next().unwrap();
+    
+    assert_eq!(vars[0], true.into());
+}
+
+
+#[test]
+fn validate_inv_logic() {
+    let src = "root\n
+    has_no_name !global.name\n
+    if has_no_name true\n
+;\n
+def global\n
+;\n";
+
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
+
+    let ev = Evaluator::new(&mut env);
+    let (vars,_) = ev.last().unwrap();
     
     assert_eq!(vars[0], true.into());
 }
