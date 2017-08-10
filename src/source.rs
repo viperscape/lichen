@@ -309,7 +309,6 @@ impl Src {
                     let mut is_true = false;
                     if let Some(val) = logic.get(k) {
                         if let Some(val) = val.run(def) {
-                            println!("logicfn: {:?}",val);
                             is_true = val;
                         }
                     }

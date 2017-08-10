@@ -349,7 +349,7 @@ fn parse_or_logic() {
 fn validate_inv_logic() {
     let src = "root\n
     has_no_name !global.name\n
-    if has_no_name true\n
+    emit has_no_name\n
 ;\n
 def global\n
 ;\n";

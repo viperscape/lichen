@@ -155,6 +155,11 @@ impl<'e> Evaluator<'e> {
                             if let Some(val_) = self.env.def.get_path(s) {
                                 val = Some(val_);
                             }
+                            else if let Some(ref lfn) = b.logic.get(s) {
+                                if let Some(val_) = lfn.run(&self.env.def) {
+                                    val = Some(val_.into());
+                                }
+                            }
                             // NOTE: otherwise we silently fail
                         },
                         &mut Var::String(ref mut s) => { //format string
@@ -166,6 +171,14 @@ impl<'e> Evaluator<'e> {
                                 if (c == ' ' || c == '`') && !sym.is_empty() {
                                     if let Some(v) = self.env.def.get_path(&sym) {
                                         fs.push_str(&v.to_string());
+                                    }
+                                    else if let Some(ref lfn) = b.logic.get(s) {
+                                        if let Some(val_) = lfn.run(&self.env.def) {
+                                            fs.push_str(&val_.to_string());
+                                        }
+                                        else {
+                                            fs.push_str(&sym);
+                                        }
                                     }
                                     else {
                                         fs.push_str(&sym); //push as non-ref sym again
@@ -189,6 +202,14 @@ impl<'e> Evaluator<'e> {
                             if !sym.is_empty() {
                                 if let Some(v) = self.env.def.get_path(&sym) {
                                     fs.push_str(&v.to_string());
+                                }
+                                else if let Some(ref lfn) = b.logic.get(s) {
+                                    if let Some(val_) = lfn.run(&self.env.def) {
+                                        fs.push_str(&val_.to_string());
+                                    }
+                                    else {
+                                        fs.push_str(&sym);
+                                    }
                                 }
                                 else {
                                     fs.push_str(&sym); //push as non-ref sym again
