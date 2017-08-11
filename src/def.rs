@@ -31,6 +31,7 @@ impl Eval for Def {
 
         loop { // resolve symbol references
             let (path,sym) = self.as_path(lookup);
+            println!("{:?}: {:?} {:?}",lookup, path, sym);
             if let Some(path) = path {
                 if let Some(ref def) = self.get(path[0]) {
                     if let Some(v) = def.data.get(sym) {

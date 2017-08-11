@@ -19,6 +19,10 @@ impl Eval for Player {
         else { None }
     }
 
+    fn get_last (&self, lookup: &str) -> Option<Var> {
+        self.get_path(lookup)
+    }
+
     #[allow(unused_variables)]
     fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var) {
         if lookup == "coins" {

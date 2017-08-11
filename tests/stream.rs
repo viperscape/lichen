@@ -2,9 +2,10 @@ extern crate lichen;
 
 use std::io::Cursor;
 
-use lichen::parse::{StreamParser,Block, Env};
+use lichen::parse::{StreamParser,Block};
 use lichen::source::Src;
 use lichen::var::Var;
+use lichen::env::Env;
 use lichen::eval::{Evaluator,Empty};
 
 
