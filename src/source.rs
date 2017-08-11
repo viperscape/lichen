@@ -288,42 +288,28 @@ impl Src {
                  */
             },
             &Src::If(ref lookup, ref v, ref next) => {
-                let mut if_value = false;
+                let mut is_true = false;
                 
-                if let Some(val) = logic.get(lookup) {
-                    if let Some(val) = val.run(def) {
-                        if_value = val;
-                    }
-                }
-                else if let Some((val, res)) = def.get_last(lookup) {
+                if let Some(val) = Evaluator::resolve(lookup, logic, def) {
                     match val {
-                        Var::Bool(v) => { if_value = v; },
-                        _ => { if_value = res; }
+                        Var::Bool(v) => { is_true = v; },
+                        _ => { is_true = lookup != &val.to_string(); }
                     }
                 }
                 
-                if if_value { return ((*v).clone(), next.clone()) }
+                if is_true { return ((*v).clone(), next.clone()) }
                 else { return (vec![],None) }
             },
             &Src::When(ref map) => {
                 for (k, &(ref m, ref v, ref a)) in map.iter() {
                     let mut is_true = false;
-                    if let Some(val) = logic.get(k) {
-                        if let Some(val) = val.run(def) {
-                            is_true = val;
-                        }
-                    }
-
-                    if let Some((val, res)) = def.get_last(k) {
+                    if let Some(val) = Evaluator::resolve(k, logic, def) {
                         match val {
                             Var::Bool(v) => { is_true = v; },
-                            _ => { is_true = res; }
+                            _ => { is_true = k != &val.to_string(); }
                         }
                     }
-                    else {
-                        Evaluator::resolve(k, logic, def);
-                    }
-                    
+                
                     if is_true {
                         Src::eval(&Src::Mut(m.clone(), v.clone(), a.clone()), logic, def);
                     }

@@ -138,7 +138,7 @@ impl<'e> Evaluator<'e> {
             if let Some(src) = b.src.get(b.idx) {
                 self.node_stack.push(node_name.to_owned()); //more to iterate through?
                 b.idx += 1;
-println!("src: {:?}",src);
+                
                 match src {
                     &Src::Or(_,_) => {
                         if !b.or_valid {

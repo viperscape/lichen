@@ -331,9 +331,7 @@ def global\n
     
     let (vars,_) = ev.next().unwrap();
     assert_eq!(vars[0], "missing name".into());
-
-    assert_eq!(None, ev.next());
-
+    
     let (vars,_) = ev.next().unwrap();
     assert_eq!(vars[0], "new-name".into());
 }
