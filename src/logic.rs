@@ -102,7 +102,7 @@ impl Logic {
             &Logic::Is(ref lookup) => {
                 let lookup = lookup.clone();
                 let lfn = Box::new(move |data: &Def| {
-                    if let Some(r) = data.get_last(&lookup) {
+                    if let Some((r,_res)) = data.get_last(&lookup) {
                         match r {
                             Var::Bool(v) => {
                                  Some(v)
@@ -120,7 +120,7 @@ impl Logic {
             &Logic::IsNot(ref lookup) => { //inverse state
                 let lookup = lookup.clone();
                 let lfn = Box::new(move |data: &Def| {
-                    if let Some(r) = data.get_last(&lookup) {
+                    if let Some((r,_res)) = data.get_last(&lookup) {
                         match r {
                             Var::Bool(v) => {
                                 Some(!v)
@@ -130,7 +130,7 @@ impl Logic {
                             },
                         }
                     }
-                    else { None }
+                    else {  Some(true) } // missing identity turns into true on inv bool
                 });
 
                 LogicFn(lfn)

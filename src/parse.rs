@@ -167,26 +167,24 @@ impl Parser {
                             *s = sym;
                         }
                     };
-
+                    
                     // this builds symbol refs as a convenience
-                    if exps.len() > 2 { //must be if/or/comp blocks
-                        for n in exps.iter_mut() {
-                            match n {
-                                &mut IR::Sym(ref mut s) => {
-                                    adjust_sym(&mut qsyms,s);
-                                },
-                                &mut IR::Map(ref mut v) => {
-                                    for n in v.iter_mut() {
-                                        match n {
-                                            &mut IR::Sym(ref mut s) => {
-                                                adjust_sym(&mut qsyms,s);
-                                            },
-                                            _ => {},
-                                        }
+                    for n in exps.iter_mut() {
+                        match n {
+                            &mut IR::Sym(ref mut s) => {
+                                adjust_sym(&mut qsyms,s);
+                            },
+                            &mut IR::Map(ref mut v) => {
+                                for n in v.iter_mut() {
+                                    match n {
+                                        &mut IR::Sym(ref mut s) => {
+                                            adjust_sym(&mut qsyms,s);
+                                        },
+                                        _ => {},
                                     }
-                                },
-                                _ => {},
-                            }
+                                }
+                            },
+                            _ => {},
                         }
                     }
                     

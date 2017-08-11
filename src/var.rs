@@ -67,7 +67,7 @@ impl Var {
         match self {
             &Var::Num(n) => { num = n; },
             &Var::Sym(ref s) => {
-                if let Some(n) = data.get_last(s) {
+                if let Some((n,_res)) = data.get_last(s) {
                     match n {
                         Var::Num(n) => { num = n; },
                         _ => return Err("ERROR: NaN Evaluation")

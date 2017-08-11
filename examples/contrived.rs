@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use lichen::parse::Parser;
 use lichen::var::Var;
-use lichen::eval::{Eval,Evaluator};
+use lichen::eval::Evaluator;
 use lichen::source::Next;
 
 struct Player {
@@ -20,52 +20,6 @@ enum Items {
     Sword,
     Shield,
     Gloves
-}
-
-impl Eval for Player {
-    fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var> {
-        if let Some(path) = path {
-            if path[..] == ["items"] {
-                Some(self.items.contains_key(lookup).into())
-            }
-            else { None }
-        }
-        else {
-            match lookup {
-                "weight" => {
-                    Some(self.weight.into())
-                },
-                "name" => {
-                    Some(self.name.clone().into())
-                }
-                "coins" => {
-                    Some(self.coins.clone().into())
-                }
-                _ => { None }
-            }
-        }
-    }
-
-    fn get_last (&self, lookup: &str) -> Option<Var> {
-        self.get_path(lookup)
-    }
-
-    #[allow(unused_variables)]
-    fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var) {
-        if lookup == "coins" {
-            match var {
-                Var::Num(n) => {
-                    self.coins = n;
-                },
-                _ => {}
-            }
-        }
-    }
-
-    #[allow(unused_variables)]
-    fn call (&mut self, var: Var, fun: &str, vars: &Vec<Var>) -> Option<Var> {
-        None
-    }
 }
 
 fn main() {

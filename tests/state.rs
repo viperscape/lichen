@@ -2,7 +2,7 @@ extern crate lichen;
 
 use lichen::parse::Parser;
 use lichen::var::Var;
-use lichen::eval::{Eval,Evaluator};
+use lichen::eval::Evaluator;
 
 
 // Test for mutable state
@@ -10,68 +10,6 @@ use lichen::eval::{Eval,Evaluator};
 struct Player {
     coins: f32,
     name: String
-}
-impl Eval for Player {
-    #[allow(unused_variables)]
-    fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var> {
-        if lookup == "coins" { Some(self.coins.into()) }
-        else if lookup == "name" { Some(self.name.clone().into()) }
-        else { None }
-    }
-
-    fn get_last (&self, lookup: &str) -> Option<Var> {
-        self.get_path(lookup)
-    }
-
-    #[allow(unused_variables)]
-    fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var) {
-        if lookup == "coins" {
-            match var {
-                Var::Num(n) => {
-                    self.coins = n;
-                },
-                _ => {}
-            }
-        }
-        else if lookup == "name" {
-            match var {
-                Var::String(s) => {
-                    self.name = s;
-                },
-                _ => {}
-            }
-        }
-    }
-
-    #[allow(unused_variables)]
-    fn call (&mut self, var: Var, fun: &str, vars: &Vec<Var>) -> Option<Var> {
-        match fun {
-            "inc" => {
-                if let Ok(v) = Var::get_num(&var, self) {
-                    let mut r = v;
-                    for n in vars.iter() {
-                        if let Ok(v) = Var::get_num(&n, self) {
-                            r += v;
-                        }
-                    }
-
-                    return Some(Var::Num(r))
-                }
-            },
-            "wrap" => {
-                if let Some(w) = vars.get(0) {
-                    let mut s = w.to_string();
-                    s.push_str(&var.to_string());
-                    s.push_str(&w.to_string());
-
-                    return Some(Var::String(s));
-                }
-            },
-            _ => { }
-        }
-
-        None
-    }
 }
 
 #[test]

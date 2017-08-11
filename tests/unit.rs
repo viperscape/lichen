@@ -4,47 +4,9 @@ use lichen::parse::{Parser,Block,SrcBlock,Map};
 use lichen::logic::{Logic,Expect};
 use lichen::var::Var;
 use lichen::source::{Src,Next};
-use lichen::eval::{Eval,Evaluator};
+use lichen::eval::Evaluator;
 
 use std::collections::HashMap;
-
-struct Data;
-impl Eval for Data {
-    #[allow(unused_variables)]
-    fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var> {
-        match lookup {
-            "some_item" => {
-                Some(false.into())
-            },
-            "other_item" => {
-                Some(true.into())
-            },
-            "some_weight" => {
-                Some(4.0 .into())
-            },
-            "other_weight" => {
-                Some(5.0 .into())
-            },
-            "name" => {
-                Some("Io".into())
-            }
-            _ => None
-        }
-    }
-
-    fn get_last (&self, lookup: &str) -> Option<Var> {
-        self.get_path(lookup)
-    }
-
-    #[allow(unused_variables)]
-    fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var) {}
-
-    #[allow(unused_variables)]
-    fn call (&mut self, var: Var, fun: &str, vars: &Vec<Var>) -> Option<Var> {
-        None
-    }
-}
-
 
 
 #[test]
@@ -352,16 +314,26 @@ fn parse_or_logic() {
 #[test]
 fn validate_inv_logic() {
     let src = "root\n
-    has_no_name !global.name\n
-    emit has_no_name\n
+    if !global.name \"missing name\"\n
+    or \"name is `global.name\"\n
+\n
+    if global.is_false \"is_false\"\n
+    when {!global.name @global.name \"new-name\"}\n
+    emit global.name\n
 ;\n
 def global\n
+    is_false false\n
 ;\n";
 
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
 
-    let ev = Evaluator::new(&mut env);
-    let (vars,_) = ev.last().unwrap();
+    let mut ev = Evaluator::new(&mut env);
     
-    assert_eq!(vars[0], true.into());
+    let (vars,_) = ev.next().unwrap();
+    assert_eq!(vars[0], "missing name".into());
+
+    assert_eq!(None, ev.next());
+
+    let (vars,_) = ev.next().unwrap();
+    assert_eq!(vars[0], "new-name".into());
 }

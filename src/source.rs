@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use logic::{Logic,Expect,LogicFn};
-use eval::Eval;
+use eval::{Eval,Evaluator};
 use var::{Var,Mut};
 use parse::{Parser,Map,IR};
 use def::Def;
@@ -287,7 +287,7 @@ impl Src {
                 return (vec![],None) // composite does not return anything
                  */
             },
-            &Src::If(ref lookup, ref v, ref next) => {                
+            &Src::If(ref lookup, ref v, ref next) => {
                 let mut if_value = false;
                 
                 if let Some(val) = logic.get(lookup) {
@@ -295,10 +295,10 @@ impl Src {
                         if_value = val;
                     }
                 }
-                else if let Some(val) = def.get_path(lookup) {
+                else if let Some((val, res)) = def.get_last(lookup) {
                     match val {
                         Var::Bool(v) => { if_value = v; },
-                        _ => { if_value = true; }
+                        _ => { if_value = res; }
                     }
                 }
                 
@@ -313,11 +313,15 @@ impl Src {
                             is_true = val;
                         }
                     }
-                    else if let Some(val) = def.get_path(k) {
+
+                    if let Some((val, res)) = def.get_last(k) {
                         match val {
                             Var::Bool(v) => { is_true = v; },
-                            _ => { is_true = true; }
+                            _ => { is_true = res; }
                         }
+                    }
+                    else {
+                        Evaluator::resolve(k, logic, def);
                     }
                     
                     if is_true {

@@ -6,7 +6,7 @@ use lichen::parse::{StreamParser,Block};
 use lichen::source::Src;
 use lichen::var::Var;
 use lichen::env::Env;
-use lichen::eval::{Evaluator,Empty};
+use lichen::eval::Evaluator;
 
 
 

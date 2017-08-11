@@ -1,6 +1,10 @@
 use env::Env;
 use var::Var;
 use source::{Src,Next};
+use logic::LogicFn;
+use def::DefBlock;
+
+use std::collections::HashMap;
 
 /// Creates a possible path from a dot-seperated string
 ///
@@ -33,7 +37,8 @@ pub trait Eval {
         self.get(path, lookup)
     }
 
-    fn get_last (&self, lookup: &str) -> Option<Var>;
+    /// Returns final ref or var, and if it is a var
+    fn get_last (&self, lookup: &str) -> Option<(Var, bool)>;
     
     /// Expects var to be written to underlying mem/store in Rust
     fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var);
@@ -110,6 +115,19 @@ impl<'e> Evaluator<'e> {
         self.node_stack.push(node);
     }
 
+    pub fn resolve (s: &str, logic: &HashMap<String,LogicFn>, def: &HashMap<String,DefBlock>) -> Option<Var> {
+        if let Some(ref lfn) = logic.get(s) {
+            if let Some(val_) = lfn.run(&def) {
+                return Some(val_.into())
+            }
+        }
+        else if let Some((v,res)) = def.get_last(s) {
+            if res { return Some(v) }
+        }
+
+        None
+    }
+
     /// Manually run the Evaluator, starting at node specified
     pub fn run (&mut self, node_name: &str)
                 -> Option<(Vec<Var>, Option<Next>)>
@@ -120,7 +138,7 @@ impl<'e> Evaluator<'e> {
             if let Some(src) = b.src.get(b.idx) {
                 self.node_stack.push(node_name.to_owned()); //more to iterate through?
                 b.idx += 1;
-
+println!("src: {:?}",src);
                 match src {
                     &Src::Or(_,_) => {
                         if !b.or_valid {
@@ -154,14 +172,7 @@ impl<'e> Evaluator<'e> {
                     
                     match var {
                         &mut Var::Sym(ref mut s) => { // resolve symbol refs
-                            if let Some(val_) = self.env.def.get_path(s) {
-                                val = Some(val_);
-                            }
-                            else if let Some(ref lfn) = b.logic.get(s) {
-                                if let Some(val_) = lfn.run(&self.env.def) {
-                                    val = Some(val_.into());
-                                }
-                            }
+                            val = Evaluator::resolve(s, &b.logic, &self.env.def);
                             // NOTE: otherwise we silently fail
                         },
                         &mut Var::String(ref mut s) => { //format string
@@ -171,16 +182,16 @@ impl<'e> Evaluator<'e> {
                             
                             for c in s.chars() {
                                 if (c == ' ' || c == '`') && !sym.is_empty() {
-                                    if let Some(v) = self.env.def.get_path(&sym) {
-                                        fs.push_str(&v.to_string());
-                                    }
-                                    else if let Some(ref lfn) = b.logic.get(s) {
-                                        if let Some(val_) = lfn.run(&self.env.def) {
-                                            fs.push_str(&val_.to_string());
-                                        }
+                                    if let Some((v,res)) = self.env.def.get_last(&sym) {
+                                        if res { fs.push_str(&v.to_string()); }
                                         else {
-                                            fs.push_str(&sym);
+                                            if let Some(v) = Evaluator::resolve(&v.to_string(), &b.logic, &self.env.def) {
+                                                fs.push_str(&v.to_string());
+                                            }
                                         }
+                                    }
+                                    else if let Some(v) = Evaluator::resolve(&sym, &b.logic, &self.env.def) {
+                                        fs.push_str(&v.to_string());
                                     }
                                     else {
                                         fs.push_str(&sym); //push as non-ref sym again
@@ -202,19 +213,21 @@ impl<'e> Evaluator<'e> {
                             }
 
                             if !sym.is_empty() {
-                                if let Some(v) = self.env.def.get_path(&sym) {
-                                    fs.push_str(&v.to_string());
-                                }
-                                else if let Some(ref lfn) = b.logic.get(s) {
-                                    if let Some(val_) = lfn.run(&self.env.def) {
-                                        fs.push_str(&val_.to_string());
+                                if let Some((v,res)) = self.env.def.get_last(&sym) {
+                                    if res { fs.push_str(&v.to_string()); }
+                                    else if let Some(v) = Evaluator::resolve(&v.to_string(), &b.logic, &self.env.def) {
+                                        fs.push_str(&v.to_string());
                                     }
                                     else {
                                         fs.push_str(&sym);
                                     }
+                                    
+                                }
+                                else if let Some(v) = Evaluator::resolve(&sym, &b.logic, &self.env.def) {
+                                    fs.push_str(&v.to_string());
                                 }
                                 else {
-                                    fs.push_str(&sym); //push as non-ref sym again
+                                    fs.push_str(&sym);
                                 }
                             }
 
@@ -276,29 +289,5 @@ impl EvaluatorState {
 
     pub fn as_eval<'e> (&self, env: &'e mut Env) -> Evaluator<'e> {
         self.clone().to_eval(env)
-    }
-}
-
-
-pub struct Empty;
-impl Eval for Empty {
-    #[allow(unused_variables)]
-    fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var> {
-        None
-    }
-
-    #[allow(unused_variables)]
-    fn get_last (&self, lookup: &str) -> Option<Var> {
-        None
-    }
-
-
-    #[allow(unused_variables)]
-    fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var) {
-    }
-
-    #[allow(unused_variables)]
-    fn call (&mut self, var: Var, fun: &str, vars: &Vec<Var>) -> Option<Var> {
-        None
     }
 }

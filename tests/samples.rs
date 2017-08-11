@@ -5,46 +5,6 @@ use lichen::parse::Parser;
 use lichen::eval::Eval;
 use lichen::var::Var;
 
-#[allow(dead_code)]
-struct Data;
-
-// we define this for the docs/syntax.ls to be tested against
-impl Eval for Data {
-    #[allow(unused_variables)]
-    fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var> {
-        None
-    }
-
-    fn get_last (&self, lookup: &str) -> Option<Var> {
-        self.get_path(lookup)
-    }
-
-    #[allow(unused_variables)]
-    fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var) {
-    }
-    
-    #[allow(unused_variables)]
-    fn call (&mut self, var: Var, fun: &str, vars: &Vec<Var>) -> Option<Var> {
-        match fun {
-            "inc" => {
-                if let Ok(v) = Var::get_num(&var, self) {
-                    let mut r = v;
-                    for n in vars.iter() {
-                        if let Ok(v) = Var::get_num(&n, self) {
-                            r += v;
-                        }
-                    }
-
-                    return Some(Var::Num(r))
-                }
-            },
-            _ => { }
-        }
-
-        None
-    }
-}
-
 #[test]
 fn bitrot() {
     let mut src = vec![("basic", String::from_utf8_lossy(include_bytes!("../examples/basic.ls"))),

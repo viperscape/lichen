@@ -26,29 +26,39 @@ impl Eval for Def {
         None
     }
 
-    fn get_last (&self, lookup: &str) -> Option<Var> {
+    fn get_last (&self, lookup: &str) -> Option<(Var, bool)> {
         let mut lookup = lookup;
+        let mut resolved = None;
 
         loop { // resolve symbol references
             let (path,sym) = self.as_path(lookup);
-            println!("{:?}: {:?} {:?}",lookup, path, sym);
             if let Some(path) = path {
                 if let Some(ref def) = self.get(path[0]) {
                     if let Some(v) = def.data.get(sym) {
                         match v {
                             &Var::Sym(ref sym) => {
-                                lookup = sym;
+                                if lookup != sym {
+                                    resolved = Some(v.clone()); // take note that we resolved atleast once
+                                    lookup = sym;
+                                    continue
+                                }
+                                else {
+                                    return Some((v.clone(), false))
+                                }
                             },
                             _ => {
-                                return Some(v.clone())
+                                return Some((v.clone(), true))
                             }
                         }
                     }
+                    else { break }
                 }
-                
+                else { break }
             }
             else { break }
         }
+
+        if let Some(v) = resolved { return Some((v, false)) } 
 
         None
     }
