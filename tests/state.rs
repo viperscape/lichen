@@ -128,21 +128,25 @@ def global\n
 #[test]
 fn save_state() {
     let src = "root\n
-    next:now other\n
-;\n
-\n
-other\n
-    @coins 1\n
-    next:await end\n
-    emit \"bye\"\n
-;\n
-\n
-end\n
-    emit true\n
+    @ (inc) \"coins\" 1 2 3\n
 ;";
     
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
     let data = Player { coins: 0.0, name: "Pan".to_owned() };
+    let data = Arc::new(Mutex::new(data));
+
+    let dc = data.clone();
+    let inc = MutFn::new(move |args, def| {
+        let mut r = dc.lock().unwrap().coins;
+        for n in args.iter() {
+            if let Ok(v) = n.get_num(def) {
+                *r += v;
+            }
+        }
+        
+        None
+    });
+    env.fun.insert("inc".to_owned(), inc);
 
     
     let state = {
