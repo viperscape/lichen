@@ -93,12 +93,11 @@ def global\n
 }
 
 #[test]
-fn parse_when_block() {
+fn validate_when_block() {
     let src = "root\n
     needs_coins global.coins < 1\n
-    has_no_name !global.name\n
     when {needs_coins @global.coins + 2, \n
-         has_no_name @global.name \"new-name\"}\n
+         !global.name @global.name \"new-name\"}\n
     emit global.name global.coins\n
 ;\n
 def global\n
