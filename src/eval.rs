@@ -182,15 +182,7 @@ println!("src: {:?}",src);
                             
                             for c in s.chars() {
                                 if (c == ' ' || c == '`') && !sym.is_empty() {
-                                    if let Some((v,res)) = self.env.def.get_last(&sym) {
-                                        if res { fs.push_str(&v.to_string()); }
-                                        else {
-                                            if let Some(v) = Evaluator::resolve(&v.to_string(), &b.logic, &self.env.def) {
-                                                fs.push_str(&v.to_string());
-                                            }
-                                        }
-                                    }
-                                    else if let Some(v) = Evaluator::resolve(&sym, &b.logic, &self.env.def) {
+                                    if let Some(v) = Evaluator::resolve(&sym, &b.logic, &self.env.def) {
                                         fs.push_str(&v.to_string());
                                     }
                                     else {
@@ -213,17 +205,7 @@ println!("src: {:?}",src);
                             }
 
                             if !sym.is_empty() {
-                                if let Some((v,res)) = self.env.def.get_last(&sym) {
-                                    if res { fs.push_str(&v.to_string()); }
-                                    else if let Some(v) = Evaluator::resolve(&v.to_string(), &b.logic, &self.env.def) {
-                                        fs.push_str(&v.to_string());
-                                    }
-                                    else {
-                                        fs.push_str(&sym);
-                                    }
-                                    
-                                }
-                                else if let Some(v) = Evaluator::resolve(&sym, &b.logic, &self.env.def) {
+                                if let Some(v) = Evaluator::resolve(&sym, &b.logic, &self.env.def) {
                                     fs.push_str(&v.to_string());
                                 }
                                 else {
