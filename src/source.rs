@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use logic::{Logic,Expect,LogicFn};
 use eval::Eval;
 use var::{Var,Mut};
-use parse::{Parser,Map,Def,IR};
+use parse::{Parser,Map,IR};
+use def::Def;
 
 /// Source block statement types
 #[derive(Debug,PartialEq)]

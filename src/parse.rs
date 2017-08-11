@@ -3,8 +3,9 @@ use std::io::prelude::*;
 
 use source::Src;
 use var::Var;
-use eval::Eval;
 use logic::LogicFn;
+use def::DefBlock;
+use env::Env;
 
 #[derive(Debug,PartialEq)]
 pub struct SrcBlock {
@@ -15,12 +16,6 @@ pub struct SrcBlock {
     pub or_valid: bool,
 
     pub logic: HashMap<String,LogicFn>,
-}
-
-#[derive(Debug,PartialEq)]
-pub struct DefBlock {
-    pub name: String,
-    pub def: HashMap<String,Var>
 }
 
 #[derive(Debug,PartialEq)]
@@ -356,88 +351,7 @@ impl Parser {
     }
 }
 
-/// Def alias used for internal evaluation purposes
-pub type Def = HashMap<String, DefBlock>;
 
-impl Env {
-    pub fn def_contains(def: &Def, path: Option<Vec<&str>>, lookup: &str) -> bool {
-        if let Some(path) = path {
-            if let Some(ref def) = def.get(path[0]) {
-                return def.def.contains_key(lookup)
-            }
-        }
-
-        false
-    }
-
-    pub fn empty () -> Env {
-        Env { src: HashMap::new(), def: HashMap::new() }
-    }
-
-    pub fn insert (&mut self, mut v: Vec<Block>) {
-        for b in v.drain(..) {
-            match b {
-                Block::Def(db) => {
-                    self.def.insert(db.name.clone(), db);
-                },
-                Block::Src(sb) => {
-                    self.src.insert(sb.name.clone(), sb);
-                },
-            }
-        }
-    }
-
-    pub fn insert_var (&mut self, block: &str, name: String, var: Var) -> Option<Var> {
-        if let Some(b) = self.def.get_mut(block) {
-            return b.def.insert(name, var)
-        }
-
-        None
-    }
-}
-
-/// Environment containing all parsed definition and source blocks
-pub struct Env {
-    pub def: Def,
-    pub src: HashMap<String, SrcBlock>
-}
-
-impl Eval for Def {
-    fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var> {
-        if let Some(path) = path {
-            if let Some(ref def) = self.get(path[0]) {
-                if let Some(v) = def.def.get(lookup) {
-                    return Some(v.clone())
-                }
-            }
-        }
-
-        None
-    }
-
-    #[allow(unused_variables)]
-    fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var) {
-        if let Some(path) = path {
-            if let Some(ref mut def) = self.get_mut(path[0]) {
-                let set;
-                if let Some(v) = def.def.get_mut(lookup) {
-                    *v = var;
-                    set = None;
-                }
-                else { set = Some(var); }
-                
-                if let Some(var) = set { // NOTE: we're building this from scratch, this should be considered explicit instead
-                    def.def.insert(lookup.to_owned(), var);
-                }
-            }
-        }
-    }
-
-    #[allow(unused_variables)]
-    fn call (&mut self, var: Var, fun: &str, vars: &Vec<Var>) -> Option<Var> {
-        None
-    }
-}
 
 pub struct StreamParser<S:Read> {
     /// The non-parsed leftovers of a stream that is being buffered actively

@@ -1,6 +1,7 @@
 use var::Var;
-use parse::{IR, Def};
+use parse::IR;
 use eval::Eval;
+use def::Def;
 
 /// Expect Types for Composites
 #[derive(Debug,PartialEq)]
