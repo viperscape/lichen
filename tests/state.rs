@@ -75,10 +75,7 @@ fn validate_def_block() {
     let src = "root\n
     @global.size + 0.5\n
     @global.name \"other-game\"\n
-    @name global.name\n
-    @coins - global.size\n
-    emit [global.name global.size\n
-         name coins]\n
+    emit global.name global.size\n\n
 ;\n
 \n
 def global\n
@@ -93,9 +90,6 @@ def global\n
 
     assert_eq!(vars[0], Var::String("other-game".to_owned()));
     assert_eq!(vars[1], Var::Num(2.0 .to_owned()));
-
-    assert_eq!(vars[2], Var::String("Pan".to_owned()));
-    assert_eq!(vars[3], Var::Num(-2.0 .to_owned()));
 }
 
 #[test]
