@@ -13,7 +13,6 @@ struct Player {
 }
 
 #[test]
-/// this test shows that all statements are processed in one Eval iteration
 fn state_mut() {
     let src = "\n
 def global\n

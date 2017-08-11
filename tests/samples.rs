@@ -2,8 +2,6 @@
 extern crate lichen;
 
 use lichen::parse::Parser;
-use lichen::eval::Eval;
-use lichen::var::Var;
 
 #[test]
 fn bitrot() {
