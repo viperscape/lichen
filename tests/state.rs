@@ -167,27 +167,6 @@ end\n
     assert_eq!(vars[0],"bye".into());
 }
 
-
-#[test]
-fn parse_sym_call_value() {
-    let src = "def root\n
-    tag \"--\"\n
-;\n
-\n
-root\n
-    @name (wrap) root.tag\n
-    emit name\n
-;";
-
-    let p = Parser::parse_blocks(src).expect("ERROR: Unable to parse source");
-    let mut env = p.into_env();
-    
-    let ev = Evaluator::new(&mut env);
-    let (vars,_) = ev.last().unwrap();
-
-    assert_eq!(vars[0], Var::String("--Pan--".to_owned()));
-}
-
 #[test]
 fn validate_or_block() {
     let src = "root\n
