@@ -62,14 +62,12 @@ impl Var {
     }
 
     /// Get any underlying number
-    ///
-    /// Only looks at one reference of a symbol, not a symbol referencing another symbol
     pub fn get_num<D:Eval> (&self, data: &D) -> Result<f32,&'static str> {
         let num;
         match self {
             &Var::Num(n) => { num = n; },
             &Var::Sym(ref s) => {
-                if let Some(n) = data.get_path(s) {
+                if let Some(n) = data.get_last(s) {
                     match n {
                         Var::Num(n) => { num = n; },
                         _ => return Err("ERROR: NaN Evaluation")

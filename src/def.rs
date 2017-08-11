@@ -26,6 +26,32 @@ impl Eval for Def {
         None
     }
 
+    fn get_last (&self, lookup: &str) -> Option<Var> {
+        let mut lookup = lookup;
+
+        loop { // resolve symbol references
+            let (path,sym) = self.as_path(lookup);
+            if let Some(path) = path {
+                if let Some(ref def) = self.get(path[0]) {
+                    if let Some(v) = def.data.get(sym) {
+                        match v {
+                            &Var::Sym(ref sym) => {
+                                lookup = sym;
+                            },
+                            _ => {
+                                return Some(v.clone())
+                            }
+                        }
+                    }
+                }
+                
+            }
+            else { break }
+        }
+
+        None
+    }
+
     #[allow(unused_variables)]
     fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var) {
         if let Some(path) = path {

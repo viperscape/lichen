@@ -102,7 +102,7 @@ impl Logic {
             &Logic::Is(ref lookup) => {
                 let lookup = lookup.clone();
                 let lfn = Box::new(move |data: &Def| {
-                    if let Some(r) = data.get_path(&lookup) {
+                    if let Some(r) = data.get_last(&lookup) {
                         match r {
                             Var::Bool(v) => {
                                  Some(v)
@@ -120,7 +120,7 @@ impl Logic {
             &Logic::IsNot(ref lookup) => { //inverse state
                 let lookup = lookup.clone();
                 let lfn = Box::new(move |data: &Def| {
-                    if let Some(r) = data.get_path(&lookup) {
+                    if let Some(r) = data.get_last(&lookup) {
                         match r {
                             Var::Bool(v) => {
                                 Some(!v)

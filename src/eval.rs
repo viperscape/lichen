@@ -33,6 +33,8 @@ pub trait Eval {
         self.get(path, lookup)
     }
 
+    fn get_last (&self, lookup: &str) -> Option<Var>;
+    
     /// Expects var to be written to underlying mem/store in Rust
     fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var);
 
@@ -284,6 +286,12 @@ impl Eval for Empty {
     fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var> {
         None
     }
+
+    #[allow(unused_variables)]
+    fn get_last (&self, lookup: &str) -> Option<Var> {
+        None
+    }
+
 
     #[allow(unused_variables)]
     fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var) {
