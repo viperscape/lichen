@@ -5,6 +5,8 @@ use lichen::var::Var;
 use lichen::eval::Evaluator;
 use lichen::fun::MutFn;
 
+use std::sync::{Arc,Mutex};
+
 // Test for mutable state
 #[derive(Debug)]
 struct Player {
@@ -128,7 +130,13 @@ def global\n
 #[test]
 fn save_state() {
     let src = "root\n
-    @ (inc) \"coins\" 1 2 3\n
+    emit root.coins\n
+    @root.coins (inc) \"coins\" 1 2 3\n
+    next:await no-where\n
+    emit root.coins\n
+;\n
+def root\n
+coins 0\n
 ;";
     
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
@@ -137,38 +145,38 @@ fn save_state() {
 
     let dc = data.clone();
     let inc = MutFn::new(move |args, def| {
-        let mut r = dc.lock().unwrap().coins;
+        let mut r = dc.lock().unwrap();
         for n in args.iter() {
             if let Ok(v) = n.get_num(def) {
-                *r += v;
+                r.coins += v;
             }
         }
-        
-        None
+
+        Some(r.coins.into())
     });
     env.fun.insert("inc".to_owned(), inc);
-
+    
     
     let state = {
         let mut ev = Evaluator::new(&mut env);
-        let (_,_) = ev.next().unwrap();
+        let (vars,_) = ev.next().unwrap();
+        assert_eq!(vars[0], 0.0 .into());
+        
         ev.save()
     };
 
-    assert_eq!(data.coins, 0.0);
-
-    let state = {
+    let state = { //save await state
         let mut ev = state.to_eval(&mut env);
         let (_,_) = ev.next().unwrap();
         ev.save()
     };
 
-    assert_eq!(data.coins, 1.0);
+    let mut ev = state.to_eval(&mut env);
+    let (vars,_) = ev.next().unwrap();
+    assert_eq!(vars[0], 6.0 .into());
 
-    //check if we held our place within node after await
-    let ev = state.to_eval(&mut env);
-    let (vars,_) = ev.last().unwrap();
-    assert_eq!(vars[0],"bye".into());
+    let player = data.lock().unwrap();
+    assert_eq!(player.coins, 6.0);
 }
 
 #[test]
