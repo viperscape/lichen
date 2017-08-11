@@ -163,7 +163,7 @@ fn parse_if_vec_block() {
 #[test]
 fn parse_eval_str_block() {
     let src = "root\n
-        has_weight some_weight < 5.0\n
+        has_weight 4 < 5.0\n
         some_comp:all [has_weight !some_item ]\n
     if some_comp \"looks like you are `some_weight kgs heavy, `name\"\n
 ;";
@@ -179,7 +179,7 @@ fn parse_eval_str_block() {
 #[test]
 fn parse_compare_env_block() {
     let src = "root\n
-    weight some_weight < other_weight\n
+    weight 0 < 1\n
     if weight next:now store\n
 ;";
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
@@ -209,7 +209,7 @@ fn parse_return_varkind() {
 #[test]
 fn parse_follow_nodes() {
     let src = "root\n
-    weight some_weight < other_weight\n
+    weight 0 < 1\n
     if weight next:now store\n
 ;\n
 \n
@@ -297,9 +297,9 @@ step2
 #[test]
 fn parse_or_logic() {
     let src = "root\n
-    weight some_weight < other_weight\n
-    if !weight false\n
-    or true\n
+    has_weight 101 < 100\n
+    if !has_weight \"can add stuff\"\n
+    or \"too heavy!\"\n
 ;\n";
 
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
@@ -307,7 +307,7 @@ fn parse_or_logic() {
     let mut ev = Evaluator::new(&mut env);
     let (vars,_) = ev.next().unwrap();
     
-    assert_eq!(vars[0], true.into());
+    assert_eq!(vars[0], "can add stuff".into());
 }
 
 
