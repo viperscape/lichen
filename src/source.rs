@@ -5,6 +5,7 @@ use eval::{Eval,Evaluator};
 use var::{Var,Mut};
 use parse::{Parser,Map,IR};
 use def::Def;
+use fun::MutFn;
 
 /// Source block statement types
 #[derive(Debug,PartialEq)]
@@ -162,7 +163,8 @@ impl Next {
 impl Src {
     pub fn eval (&self,
                  logic: &HashMap<String,LogicFn>,
-                 def: &mut Def)
+                 def: &mut Def,
+                 fun: &mut HashMap<String,MutFn>)
                  -> (Vec<Var>,Option<Next>)
     {
         match self {
@@ -205,29 +207,25 @@ impl Src {
                         let val = a[0].clone();
                         def.set_path(v,val); // NOTE: this will also build a var from scratch
                     },
-                    &Mut::Fn(ref _fun) => { // FIXME: this is now defunct and needs to be rethought!
-                        unimplemented!();
-
-                        /*
+                    &Mut::Fn(ref fun_name) => {
+                        // NOTE: currently we skip non-resolved symbols!
                         let mut args = vec![]; //collect symbols' value
                         for n in a {
                             match n {
                                 &Var::Sym(ref n) => {
-                                    if let Some(var) = def.get_path(n) {
-                                        args.push(var);
+                                    if let Some(v) = Evaluator::resolve(n, &logic, &def) {
+                                        args.push(v)
                                     }
                                 },
                                 _ => { args.push(n.clone()) }
                             }
                         }
 
-                        
-                        if let Some(var) = def.get_path(v) {
-                            if let Some(r) = data.call(var, fun, &args) {
+                        if let Some(mut mfn) = fun.get_mut(fun_name) {
+                            if let Some(r) = mfn.run(&args, def) {
                                 def.set_path(&v, r);
                             }
                         }
-                        */
                     },
                 }
                 
@@ -311,7 +309,10 @@ impl Src {
                     }
                 
                     if is_true {
-                        Src::eval(&Src::Mut(m.clone(), v.clone(), a.clone()), logic, def);
+                        Src::eval(&Src::Mut(m.clone(), v.clone(), a.clone()),
+                                  logic,
+                                  def,
+                                  fun);
                     }
                 }
                 

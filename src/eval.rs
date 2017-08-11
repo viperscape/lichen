@@ -160,7 +160,9 @@ impl<'e> Evaluator<'e> {
                     _ => { b.or_valid = false; },
                 }
 
-                let (mut vars, next) = src.eval(&b.logic, &mut self.env.def);
+                let (mut vars, next) = src.eval(&b.logic,
+                                                &mut self.env.def,
+                                                &mut self.env.fun);
                 let has_return = (vars.len() > 0) || next.is_some();
                
                 // reset when if is successful

@@ -140,8 +140,8 @@ impl Logic {
                 let left = left.clone();
                 let right = right.clone();
                 let lfn = Box::new(move |data: &Def| {
-                    let right = Var::get_num::<Def>(&right,data);
-                    let left = Var::get_num::<Def>(&left,data);
+                    let right = Var::get_num(&right,data);
+                    let left = Var::get_num(&left,data);
                 
                     if left.is_ok() && right.is_ok() {
                         Some(left.unwrap() > right.unwrap())
@@ -155,8 +155,8 @@ impl Logic {
                 let left = left.clone();
                 let right = right.clone();
                 let lfn = Box::new(move |data: &Def| {
-                    let right = Var::get_num::<Def>(&right,data);
-                    let left = Var::get_num::<Def>(&left,data);
+                    let right = Var::get_num(&right,data);
+                    let left = Var::get_num(&left,data);
                     
                     if left.is_ok() && right.is_ok() {
                         Some(left.unwrap() < right.unwrap())

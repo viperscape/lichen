@@ -3,7 +3,7 @@ extern crate lichen;
 use lichen::parse::Parser;
 use lichen::var::Var;
 use lichen::eval::Evaluator;
-
+use lichen::fun::MutFn;
 
 // Test for mutable state
 #[derive(Debug)]
@@ -35,18 +35,30 @@ root\n
 #[test]
 fn parse_cust_fn() {
     let src = "root\n
-    @coins (inc) 1 2 3\n
+    @root.five (inc) 1 2 3\n
+    emit root.five\n
+;\n
+def root\n
+    five 5\n
 ;";
     
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
-    let data = Player { coins: 0.0, name: "Pan".to_owned() };
-    
-    {
-        let ev = Evaluator::new(&mut env);
-        let _ = ev.last();
-    }
+    let inc = MutFn::new(move |args, def| {
+        let mut r = 0.;
+        for n in args.iter() {
+            if let Ok(v) = n.get_num(def) {
+                r += v;
+            }
+        }
 
-    assert_eq!(data.coins, 6.0);
+        return Some(Var::Num(r))
+    });
+    env.fun.insert("inc".to_owned(), inc);
+    
+    let ev = Evaluator::new(&mut env);
+    let (vars,_) = ev.last().unwrap();
+
+    assert_eq!(vars[0], 6.0 .into());
 }
 
 

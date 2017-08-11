@@ -1,5 +1,6 @@
 use eval::Eval;
 use parse::IR;
+use def::Def;
 
 /// Supported Var Types
 ///
@@ -62,7 +63,7 @@ impl Var {
     }
 
     /// Get any underlying number
-    pub fn get_num<D:Eval> (&self, data: &D) -> Result<f32,&'static str> {
+    pub fn get_num (&self, data: &Def) -> Result<f32,&'static str> {
         let num;
         match self {
             &Var::Num(n) => { num = n; },

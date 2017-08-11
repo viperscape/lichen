@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use def::Def;
 use parse::{Block,SrcBlock};
 use var::Var;
+use fun::MutFn;
 
 impl Env {
     pub fn def_contains(def: &Def, path: Option<Vec<&str>>, lookup: &str) -> bool {
@@ -16,7 +17,7 @@ impl Env {
     }
 
     pub fn empty () -> Env {
-        Env { src: HashMap::new(), def: HashMap::new() }
+        Env { src: HashMap::new(), def: HashMap::new(), fun: HashMap::new() }
     }
 
     pub fn insert (&mut self, mut v: Vec<Block>) {
@@ -44,5 +45,6 @@ impl Env {
 /// Environment containing all parsed definition and source blocks
 pub struct Env {
     pub def: Def,
-    pub src: HashMap<String, SrcBlock>
+    pub src: HashMap<String, SrcBlock>,
+    pub fun: HashMap<String, MutFn>,
 }
