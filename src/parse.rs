@@ -135,7 +135,7 @@ impl Parser {
                     if name == "def" {
                         let b = DefBlock {
                             name: exps.pop().unwrap().into(),
-                            def: HashMap::new(),
+                            data: HashMap::new(),
                         };
                         
                         block = Some(Block::Def(b));
@@ -195,7 +195,7 @@ impl Parser {
                         Some(Block::Def(ref mut b)) => {
                             let v = exps.pop().unwrap();
                             let r = try!(Var::parse(v));
-                            b.def.insert(exps.pop().unwrap().into(),
+                            b.data.insert(exps.pop().unwrap().into(),
                                          r);
                         },
                         Some(Block::Src(ref mut b)) => {

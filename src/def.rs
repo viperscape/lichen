@@ -10,14 +10,14 @@ pub type Def = HashMap<String, DefBlock>;
 #[derive(Debug,PartialEq)]
 pub struct DefBlock {
     pub name: String,
-    pub def: HashMap<String,Var>
+    pub data: HashMap<String,Var>
 }
 
 impl Eval for Def {
     fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var> {
         if let Some(path) = path {
             if let Some(ref def) = self.get(path[0]) {
-                if let Some(v) = def.def.get(lookup) {
+                if let Some(v) = def.data.get(lookup) {
                     return Some(v.clone())
                 }
             }
@@ -31,16 +31,29 @@ impl Eval for Def {
         if let Some(path) = path {
             if let Some(ref mut def) = self.get_mut(path[0]) {
                 let set;
-                if let Some(v) = def.def.get_mut(lookup) {
+                if let Some(v) = def.data.get_mut(lookup) {
                     *v = var;
                     set = None;
                 }
                 else { set = Some(var); }
                 
                 if let Some(var) = set { // NOTE: we're building this from scratch, this should be considered explicit instead
-                    def.def.insert(lookup.to_owned(), var);
+                    def.data.insert(lookup.to_owned(), var);
                 }
+
+                return
             }
+            
+            // if we didn't successfully insert, let's build from scratch the new block path
+            let mut map = HashMap::new();
+            map.insert(lookup.to_owned(), var);
+            
+            let def = DefBlock {
+                name: path[0].to_owned(),
+                data: map,
+            };
+            
+            self.insert(path[0].to_owned(), def);
         }
     }
 

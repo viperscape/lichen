@@ -8,7 +8,7 @@ impl Env {
     pub fn def_contains(def: &Def, path: Option<Vec<&str>>, lookup: &str) -> bool {
         if let Some(path) = path {
             if let Some(ref def) = def.get(path[0]) {
-                return def.def.contains_key(lookup)
+                return def.data.contains_key(lookup)
             }
         }
 
@@ -34,7 +34,7 @@ impl Env {
 
     pub fn insert_var (&mut self, block: &str, name: String, var: Var) -> Option<Var> {
         if let Some(b) = self.def.get_mut(block) {
-            return b.def.insert(name, var)
+            return b.data.insert(name, var)
         }
 
         None
