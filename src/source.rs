@@ -162,7 +162,7 @@ impl Next {
 
 impl Src {
     pub fn eval (&self,
-                 logic: &HashMap<String,LogicFn>,
+                 logic: &mut HashMap<String,LogicFn>,
                  def: &mut Def,
                  fun: &mut HashMap<String,MutFn>)
                  -> (Vec<Var>,Option<Next>)
@@ -240,7 +240,13 @@ impl Src {
             &Src::Emit(ref vars) => {
                 return (vars.clone(),None)
             },
-            &Src::Logic(_,_) => {
+            &Src::Logic(ref name, ref logic_src)=> {
+                // NOTE: we only add logicfn if not compiled yet!
+                if !logic.contains_key(name) {
+                    let lfn = logic_src.eval();
+                    logic.insert(name.clone(),lfn);
+                }
+                
                 return (vec![],None) // logic does not return anything
             },
             &Src::Composite(ref _name, ref _x, ref _lookups) => {

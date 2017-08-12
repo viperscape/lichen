@@ -148,19 +148,10 @@ impl<'e> Evaluator<'e> {
                     }
                     &Src::If(_,_,_) => { b.or_valid = true; }
                     // anything else resets above or-logic
-                    &Src::Logic(ref name, ref logic) => {
-                        // NOTE: we only add logicfn if not compiled yet!
-                        if !b.logic.contains_key(name) {
-                            let lfn = logic.eval();
-                            b.logic.insert(name.clone(),lfn);
-                        }
-                        
-                        b.or_valid = false;
-                    },
                     _ => { b.or_valid = false; },
                 }
 
-                let (mut vars, next) = src.eval(&b.logic,
+                let (mut vars, next) = src.eval(&mut b.logic,
                                                 &mut self.env.def,
                                                 &mut self.env.fun);
                 let has_return = (vars.len() > 0) || next.is_some();
