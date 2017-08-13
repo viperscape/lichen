@@ -252,44 +252,6 @@ impl Src {
             &Src::Composite(ref _name, ref _x, ref _lookups) => {
                 // TODO: reimplement as some sort of LogicFn closure
                 unimplemented!();
-
-                /*
-                // track if any lookups are false or true
-                let mut comp_false = false;
-                let mut comp_true = false;
-                
-                for lookup in lookups.iter() {
-                    if let Some(val) = def.get_path(lookup) {
-                        match val {
-                            Var::Bool(b) => {
-                                if b { comp_true = true; }
-                                else { comp_false = true; }
-                            }
-                            _ => { comp_true = true; } //identity/exists, true
-                        }
-                    }
-                }
-                
-                match x {
-                    &Expect::All => { // all must pass as true
-                        if comp_true && !comp_false {
-                            //state.insert(name.clone(),true);
-                        }
-                    },
-                    &Expect::Any => { // first truth passes for set
-                        if comp_true {
-                            //state.insert(name.clone(),true);
-                        }
-                    },
-                    &Expect::None => { // inverse of any, none must be true
-                        if !comp_true && comp_false {
-                            //state.insert(name.clone(),true);
-                        }
-                    },
-                }
-                
-                return (vec![],None) // composite does not return anything
-                 */
             },
             &Src::If(ref lookup, ref v, ref next) => {
                 let mut is_true = false;
@@ -412,13 +374,10 @@ impl Src {
                                       r))
                     }
                     else { // composite type
-                        // NOTE: we may want to inspect what happened if the kind was not found
-                        let kind = Expect::parse(keys.pop().unwrap().to_owned());
-
-                        let exp = exp.drain(..).map(|n| n.into()).collect();
-                        Ok(Src::Composite(keys.pop().unwrap().to_owned(),
-                                          kind,
-                                          exp))
+                        let name = keys.remove(0).to_owned();
+                        let r = try!(Logic::parse_comp(keys, exp));
+                        Ok(Src::Logic(name,
+                                      r))
                     }
                 }
             },

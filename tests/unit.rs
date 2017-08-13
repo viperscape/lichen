@@ -92,7 +92,7 @@ fn parse_qsym_comp_block() {
                 Src::Logic(ref qsym,_) => { r = qsym; },
                 _ => panic!("unknown source found")
             }
-
+println!("{:?}",b.src[2]);
             match b.src[2] {
                 Src::Composite(_,_,ref x) => {
                     assert_eq!(r,&x[1]);

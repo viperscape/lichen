@@ -1,10 +1,12 @@
 use var::Var;
 use parse::IR;
-use eval::Eval;
+use eval::{Eval,Evaluator};
 use def::Def;
 
+use std::collections::HashMap;
+
 /// Expect Types for Composites
-#[derive(Debug,PartialEq)]
+#[derive(Debug,PartialEq, Clone, Copy)]
 pub enum Expect {
     All,
     Any,
@@ -38,12 +40,16 @@ pub enum Logic {
     Is(String),
     /// Boolean: False
     IsNot(String),
+
+    /// A composite logic type to group logic statements together
+    Composite(Expect, Vec<String>),
 }
 
-pub struct LogicFn(Box<Fn(&Def) -> Option<bool>>);
+pub type Logics = HashMap<String,LogicFn>;
+pub struct LogicFn(Box<Fn(&Def,&Logics) -> Option<bool>>);
 impl LogicFn {
-    pub fn run(&self, def: &Def) -> Option<bool> {
-        self.0(def)
+    pub fn run(&self, def: &Def, logic: &Logics) -> Option<bool> {
+        self.0(def, logic)
     }
 }
 
@@ -63,6 +69,16 @@ impl fmt::Debug for LogicFn {
 }
 
 impl Logic {
+    pub fn parse_comp(mut keys: Vec<&str>,
+                      mut exp: Vec<IR>) -> Result<Logic,&'static str> {
+        // NOTE: we may want to inspect what happened if the kind was not found
+        let kind = Expect::parse(keys.pop().unwrap().to_owned());
+
+        let exp = exp.drain(..).map(|n| n.into()).collect();
+        Ok(Logic::Composite(kind,
+                            exp))
+    }
+    
     pub fn parse(mut exp: Vec<IR>) -> Result<Logic,&'static str> {
         let len = exp.len();
         
@@ -101,7 +117,7 @@ impl Logic {
         match self {
             &Logic::Is(ref lookup) => {
                 let lookup = lookup.clone();
-                let lfn = Box::new(move |data: &Def| {
+                let lfn = Box::new(move |data: &Def, _logic: &Logics| {
                     if let Some((r,_res)) = data.get_last(&lookup) {
                         match r {
                             Var::Bool(v) => {
@@ -119,7 +135,7 @@ impl Logic {
             },
             &Logic::IsNot(ref lookup) => { //inverse state
                 let lookup = lookup.clone();
-                let lfn = Box::new(move |data: &Def| {
+                let lfn = Box::new(move |data: &Def, _logic: &Logics| {
                     if let Some((r,_res)) = data.get_last(&lookup) {
                         match r {
                             Var::Bool(v) => {
@@ -139,7 +155,7 @@ impl Logic {
             &Logic::GT(ref left, ref right) => {
                 let left = left.clone();
                 let right = right.clone();
-                let lfn = Box::new(move |data: &Def| {
+                let lfn = Box::new(move |data: &Def, _logic: &Logics| {
                     let right = Var::get_num(&right,data);
                     let left = Var::get_num(&left,data);
                 
@@ -154,7 +170,7 @@ impl Logic {
             &Logic::LT(ref left, ref right) => {
                 let left = left.clone();
                 let right = right.clone();
-                let lfn = Box::new(move |data: &Def| {
+                let lfn = Box::new(move |data: &Def, _logic: &Logics| {
                     let right = Var::get_num(&right,data);
                     let left = Var::get_num(&left,data);
                     
@@ -166,6 +182,40 @@ impl Logic {
 
                 LogicFn(lfn)
             },
+            &Logic::Composite(x, ref lookups) => {
+                let lookups = lookups.clone();
+                let lfn = Box::new(move |data: &Def, logic: &Logics| {
+                    // track if any lookups are false or true
+                    let mut comp_true = false;
+                    let mut comp_false = false;
+                    
+                    for lookup in lookups.iter() {
+                        if let Some(val) = Evaluator::resolve(lookup, logic, data) {
+                            match val {
+                                Var::Bool(v) => {
+                                    if v { comp_true = true; }
+                                    else { comp_false = true; }
+                                },
+                                _ => { comp_true = lookup != &val.to_string(); }
+                            }
+                        }
+                    }
+                    
+                    match x {
+                        Expect::All => { // all must pass as true
+                            Some(comp_true && !comp_false)
+                        },
+                        Expect::Any => { // first truth passes for set
+                            Some(comp_true)
+                        },
+                        Expect::None => { // inverse of any, none must be true
+                            Some(!comp_true && comp_false)
+                        },
+                    }
+                });
+                
+                LogicFn(lfn)
+            }
         }
                  
         

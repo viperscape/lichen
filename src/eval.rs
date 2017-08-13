@@ -117,7 +117,7 @@ impl<'e> Evaluator<'e> {
 
     pub fn resolve (s: &str, logic: &HashMap<String,LogicFn>, def: &HashMap<String,DefBlock>) -> Option<Var> {
         if let Some(ref lfn) = logic.get(s) {
-            if let Some(val_) = lfn.run(&def) {
+            if let Some(val_) = lfn.run(&def, &logic) {
                 return Some(val_.into())
             }
         }
