@@ -90,6 +90,7 @@ pub enum Mut {
     Sub,
     Mul,
     Div,
+    New,
 
     /// Swaps value
     Swap,
@@ -133,6 +134,7 @@ impl Mut {
                 "-" => { m = Mut::Sub },
                 "*" => { m = Mut::Mul },
                 "/" => { m = Mut::Div },
+                "new" => { m = Mut::New },
                 _ => {
                     if let Some(fun) = Mut::parse_fn(x.to_owned()) {
                         m = Mut::Fn(fun)

@@ -204,6 +204,21 @@ impl Src {
                         let val = a[0].clone();
                         def.set_path(v,val); // NOTE: this will also build a var from scratch
                     },
+                    &Mut::New => {
+                        match a[0] {
+                            Var::Sym(ref sym) => {
+                                let mut block = None;
+                                if let Some(b) = def.get(sym) {
+                                    block = Some(b.clone());
+                                }
+
+                                if let Some(block) = block {
+                                    def.insert(v.to_string(), block);
+                                }
+                            },
+                            _ => { unimplemented!() }
+                        }
+                    }
                     &Mut::Fn(ref fun_name) => {
                         // NOTE: currently we skip non-resolved symbols!
                         let mut args = vec![]; //collect symbols' value

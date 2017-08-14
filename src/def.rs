@@ -7,10 +7,19 @@ use eval::Eval;
 /// Def alias used for internal evaluation purposes
 pub type Def = HashMap<String, DefBlock>;
 
-#[derive(Debug,PartialEq)]
+#[derive(Debug,PartialEq,Clone)]
 pub struct DefBlock {
     pub name: String,
     pub data: HashMap<String,Var>
+}
+
+impl DefBlock {
+    pub fn new(name: &str) -> DefBlock {
+        DefBlock {
+            name: name.to_owned(),
+            data: HashMap::new()
+        }
+    }
 }
 
 impl Eval for Def {
@@ -32,8 +41,22 @@ impl Eval for Def {
 
         loop { // resolve symbol references
             let (path,sym) = self.as_path(lookup);
-            if let Some(path) = path {
-                if let Some(ref def) = self.get(path[0]) {
+            if let Some(mut path) = path {
+                // NOTE: for now we are using nested paths as actual names
+                // so we need to rebuild it as a full name if necessary
+                let mut p = String::new();
+                if path.len() > 1 {
+                    p.push_str(path.remove(0));
+                    p.push('.');
+                    p.push_str(path.remove(0));
+                }
+
+                let path_final = {
+                    if p.is_empty() { path[0] }
+                    else { &p }
+                };
+                
+                if let Some(ref def) = self.get(path_final) {
                     if let Some(v) = def.data.get(sym) {
                         match v {
                             &Var::Sym(ref sym) => {

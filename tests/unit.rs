@@ -356,3 +356,22 @@ def global\n
     let (vars,_) = ev.next().unwrap();
     assert_eq!(vars[0], "new-name".into());
 }
+
+#[test]
+fn obj_dupe_as_nested() {
+    let src = "def daggers\n
+  damage 1.5\n
+;\n
+
+root\n
+  @player.dagger new daggers\n
+  emit player.dagger.damage\n
+;\n";
+
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
+
+    let mut ev = Evaluator::new(&mut env);
+    
+    let (vars,_) = ev.next().unwrap();
+    assert_eq!(vars[0], 1.5 .into());
+}
