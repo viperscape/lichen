@@ -3,7 +3,7 @@ extern crate lichen;
 use lichen::parse::Parser;
 use lichen::var::Var;
 use lichen::eval::Evaluator;
-use lichen::fun::MutFn;
+use lichen::fun::Fun;
 
 use std::sync::{Arc,Mutex};
 
@@ -45,7 +45,7 @@ def root\n
 ;";
     
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
-    let inc = MutFn::new(move |args, def| {
+    let inc = Fun::new(move |args, def| {
         let mut r = 0.;
         for n in args.iter() {
             if let Ok(v) = n.get_num(def) {
@@ -144,7 +144,7 @@ coins 0\n
     let data = Arc::new(Mutex::new(data));
 
     let dc = data.clone();
-    let inc = MutFn::new(move |args, def| {
+    let inc = Fun::new(move |args, def| {
         let mut r = dc.lock().unwrap();
         for n in args.iter() {
             if let Ok(v) = n.get_num(def) {
