@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use logic::{Logic,Expect,LogicFn};
+use logic::{Logic,LogicFn};
 use eval::{Eval,Evaluator};
 use var::{Var,Mut};
 use parse::{Parser,Map,IR};
@@ -27,9 +27,6 @@ pub enum Src {
 
     /// Just emits variables
     Emit(Vec<Var>), 
-
-    /// A composite logic type to group logic statements together
-    Composite(String,Expect,Vec<String>),
 
     /// Ends execution and begins next node
     Next(Next),
@@ -248,10 +245,6 @@ impl Src {
                 }
                 
                 return (vec![],None) // logic does not return anything
-            },
-            &Src::Composite(ref _name, ref _x, ref _lookups) => {
-                // TODO: reimplement as some sort of LogicFn closure
-                unimplemented!();
             },
             &Src::If(ref lookup, ref v, ref next) => {
                 let mut is_true = false;
