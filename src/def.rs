@@ -92,10 +92,13 @@ impl Eval for Def {
             // NOTE: for now we are using nested paths as actual names
             // so we need to rebuild it as a full name if necessary
             let mut p = String::new();
+            let mut block_name = String::new();
             if path.len() > 1 {
                 p.push_str(path.remove(0));
                 p.push('.');
-                p.push_str(path.remove(0));
+                let n = path.remove(0);
+                block_name.push_str(&n);
+                p.push_str(n);
             }
 
             let path_final = {
@@ -123,11 +126,11 @@ impl Eval for Def {
             map.insert(lookup.to_owned(), var);
             
             let def = DefBlock {
-                name: path[0].to_owned(),
+                name: block_name,
                 data: map,
             };
             
-            self.insert(path[0].to_owned(), def);
+            self.insert(path_final.to_owned(), def);
         }
     }
 

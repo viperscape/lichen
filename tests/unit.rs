@@ -395,3 +395,18 @@ root\n
     let (vars,_) = ev.next().unwrap();
     assert_eq!(vars[0], 5. .into());
 }
+
+#[test]
+fn obj_from_scratch() {
+    let src = "root\n
+  @player.dagger.age 5\n
+  emit player.dagger.age\n
+;\n";
+
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
+
+    let mut ev = Evaluator::new(&mut env);
+    
+    let (vars,_) = ev.next().unwrap();
+    assert_eq!(vars[0], 5. .into());
+}
