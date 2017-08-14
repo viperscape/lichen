@@ -6,21 +6,23 @@ root
 
 store
     has_weight player.weight < 100
-    
-    if !has_weight "You look overloaded, `player.name" next:now town
-    
-    if !this.visited "G'day, you look weary, `player.name"
+
+
+    if !player.visited_store "G'day, you look weary, `player.name"
     or "Welcome back my friend, `player.name"
 
-    comp:all !player.items.Dragonscale-Great-Sword !this.visited
-    if comp [
-      "Let me tell you about the rare Dragonscale Great Sword"
-      "Are you interested?"
-      next:await info-dragonscale
-    ]
+    @player.visited_store true
+    
+    if !has_weight ["You are overloaded, `player.name"
+       "Leaving store now"
+       next:now town]
 
-    comp:all this.visited player.items.Valerium-Great-Sword
-    if comp "You are quite the master, I see!"
+    if !player.items.Dragonscale-Great-Sword [
+       "Let me tell you about the rare Dragonscale Great Sword"
+       "Are you interested?"
+       next:await info-dragonscale]
+
+    if player.Dragonscale-Great-Sword "You are quite the master, I see!"
 
     emit "See you later!"
 ;
@@ -28,7 +30,9 @@ store
 info-dragonscale
     emit ["There is a long history of Dragonscale"
          "It all started.."]
-    @player.items (add) Dragonscale-Great-Sword
+    @player.Dragonscale-Great-Sword new sword
+    @player.weight + player.Dragonscale-Great-Sword.weight
+    emit "Here have this great sword, made of Dragonscale"
 ;
 
 town
@@ -42,4 +46,9 @@ town
 exit-town
     emit "`player.name heads off into the sunset"
     next:exit
+;
+
+def sword
+    damage 5
+    weight 50
 ;
