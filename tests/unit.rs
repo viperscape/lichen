@@ -375,3 +375,23 @@ root\n
     let (vars,_) = ev.next().unwrap();
     assert_eq!(vars[0], 1.5 .into());
 }
+
+#[test]
+fn obj_dupe_mut() {
+    let src = "def daggers\n
+  damage 1.5\n
+;\n
+
+root\n
+  @player.dagger new daggers\n
+  @player.dagger.age 5\n
+  emit player.dagger.age\n
+;\n";
+
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
+
+    let mut ev = Evaluator::new(&mut env);
+    
+    let (vars,_) = ev.next().unwrap();
+    assert_eq!(vars[0], 5. .into());
+}

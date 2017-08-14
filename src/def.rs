@@ -88,8 +88,22 @@ impl Eval for Def {
 
     #[allow(unused_variables)]
     fn set (&mut self, path: Option<Vec<&str>>, lookup: &str, var: Var) {
-        if let Some(path) = path {
-            if let Some(ref mut def) = self.get_mut(path[0]) {
+        if let Some(mut path) = path {
+            // NOTE: for now we are using nested paths as actual names
+            // so we need to rebuild it as a full name if necessary
+            let mut p = String::new();
+            if path.len() > 1 {
+                p.push_str(path.remove(0));
+                p.push('.');
+                p.push_str(path.remove(0));
+            }
+
+            let path_final = {
+                if p.is_empty() { path[0] }
+                else { &p }
+            };
+            
+            if let Some(ref mut def) = self.get_mut(path_final) {
                 let set;
                 if let Some(v) = def.data.get_mut(lookup) {
                     *v = var;
