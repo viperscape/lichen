@@ -2,7 +2,7 @@ extern crate lichen;
 
 use lichen::parse::{Parser,Block,SrcBlock,Map};
 use lichen::logic::{Logic,Expect};
-use lichen::var::Var;
+use lichen::var::{Var,Mut};
 use lichen::source::{Src,Next};
 use lichen::eval::Evaluator;
 
@@ -12,8 +12,10 @@ use std::collections::HashMap;
 #[test]
 fn parse_block() {
     let src = "root\n
-    unequipped !some_item\n
-    has_weight some_weight < 5.0\n
+    @root.some_item \"Thing\"\n
+    unequipped !root.some_item\n
+    @root.some_weight 4\n
+    has_weight root.some_weight < 5.0\n
     some_comp:any [\nunequipped \nhas_weight\n]\n
 \n
     if unequipped \"you're looking for something?\"\n
@@ -30,14 +32,21 @@ fn parse_block() {
             visited: false,
             or_valid: false,
             name: "root".to_owned(),
-            src: vec![Src::Logic("unequipped".to_owned(),
-                                 Logic::IsNot("some_item".to_owned())),
+            src: vec![Src::Mut(Mut::Swap,"root.some_item".to_owned(),vec![Var::String("Thing".to_owned())]),
+
+                      Src::Logic("not_root.some_item".to_owned(),
+                                 Logic::IsNot("root.some_item".to_owned())),
+                      Src::Logic("unequipped".to_owned(),
+                                 Logic::Is("not_root.some_item".to_owned())),
+
+                      Src::Mut(Mut::Swap,"root.some_weight".to_owned(),vec![Var::Num(4.)]),
                       
                       Src::Logic("has_weight".to_owned(),
-                                 Logic::LT(Var::Sym("some_weight".to_owned()), 5.0 .into())),
-                      Src::Composite("some_comp".to_owned(),
+                                 Logic::LT(Var::Sym("root.some_weight".to_owned()), 5.0 .into())),
+                      Src::Logic("some_comp".to_owned(),
+                                 Logic::Composite(
                                      Expect::Any,
-                                     vec!["unequipped".to_owned(),"has_weight".to_owned()]),
+                                     vec!["unequipped".to_owned(),"has_weight".to_owned()])),
                       Src::If("unequipped".to_owned(),
                               vec!["you're looking for something?".into()],
                               None),
@@ -92,10 +101,15 @@ fn parse_qsym_comp_block() {
                 Src::Logic(ref qsym,_) => { r = qsym; },
                 _ => panic!("unknown source found")
             }
-println!("{:?}",b.src[2]);
+
             match b.src[2] {
-                Src::Composite(_,_,ref x) => {
-                    assert_eq!(r,&x[1]);
+                Src::Logic(ref _n,ref l) => {
+                    match l {
+                        &Logic::Composite(ref _x, ref v) => {
+                            assert_eq!(r,&v[1]);
+                        },
+                        _ => panic!("unknown logic found")
+                    }
                 },
                 _ => panic!("unknown source found")
             }
@@ -107,7 +121,8 @@ println!("{:?}",b.src[2]);
 #[test]
 fn validate_qsym_block() {
     let src =  "root\n
-    if other_item next:await store\n
+    @root.other_item \"thing\"\n
+    if root.other_item next:await store\n
     ;";
     
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
@@ -121,10 +136,11 @@ fn validate_qsym_block() {
 #[test]
 fn validate_reflection_block() {
     let src =  "root\n
-    has other_item\n
-    hasnt some_item\n
-    hasnt-too !hasnt\n
-    comp:all has hasnt-too\n
+    @root.other_item \"thing\"\n
+    \n
+    hasnt !root.some_item\n
+    hasnt-inv !hasnt\n
+    comp:all root.other_item !hasnt-inv\n
     if comp next:await store\n
     ;";
     
@@ -163,9 +179,11 @@ fn parse_if_vec_block() {
 #[test]
 fn parse_eval_str_block() {
     let src = "root\n
-        has_weight 4 < 5.0\n
+    @root.name \"Io\"\n
+    @root.weight 4\n
+        has_weight root.weight < 5.0\n
         some_comp:all [has_weight !some_item ]\n
-    if some_comp \"looks like you are `some_weight kgs heavy, `name\"\n
+    if some_comp \"looks like you are `root.weight kgs heavy, `root.name\"\n
 ;";
     
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
@@ -193,8 +211,11 @@ fn parse_compare_env_block() {
 #[test]
 fn parse_return_varkind() {
     let src = "root\n
-    weight some_weight < other_weight\n
-    if weight some_weight \"hi `name\"\n
+    @root.name \"Io\"\n
+    @root.some_weight 4\n
+    @root.other_weight 5\n
+    has_weight root.some_weight < root.other_weight\n
+    if has_weight root.some_weight \"hi `root.name\"\n
 ;";
 
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();

@@ -199,6 +199,7 @@ impl Logic {
                                 _ => { comp_true = lookup != &val.to_string(); }
                             }
                         }
+                        else { comp_false = true }
                     }
                     
                     match x {
