@@ -14,7 +14,7 @@
 
 ```toml
 [dependencies]
-lichen = "0.2"
+lichen = "0.3"
 ```
 
 ### Examples
