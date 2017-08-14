@@ -77,16 +77,13 @@ To pass multiple node entries to select on, use the [select tag](https://github.
 
 Referenced variables can be returned to the caller, as well can be formatted into strings. The ` [backtick symbol](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L21) is used to specify a referenced variable when formatting a string.
 
-##### Internal State
-
-Each node tracks its [visited-status](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L26) upon evaluation, and can be accessed with the ```this.visited``` variable.
 
 ##### Mutate from Functions
 
-There are a few builtins to mutate external state. To affect data you must prefix the referenced variable with an [```@``` symbol](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L29). Currently functions are only called on the top-level of the node, node within statement regions/multilines. It's also possible to implement your own custom function, to call it you simply surround the function-name within parenthesis. Note, all referenced variables will first be pulled from any [```def``` blocks](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L41) within the environment, if they do not exist, then it wil be pulled from the rust environment that was originally passed into the Evaluator.
+There are a few builtins to mutate external state. To affect data you must prefix the referenced variable with an [```@``` symbol](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L29). Currently functions are only called on the top-level of the node, node within statement regions/multilines. It's also possible to implement your own custom function, to call it you simply surround the function-name within parenthesis. Note, all referenced variables will be pulled from any [```def``` blocks](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L41) within the environment. In addition to some [builtins](https://github.com/viperscape/lichen/blob/master/src/var.rs#L88-L100), you can also build [basic objects](https://github.com/viperscape/lichen/blob/master/tests/unit.rs#L380-L397) with the ```new``` keyword.
 
 
-When the node is reached, these side-affect functions will run immediately. The [custom ```inc``` function](https://github.com/viperscape/lichen/blob/master/tests/samples.rs#L22-L40) must be built on the rust side of things as apart of the Eval implementation.
+When the node is reached, these side-affect functions will run immediately. The [custom ```inc``` function](https://github.com/viperscape/lichen/blob/master/tests/state.rs#L38-L64) must be built on the rust side of things as apart of the Eval implementation.
 
 ##### When Mutate on Logic
 
