@@ -8,20 +8,6 @@ use lichen::var::Var;
 use lichen::eval::Evaluator;
 use lichen::source::Next;
 
-struct Player {
-    items: HashMap<String,Items>,
-    weight: f32,
-    name: String,
-    coins: f32,
-}
-
-#[allow(dead_code)] 
-enum Items {
-    Sword,
-    Shield,
-    Gloves
-}
-
 fn main() {
     let bytes = include_bytes!("contrived.ls");
     let mut src = String::from_utf8_lossy(bytes);
