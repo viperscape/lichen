@@ -410,3 +410,20 @@ fn obj_from_scratch() {
     let (vars,_) = ev.next().unwrap();
     assert_eq!(vars[0], 5. .into());
 }
+
+#[test]
+fn inline_logic_inv() {
+    let src = "root\n
+  weight 4 < 5\n
+  if !weight 4.\n
+\n
+  weight2 5 < 4\n
+  if !weight2 5.\n
+;\n";
+
+    let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
+    let mut ev = Evaluator::new(&mut env);
+
+    let (vars,_) = ev.next().unwrap();
+    assert_eq!(vars[0], 5. .into());
+}

@@ -117,8 +117,8 @@ impl Logic {
         match self {
             &Logic::Is(ref lookup) => {
                 let lookup = lookup.clone();
-                let lfn = Box::new(move |data: &Def, _logic: &Logics| {
-                    if let Some((r,_res)) = data.get_last(&lookup) {
+                let lfn = Box::new(move |data: &Def, logic: &Logics| {
+                    if let Some(r) = Evaluator::resolve(&lookup, logic, data) {
                         match r {
                             Var::Bool(v) => {
                                  Some(v)
@@ -128,15 +128,15 @@ impl Logic {
                             },
                         }
                     }
-                    else { None }
+                    else { Some(false) }
                 });
 
                 LogicFn(lfn)
             },
             &Logic::IsNot(ref lookup) => { //inverse state
                 let lookup = lookup.clone();
-                let lfn = Box::new(move |data: &Def, _logic: &Logics| {
-                    if let Some((r,_res)) = data.get_last(&lookup) {
+                let lfn = Box::new(move |data: &Def, logic: &Logics| {
+                    if let Some(r) = Evaluator::resolve(&lookup, logic, data) {
                         match r {
                             Var::Bool(v) => {
                                 Some(!v)

@@ -188,7 +188,6 @@ impl Parser {
                         }
                     }
                     
-                    
                     match block {
                         Some(Block::Def(ref mut b)) => {
                             let v = exps.pop().unwrap();
@@ -205,6 +204,7 @@ impl Parser {
                                 
                                 let src = try!(Src::parse(vec![IR::Sym(qsym),
                                                                IR::Sym(sym)]));
+
                                 srcs.push(src);
                             }
 
