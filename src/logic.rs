@@ -1,6 +1,6 @@
 use var::Var;
 use parse::IR;
-use eval::{Eval,Evaluator};
+use eval::Evaluator;
 use def::Def;
 
 use std::collections::HashMap;
