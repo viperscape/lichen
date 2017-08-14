@@ -5,7 +5,7 @@ use eval::{Eval,Evaluator};
 use var::{Var,Mut};
 use parse::{Parser,Map,IR};
 use def::Def;
-use fun::MutFn;
+use fun::Fun;
 
 /// Source block statement types
 #[derive(Debug,PartialEq)]
@@ -161,7 +161,7 @@ impl Src {
     pub fn eval (&self,
                  logic: &mut HashMap<String,LogicFn>,
                  def: &mut Def,
-                 fun: &mut HashMap<String,MutFn>)
+                 fun: &mut HashMap<String,Fun>)
                  -> (Vec<Var>,Option<Next>)
     {
         match self {

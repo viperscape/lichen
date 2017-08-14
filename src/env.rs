@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use def::Def;
 use parse::{Block,SrcBlock};
 use var::Var;
-use fun::MutFn;
+use fun::Fun;
 
 impl Env {
     pub fn def_contains(def: &Def, path: Option<Vec<&str>>, lookup: &str) -> bool {
@@ -46,5 +46,5 @@ impl Env {
 pub struct Env {
     pub def: Def,
     pub src: HashMap<String, SrcBlock>,
-    pub fun: HashMap<String, MutFn>,
+    pub fun: HashMap<String, Fun>,
 }
