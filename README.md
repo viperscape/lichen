@@ -19,11 +19,11 @@ lichen = "0.3"
 
 ### Documentation
 
-[Usage](https://github.com/viperscape/lichen/blob/master/docs/usage.md)
-[Syntax rules](https://github.com/viperscape/lichen/blob/master/docs/syntax.md)
-[Crate documentation](https://docs.rs/lichen/)
+- [Usage](https://github.com/viperscape/lichen/blob/master/docs/usage.md)
+- [Syntax rules](https://github.com/viperscape/lichen/blob/master/docs/syntax.md)
+- [Crate documentation](https://docs.rs/lichen/)
 
 ### Examples
 
-[Multiple examples](https://github.com/viperscape/lichen/blob/master/examples/)
-[Tests](https://github.com/viperscape/lichen/tree/master/tests) provide a great example set to review
+- [Multiple examples](https://github.com/viperscape/lichen/blob/master/examples/)
+- [Tests](https://github.com/viperscape/lichen/tree/master/tests) provide a great example set to review
