@@ -65,7 +65,7 @@ External to if-statements and logic entirely, a block can also contain standard 
 The [Next](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L13-L17) statement defines an optionally pausable region which requires advancement. The statement must be tagged with a next type: now, await or select.
 
 
-To pass multiple node entries to select on, use the [select tag](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L23-L24). Note the use of braclets ```{}``` to create the key-value map. The end of each value-list must be terminated with a comma. The final entry in the map does not need a comma. The internal Map type can take any Var type, and automatically converts the Key to a String for internal use.
+To pass multiple node entries to select on, use the [select tag](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L23-L24). Note the use of braclets ```{}``` to create the key-value map. The end of each value-list must be terminated with a comma, it's a variable sized entry-- so no two entries must be similarly sized. The final entry in the map does not need a comma. The internal Map type can take any Var type, and automatically converts the Key to a String for internal use.
 
 ```
 {"my-list" "one" "two" "three",  # note the comma, tells the parser to start next KV group
@@ -80,10 +80,10 @@ Referenced variables can be returned to the caller, as well can be formatted int
 
 ##### Mutate from Functions
 
-There are a few builtins to mutate external state. To affect data you must prefix the referenced variable with an [```@``` symbol](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L29). Currently functions are only called on the top-level of the node, node within statement regions/multilines. It's also possible to implement your own custom function, to call it you simply surround the function-name within parenthesis. Note, all referenced variables will be pulled from any [```def``` blocks](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L41) within the environment. In addition to some [builtins](https://github.com/viperscape/lichen/blob/master/src/var.rs#L88-L100), you can also build [basic objects](https://github.com/viperscape/lichen/blob/master/tests/unit.rs#L380-L397) with the ```new``` keyword.
+There are a few builtins to mutate state. To affect data you must prefix the referenced variable with an [```@``` symbol](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L29). Currently functions are only called on the top-level of the node, node within statement regions/multilines. It's also possible to implement your own custom function, to call it you simply surround the function-name within parenthesis. Note, all referenced variables will be pulled from any [```def``` blocks](https://github.com/viperscape/lichen/blob/master/docs/syntax.ls#L41) within the environment. In addition to some [builtins](https://github.com/viperscape/lichen/blob/master/src/var.rs#L88-L100), you can also build [basic objects](https://github.com/viperscape/lichen/blob/master/tests/unit.rs#L380-L397) with the ```new``` keyword.
 
 
-When the node is reached, these side-affect functions will run immediately. The [custom ```inc``` function](https://github.com/viperscape/lichen/blob/master/tests/state.rs#L38-L64) must be built on the rust side of things as apart of the Eval implementation.
+When the node is reached, these side-affect functions will run immediately. See a [custom ```inc``` function](https://github.com/viperscape/lichen/blob/master/tests/state.rs#L38-L64), which we build on the rust side of things as a closure. Custom functions are given access to the entire def block environment, which is useful for finding the actual value of a symbol, see [this example](https://github.com/viperscape/lichen/blob/master/tests/state.rs#L51), which gets the underlying number. ```args``` in this case are any additional Vars you provide in the call, [for example](https://github.com/viperscape/lichen/blob/master/tests/state.rs#L40) we provide 3 numbers to iterate over.
 
 ##### When Mutate on Logic
 
