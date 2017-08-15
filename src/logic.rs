@@ -46,7 +46,7 @@ pub enum Logic {
 }
 
 pub type Logics = HashMap<String,LogicFn>;
-pub struct LogicFn(Box<Fn(&Def,&Logics) -> Option<bool>>);
+pub struct LogicFn(Box<Fn(&Def,&Logics) -> Option<bool> + Send>);
 impl LogicFn {
     pub fn run(&self, def: &Def, logic: &Logics) -> Option<bool> {
         self.0(def, logic)
