@@ -146,8 +146,8 @@ fn validate_reflection_block() {
     
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
 
-    let ev = Evaluator::new(&mut env);
-    let (_,nn) = ev.last().unwrap();
+    let mut ev = Evaluator::new(&mut env);
+    let (_,nn) = ev.next().unwrap();
     
     assert_eq!(nn, Some(Next::Await("store".into())));
 }
@@ -253,12 +253,12 @@ fn parse_select_nodes() {
                 \"Leave the town?\" exit-town}\n
 \n
     if !some_item [\"Some choices\"
-        next:select {\"Head to Store?\" store,\n
-                    \"Leave the town?\" exit-town}]\n
+        next:select {\"Head to Store?\" store2,\n
+                    \"Leave the town?\" exit-town2}]\n
 \n
-    next:select {\"Head to town?\" store bakery tanner,\n
+    next:select {\"Head to town?\" store3 bakery tanner,\n
                 5 hike,
-                \"Leave the town?\" exit-town}\n
+                \"Leave the town?\" exit-town3}\n
 \n
     emit \"A dustball blows by\"\n
 ;";
@@ -268,13 +268,13 @@ fn parse_select_nodes() {
     let (_vars,select1) = ev.next().unwrap();
     let (_vars,select2) = ev.next().unwrap();
 
-    assert_eq!(select1,select2);
+    assert_ne!(select1,select2);
     
     let mut map: Map = HashMap::new();
-    map.insert("Head to Store?".to_owned(), vec![Var::Sym("store".to_owned())]);
-    map.insert("Leave the town?".to_owned(), vec![Var::Sym("exit-town".to_owned())]);
+    map.insert("Head to Store?".to_owned(), vec![Var::Sym("store2".to_owned())]);
+    map.insert("Leave the town?".to_owned(), vec![Var::Sym("exit-town2".to_owned())]);
     
-    assert_eq!(select1, Some(Next::Select(map)));
+    assert_eq!(select2, Some(Next::Select(map)));
 
     let (_,select) = ev.next().unwrap();
     match select.expect("Unable to parse map") {

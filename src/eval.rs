@@ -110,6 +110,13 @@ impl<'e> Evaluator<'e> {
 
     /// Manually advances Evaluator to next node
     pub fn advance (&mut self, node: String) {
+        // reset last node on advance
+        if let Some(node_) = self.node_stack.pop() {
+            if let Some(b) = self.env.src.get_mut(&node_) {
+                b.idx = 0;
+            }
+        }
+        
         // successful advance clears out stack
         self.node_stack.clear();
         self.node_stack.push(node);
@@ -226,10 +233,10 @@ impl<'e> Evaluator<'e> {
                             self.node_stack.push(nn.clone());
                         },
                         &Next::Call(ref nn) => { // callback nodes add to stack
+                            b.idx = idx; // reset so we can pickup afterwards
                             self.node_stack.push(nn.clone());
                         },
                         &Next::Back => {
-                            b.idx = idx; // reset so we can pickup afterwards
                             self.node_stack.pop();
                         },
                         &Next::Restart(ref nn) => {
@@ -241,7 +248,9 @@ impl<'e> Evaluator<'e> {
                             self.node_stack.push(b.name.to_owned());
                         },
                         &Next::Exit => { self.node_stack.clear(); },
-                        _ => {},
+                        &Next::Await(_) | &Next::Select(_) => {
+                            b.idx = idx;
+                        },
                     }
                 }
 
