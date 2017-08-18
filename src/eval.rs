@@ -67,9 +67,22 @@ impl<'e> Iterator for Evaluator<'e> {
         type Item = (Vec<Var>, Option<Next>); //here we only return node name as an option to advance
         fn next(&mut self) -> Option<Self::Item> {
             if let Some(nn) = self.node_stack.pop() {
-                let run = self.run(&nn);
-                if run.is_some()  {
-                    run
+                if let Some(r) = self.run(&nn) {
+                    // reset node if necessary
+                    if let Some(ref next) = r.1 {
+                        match next {
+                            &Next::Restart(ref nn) => {
+                                if let &Some(ref nn) = nn {
+                                    if let Some(b) = self.env.src.get_mut(nn) {
+                                        b.idx = 0;
+                                    }
+                                }
+                            }
+                            _ => {}, // we handle the rest during Run, for convenience
+                        }
+                    }
+                    
+                    Some(r)
                 }
                 else { self.next() }
             }
