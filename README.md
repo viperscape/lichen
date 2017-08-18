@@ -27,3 +27,7 @@ lichen = "0.3"
 
 - [Multiple examples](https://github.com/viperscape/lichen/blob/master/examples/)
 - [Tests](https://github.com/viperscape/lichen/tree/master/tests) provide a great example set to review
+
+### Showcase
+
+[Online interactive stories](http://inter.stratisgame.com)
