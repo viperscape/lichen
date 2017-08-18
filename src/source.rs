@@ -65,6 +65,9 @@ pub enum Next {
     /// Select from a group, based on decision
     Select(Map),
 
+    /// Calls a node, pushes it onto stack
+    Call(String),
+
     /// Exits evaluation completely
     Exit
 }
@@ -109,6 +112,7 @@ impl Next {
                                 Some("now") => { next = Next::Now(node.into()) },
                                 Some("await") => { next = Next::Await(node.into()) },
                                 Some("restart") => { next = Next::Restart(Some(node.into())) },
+                                Some("call") => { next = Next::Call(node.into()) },
                                 _ => { return Err("Invalid Next Type Found") },
                             }
                         }
@@ -128,7 +132,7 @@ impl Next {
                     }
                 }
             }
-            else {
+            else { // NOTE: this are next commands without node names
                 match node {
                     IR::Sym(ref tag) => {
                         let tag: &str = &tag;
@@ -216,7 +220,7 @@ impl Src {
                                     def.insert(v.to_string(), block);
                                 }
                             },
-                            _ => { unimplemented!() }
+                            _ => { } // We do nothing with other var types
                         }
                     }
                     &Mut::Fn(ref fun_name) => {

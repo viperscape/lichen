@@ -108,10 +108,10 @@ impl<'e> Evaluator<'e> {
         }
     }
 
-    /// Advances Evaluator to next node
-    ///
-    /// If you specify a node name, Evaluator will start there on next step
+    /// Manually advances Evaluator to next node
     pub fn advance (&mut self, node: String) {
+        // successful advance clears out stack
+        self.node_stack.clear();
         self.node_stack.push(node);
     }
 
@@ -217,8 +217,15 @@ impl<'e> Evaluator<'e> {
                 }
                 
                 if let Some(ref next) = next {
+                    // NOTE: await and select clear stack on advance
                     match next {
-                        &Next::Now(ref nn) => { self.node_stack.push(nn.clone()); },
+                        &Next::Now(ref nn) => { // immediate advance clears node stack
+                            self.node_stack.clear();
+                            self.node_stack.push(nn.clone());
+                        },
+                        &Next::Call(ref nn) => { // callback nodes add to stack
+                            self.node_stack.push(nn.clone());
+                        },
                         &Next::Back => { self.node_stack.pop(); },
                         &Next::Restart(ref nn) => {
                             if nn.is_none() { b.idx = 0; }
@@ -240,9 +247,7 @@ impl<'e> Evaluator<'e> {
                     return None
                 }
             }
-            else if b.idx > 0 { // we've been here, but node is finished?
-                b.idx = 0; //reset
-            }
+            else { b.idx = 0; } //reset
         }
 
         None

@@ -292,11 +292,12 @@ fn parse_select_nodes() {
 #[test]
 fn parse_next_back_restart() {
     let src = "root\n
-    next:now step2
+    next:call step2
     next:restart\n
 ;\n
 step2
     next:back\n
+    emit \"something\"\n
 ;\n";
 
     let p = Parser::parse_blocks(src).expect("ERROR: Unable to parse source");
@@ -306,7 +307,7 @@ step2
     let mut ev = Evaluator::new(&mut env);
     
     let (_,next) = ev.next().unwrap();
-    assert_eq!(next, Some(Next::Now("step2".to_owned())));
+    assert_eq!(next, Some(Next::Call("step2".to_owned())));
 
     let (_,next) = ev.next().unwrap();
     assert_eq!(next, Some(Next::Back));
