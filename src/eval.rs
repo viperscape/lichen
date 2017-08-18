@@ -233,7 +233,7 @@ impl<'e> Evaluator<'e> {
                             self.node_stack.pop();
                         },
                         &Next::Restart(ref nn) => {
-                            if nn.is_none() { b.idx = 0; }
+                            if nn.is_some() { b.idx = idx; }
                             // NOTE: see iterator for other side of this
                         },
                         &Next::Clear => {
