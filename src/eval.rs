@@ -217,6 +217,8 @@ impl<'e> Evaluator<'e> {
                 }
                 
                 if let Some(ref next) = next {
+                    let idx = b.idx; // save for 'back'
+                    b.idx = 0; // clear our place in the source evaluation
                     // NOTE: await and select clear stack on advance
                     match next {
                         &Next::Now(ref nn) => { // immediate advance clears node stack
@@ -226,7 +228,10 @@ impl<'e> Evaluator<'e> {
                         &Next::Call(ref nn) => { // callback nodes add to stack
                             self.node_stack.push(nn.clone());
                         },
-                        &Next::Back => { self.node_stack.pop(); },
+                        &Next::Back => {
+                            b.idx = idx; // reset so we can pickup afterwards
+                            self.node_stack.pop();
+                        },
                         &Next::Restart(ref nn) => {
                             if nn.is_none() { b.idx = 0; }
                             // NOTE: see iterator for other side of this
