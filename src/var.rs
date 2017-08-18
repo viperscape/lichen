@@ -134,7 +134,15 @@ impl Mut {
                 "-" => { m = Mut::Sub },
                 "*" => { m = Mut::Mul },
                 "/" => { m = Mut::Div },
-                "new" => { m = Mut::New },
+                "new" => {
+                    m = Mut::New;
+                    
+                    // fail on non-sym values
+                    match a[0] {
+                        Var::Sym(_) => {},
+                        _ => { return Err("Non-Sym found on New") }
+                    }
+                },
                 _ => {
                     if let Some(fun) = Mut::parse_fn(x.to_owned()) {
                         m = Mut::Fn(fun)
