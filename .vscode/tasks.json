@@ -14,9 +14,20 @@
             }
         },
         {
-            "label": "run",
+            "label": "example",
             "type": "shell",
-            "command": "cargo run --example basic"
+            "command": "cargo run --example iter",
+            "problemMatcher": [],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "cargo test",
+            "problemMatcher": []
         }
     ]
 }
