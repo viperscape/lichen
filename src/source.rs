@@ -39,6 +39,9 @@ pub enum Src {
     /// Map format should have Logic-Tested for the key
     /// and Mutation Function Signature for the value
     When(WhenMap),
+
+    // Basic iterator
+    Each(String, Vec<Var>),
 }
 
 /// Internal type to hold a specialized When-Mutate Map
@@ -265,6 +268,13 @@ impl Src {
                 
                 return (vec![],None) // logic does not return anything
             },
+            &Src::Each(ref node, ref v) => {
+                if let Some(val) = Evaluator::resolve_iter(v[0], def) {
+                    
+                }
+                
+                return (vec![],None)
+            },
             &Src::If(ref lookup, ref v, ref next) => {
                 let mut is_true = false;
                 
@@ -309,6 +319,27 @@ impl Src {
                     exp.insert(0,IR::Sym(sym.to_owned()));
                     let (m, v, a) = try!(Mut::parse(&mut exp));
                     return Ok(Src::Mut(m,v,a))
+                }
+                else if sym == "each" {
+                    if exp.len() < 2 { return Err("Invalid EACH Logic") }
+                    let node = exp.remove(0);
+                    let mut v = vec!();
+
+                    for val in exp.drain(..) {
+                        match Var::parse(val) {
+                            Ok(var) => {
+                                match var { // for now just match on strings, no additional params
+                                    Var::String(_) => {
+                                        v.push(var);
+                                    },
+                                    _ => { return Err("Invalid EACH syntax") }
+                                }
+                            },
+                            _ => { return Err("Invalid EACH IR") }
+                        }
+                    }
+
+                    Ok(Src::Each(node.into(), v))
                 }
                 else if sym == "when" {
                     if exp.len() != 1 { return Err("Invalid WHEN Logic") }

@@ -122,12 +122,22 @@ impl<'e> Evaluator<'e> {
         self.node_stack.push(node);
     }
 
-    pub fn resolve (s: &str, logic: &HashMap<String,LogicFn>, def: &HashMap<String,DefBlock>) -> Option<Var> {
+    pub fn resolve (s: &str, logic: &HashMap<String,LogicFn>, def: &HashMap<String,DefBlock>) 
+        -> Option<Var> {
         if let Some(ref lfn) = logic.get(s) {
             if let Some(val_) = lfn.run(&def, &logic) {
                 return Some(val_.into())
             }
         }
+        else if let Some((v,res)) = def.get_last(s) {
+            if res { return Some(v) }
+        }
+
+        None
+    }
+
+    pub fn resolve_iter (s: &str, def: &HashMap<String,DefBlock>) 
+        -> Option<Vec<Var>> {
         else if let Some((v,res)) = def.get_last(s) {
             if res { return Some(v) }
         }
