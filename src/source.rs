@@ -269,9 +269,9 @@ impl Src {
                 return (vec![],None) // logic does not return anything
             },
             &Src::Each(ref node, ref v) => {
-                if let Some(val) = Evaluator::resolve_iter(v[0], def) {
+                //if let Some(val) = Evaluator::resolve_iter(v[0], def) {
                     
-                }
+                //}
                 
                 return (vec![],None)
             },

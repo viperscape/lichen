@@ -136,6 +136,7 @@ impl Parser {
                         let b = DefBlock {
                             name: exps.pop().unwrap().into(),
                             data: HashMap::new(),
+                            datav: HashMap::new()
                         };
                         
                         block = Some(Block::Def(b));

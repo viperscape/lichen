@@ -138,9 +138,9 @@ impl<'e> Evaluator<'e> {
 
     pub fn resolve_iter (s: &str, def: &HashMap<String,DefBlock>) 
         -> Option<Vec<Var>> {
-        else if let Some((v,res)) = def.get_last(s) {
+        /*if let Some((v,res)) = def.get_last(s) {
             if res { return Some(v) }
-        }
+        }*/
 
         None
     }

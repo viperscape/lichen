@@ -10,14 +10,16 @@ pub type Def = HashMap<String, DefBlock>;
 #[derive(Debug,PartialEq,Clone)]
 pub struct DefBlock {
     pub name: String,
-    pub data: HashMap<String,Var>
+    pub data: HashMap<String,Var>,
+    pub datav: HashMap<String, Vec<Var>>
 }
 
 impl DefBlock {
     pub fn new(name: &str) -> DefBlock {
         DefBlock {
             name: name.to_owned(),
-            data: HashMap::new()
+            data: HashMap::new(),
+            datav: HashMap::new()
         }
     }
 }
@@ -128,6 +130,7 @@ impl Eval for Def {
             let def = DefBlock {
                 name: block_name,
                 data: map,
+                datav: HashMap::new()
             };
             
             self.insert(path_final.to_owned(), def);
