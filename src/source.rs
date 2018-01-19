@@ -40,8 +40,10 @@ pub enum Src {
     /// and Mutation Function Signature for the value
     When(WhenMap),
 
-    // Basic iterator
-    Each(String, Vec<Var>),
+    /// Basic iterator
+    ///
+    /// node to call repeatedly, symbol name for list, additional params
+    Each(String, String, Vec<Var>),
 }
 
 /// Internal type to hold a specialized When-Mutate Map
@@ -268,10 +270,9 @@ impl Src {
                 
                 return (vec![],None) // logic does not return anything
             },
-            &Src::Each(ref node, ref v) => {
-                //if let Some(val) = Evaluator::resolve_iter(v[0], def) {
-                    
-                //}
+            &Src::Each(ref node, ref list, ref v) => {
+                println!("{:?} {:?} => {:?}", node, list, v);
+                println!("{:?}", Evaluator::resolve_iter(list, def));
                 
                 return (vec![],None)
             },
@@ -323,23 +324,19 @@ impl Src {
                 else if sym == "each" {
                     if exp.len() < 2 { return Err("Invalid EACH Logic") }
                     let node = exp.remove(0);
+                    let list = exp.remove(0);
                     let mut v = vec!();
 
                     for val in exp.drain(..) {
                         match Var::parse(val) {
                             Ok(var) => {
-                                match var { // for now just match on strings, no additional params
-                                    Var::String(_) => {
-                                        v.push(var);
-                                    },
-                                    _ => { return Err("Invalid EACH syntax") }
-                                }
+                                v.push(var);
                             },
                             _ => { return Err("Invalid EACH IR") }
                         }
                     }
 
-                    Ok(Src::Each(node.into(), v))
+                    Ok(Src::Each(node.into(), list.into(), v))
                 }
                 else if sym == "when" {
                     if exp.len() != 1 { return Err("Invalid WHEN Logic") }

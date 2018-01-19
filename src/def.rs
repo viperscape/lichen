@@ -37,6 +37,18 @@ impl Eval for Def {
         None
     }
 
+    fn getv (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Vec<Var>> {
+        if let Some(path) = path {
+            if let Some(ref def) = self.get(path[0]) {
+                if let Some(v) = def.datav.get(lookup) {
+                    return Some(v.clone())
+                }
+            }
+        }
+
+        None
+    }
+
     fn get_last (&self, lookup: &str) -> Option<(Var, bool)> {
         let mut lookup = lookup;
         let mut resolved = None;

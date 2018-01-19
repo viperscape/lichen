@@ -7,5 +7,5 @@ map
 ;
 
 def vals
-    list []
+    list ..
 ;

@@ -193,8 +193,14 @@ impl Parser {
                         Some(Block::Def(ref mut b)) => {
                             let v = exps.pop().unwrap();
                             let r = try!(Var::parse(v));
-                            b.data.insert(exps.pop().unwrap().into(),
-                                         r);
+                            if r == Var::Sym("..".to_owned()) {
+                                b.datav.insert(exps.pop().unwrap().into(),
+                                            vec!());
+                            }
+                            else {
+                                b.data.insert(exps.pop().unwrap().into(),
+                                            r);
+                            }
                         },
                         Some(Block::Src(ref mut b)) => {
                             let mut srcs: Vec<Src> = vec![];

@@ -28,6 +28,8 @@ pub trait Eval {
     /// Get method to retrieve variable from Rust side
     fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var>;
 
+    fn getv (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Vec<Var>>;
+
     fn as_path<'a> (&self, lookup: &'a str) -> (Option<Vec<&'a str>>, &'a str) {
         as_path(lookup)
     }
@@ -138,11 +140,8 @@ impl<'e> Evaluator<'e> {
 
     pub fn resolve_iter (s: &str, def: &HashMap<String,DefBlock>) 
         -> Option<Vec<Var>> {
-        /*if let Some((v,res)) = def.get_last(s) {
-            if res { return Some(v) }
-        }*/
-
-        None
+        let (path,sym) = as_path(s);
+        def.getv(path, sym)
     }
 
     /// Manually run the Evaluator, starting at node specified
