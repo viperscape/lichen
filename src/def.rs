@@ -37,11 +37,11 @@ impl Eval for Def {
         None
     }
 
-    fn getv (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Vec<Var>> {
+    fn getv (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<&mut Vec<Var>> {
         if let Some(path) = path {
             if let Some(ref def) = self.get(path[0]) {
-                if let Some(v) = def.datav.get(lookup) {
-                    return Some(v.clone())
+                if let Some(ref mut v) = def.datav.get_mut(lookup) {
+                    return Some(v)
                 }
             }
         }

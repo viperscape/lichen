@@ -28,7 +28,7 @@ pub trait Eval {
     /// Get method to retrieve variable from Rust side
     fn get (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Var>;
 
-    fn getv (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<Vec<Var>>;
+    fn getv (&self, path: Option<Vec<&str>>, lookup: &str) -> Option<&mut Vec<Var>>;
 
     fn as_path<'a> (&self, lookup: &'a str) -> (Option<Vec<&'a str>>, &'a str) {
         as_path(lookup)
@@ -138,8 +138,8 @@ impl<'e> Evaluator<'e> {
         None
     }
 
-    pub fn resolve_iter (s: &str, def: &HashMap<String,DefBlock>) 
-        -> Option<Vec<Var>> {
+    pub fn resolve_iter<'a> (s: &str, def: &'a HashMap<String,DefBlock>) 
+        -> Option<&'a mut Vec<Var>> {
         let (path,sym) = as_path(s);
         def.getv(path, sym)
     }
