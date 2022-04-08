@@ -191,7 +191,7 @@ impl Parser {
                     match block {
                         Some(Block::Def(ref mut b)) => {
                             let v = exps.pop().unwrap();
-                            let r = try!(Var::parse(v));
+                            let r = Var::parse(v)?;
                             b.data.insert(exps.pop().unwrap().into(),
                                          r);
                         },
@@ -202,13 +202,13 @@ impl Parser {
                                 if usyms.contains(&qsym) { continue }
                                 usyms.insert(qsym.clone());
                                 
-                                let src = try!(Src::parse(vec![IR::Sym(qsym),
-                                                               IR::Sym(sym)]));
+                                let src = Src::parse(vec![IR::Sym(qsym),
+                                                          IR::Sym(sym)])?;
 
                                 srcs.push(src);
                             }
 
-                            let src = try!(Src::parse(exps));
+                            let src = Src::parse(exps)?;
                             srcs.push(src);
 
                             for src in srcs.drain(..) {

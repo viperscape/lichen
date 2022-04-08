@@ -46,7 +46,7 @@ pub enum Logic {
 }
 
 pub type Logics = HashMap<String,LogicFn>;
-pub struct LogicFn(Box<Fn(&Def,&Logics) -> Option<bool> + Send>);
+pub struct LogicFn(Box<dyn Fn(&Def,&Logics) -> Option<bool> + Send>);
 impl LogicFn {
     pub fn run(&self, def: &Def, logic: &Logics) -> Option<bool> {
         self.0(def, logic)
@@ -95,11 +95,11 @@ impl Logic {
         }
         else if len == 3 {
             let var = exp.pop().unwrap();
-            let var = try!(Var::parse(var));
+            let var = Var::parse(var)?;
 
             let sym: String = exp.pop().unwrap().into();
             let key = exp.pop().unwrap();
-            let key = try!(Var::parse(key));
+            let key = Var::parse(key)?;
             
             if sym == ">" {
                 Ok(Logic::GT(key,var))

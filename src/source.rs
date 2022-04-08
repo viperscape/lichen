@@ -237,7 +237,7 @@ impl Src {
                             }
                         }
 
-                        if let Some(mut mfn) = fun.get_mut(fun_name) {
+                        if let Some(mfn) = fun.get_mut(fun_name) {
                             if let Some(r) = mfn.run(&args, def) {
                                 def.set_path(&v, r);
                             }
@@ -307,7 +307,7 @@ impl Src {
             IR::Sym(ref sym) => {
                 if sym.chars().next() == Some('@') { //mutating statement
                     exp.insert(0,IR::Sym(sym.to_owned()));
-                    let (m, v, a) = try!(Mut::parse(&mut exp));
+                    let (m, v, a) = Mut::parse(&mut exp)?;
                     return Ok(Src::Mut(m,v,a))
                 }
                 else if sym == "when" {
@@ -316,7 +316,7 @@ impl Src {
                         let mut when_map: WhenMap = HashMap::new();
                         for (k,mut v) in map.drain() {
                             let v_ir = v.drain(..).map(|n| n.into()).collect();
-                            let m = try!(Src::parse(v_ir));
+                            let m = Src::parse(v_ir)?;
                             match m {
                                 Src::Mut(m,v,a) => {
                                     when_map.insert(k, (m,v,a));
@@ -338,7 +338,7 @@ impl Src {
                     
                     let mut v = vec![];
                     for n in exp.drain(..) {
-                        let r = try!(Var::parse(n));
+                        let r = Var::parse(n)?;
                         v.push(r);
                     }
 
@@ -352,7 +352,7 @@ impl Src {
                     
                     let mut v = vec![];
                     for n in exp.drain(..) {
-                        let r = try!(Var::parse(n));
+                        let r = Var::parse(n)?;
                         v.push(r);
                     }
                     
@@ -370,7 +370,7 @@ impl Src {
                     if exp.len() > 0 {
                         let mut v = vec![];
                         for e in exp.drain(..) {
-                            let r = try!(Var::parse(e));
+                            let r = Var::parse(e)?;
                             v.push(r);
                         }
 
@@ -381,13 +381,13 @@ impl Src {
                 else {
                     let mut keys: Vec<&str> = sym.split_terminator(':').collect();
                     if keys.len() < 2 { // regular logic
-                        let r = try!(Logic::parse(exp));
+                        let r = Logic::parse(exp)?;
                         Ok(Src::Logic(sym.to_owned(),
                                       r))
                     }
                     else { // composite type
                         let name = keys.remove(0).to_owned();
-                        let r = try!(Logic::parse_comp(keys, exp));
+                        let r = Logic::parse_comp(keys, exp)?;
                         Ok(Src::Logic(name,
                                       r))
                     }

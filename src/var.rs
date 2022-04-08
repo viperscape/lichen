@@ -125,7 +125,7 @@ impl Mut {
             let x: &str = &x;
             
             for n in exps.drain(..) {
-                let r = try!(Var::parse(n));
+                let r = Var::parse(n)?;
                 a.push(r);
             }
 
@@ -154,7 +154,7 @@ impl Mut {
             }
         }
         else {
-            let r = try!(Var::parse(exps.pop().unwrap()));
+            let r = Var::parse(exps.pop().unwrap())?;
             a.push(r);
             v = exps.pop().unwrap().into();
             m = Mut::Swap;

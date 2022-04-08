@@ -1,7 +1,7 @@
 use var::Var;
 use def::Def;
 
-pub struct Fun(Box<FnMut(&[Var], &Def) -> Option<Var> + Send>);
+pub struct Fun(Box<dyn FnMut(&[Var], &Def) -> Option<Var> + Send>);
 impl Fun {
     pub fn run(&mut self, args: &[Var], def: &Def) -> Option<Var> {
         self.0(args, def)
