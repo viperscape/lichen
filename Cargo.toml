@@ -1,8 +1,9 @@
 [package]
 name = "lichen"
-version = "0.3.7"
-authors = ["viperscape <chrisfgill@gmail.com>"]
+version = "0.3.8"
+authors = ["Chris Gill <chrisfgill@gmail.com>"]
 license = "Apache-2.0"
+readme = "README.md"
 repository = "https://github.com/viperscape/lichen"
 description = "Scripting DSL (for Dialogue Graphs, et al)"
 keywords = ["scripting","dsl"]
