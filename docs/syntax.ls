@@ -1,5 +1,5 @@
 root
-    next:now some_block
+    now some_block
 ;
 
 some_block
@@ -14,8 +14,8 @@ some_block
     comp:all [!player.stars  # defines that items does not have stars (IsNot)
              has_weight]
 
-    if comp next:now other_block  # immediately heads to other_block
-    or ["how about something else?" next:await another_block]  # waits for manual advancement to something_else
+    if comp now other_block  # immediately heads to other_block
+    or ["how about something else?" await another_block]  # waits for manual advancement to something_else
 
     # if failure to advance, then we pickup back where we left off after the Await
     emit "still here?"
@@ -24,7 +24,7 @@ some_block
     emit player.name  # reference an environment variable to return
     if player.name "G'day, you look weary, `player.name"  # use name variable as apart of formatted response
 
-    next:select {"Go to store" store,  # store would be the actual node name
+    select {"Go to store" store,  # store would be the actual node name
                 "Get out of here" exit}  # both Keys are seperated by a comma
 
     if some_block.visited "hi again"
@@ -38,7 +38,7 @@ some_block
     when {needs_coins @coins + 2,  # perform addition if needs_coins is true
          player.name @name "new-name"}  # state swap on name
 
-    next:restart  # start over if user selects wrong entry!
+    restart  # start over if user selects wrong entry!
 ;
 
 def my-env

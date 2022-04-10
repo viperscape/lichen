@@ -1,7 +1,7 @@
 root
     @player.weight 50
     @player.name "Io"
-    next:now town
+    now town
 ;
 
 store
@@ -15,12 +15,12 @@ store
     
     if !has_weight ["You are overloaded, `player.name"
        "Leaving store now"
-       next:now town]
+       now town]
 
     if !player.items.Dragonscale-Great-Sword [
        "Let me tell you about the rare Dragonscale Great Sword"
        "Are you interested?"
-       next:await info-dragonscale]
+       await info-dragonscale]
 
     if player.Dragonscale-Great-Sword "You are quite the master, I see!"
 
@@ -36,16 +36,16 @@ info-dragonscale
 ;
 
 town
-    next:select {"Head to Store?" store,
-                "Leave the town?" exit-town}
+    select {"Head to Store?" store,
+            "Leave the town?" leave}
 
     emit "A dustball blows by"
-    next:restart
+    restart
 ;
 
-exit-town
+leave
     emit "`player.name heads off into the sunset"
-    next:exit
+    exit
 ;
 
 def sword

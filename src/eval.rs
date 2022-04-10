@@ -237,7 +237,7 @@ impl<'e> Evaluator<'e> {
                             self.node_stack.push(nn.clone());
                         },
                         &Next::Back => {
-                            self.node_stack.pop();
+                            self.node_stack.pop(); // TODO should warn if none are left
                         },
                         &Next::Restart(ref nn) => {
                             if nn.is_some() { b.idx = idx; }
@@ -248,7 +248,7 @@ impl<'e> Evaluator<'e> {
                             self.node_stack.push(b.name.to_owned());
                         },
                         &Next::Exit => { self.node_stack.clear(); },
-                        &Next::Await(_) | &Next::Select(_) => {
+                        &Next::Await(_) | &Next::Select(_) => { // FIXME this does not pop back to prev node when using AWAIT
                             b.idx = idx;
                         },
                     }

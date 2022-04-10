@@ -5,7 +5,7 @@ root
     emit "Welcome, let's head over to the information node"
 
     # tag next with 'now' to immediately advance
-    next:now info # info specifies the node-name to head to
+    now info # info specifies the node-name to head to
 ;
 
 info
@@ -14,13 +14,18 @@ info
     emit ["Information node here"
          "The my-globals size var is `my-globals.size"]
 
-    next:now end
+    call bounce
+    now end
 ;
 
 # notice the order of nodes does not matter
 def my-globals
     # define a local environment of variables to use
     size 5
+;
+
+bounce
+    emit "bouncing back from a call"
 ;
 
 end

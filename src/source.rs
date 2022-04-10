@@ -77,7 +77,7 @@ impl Next {
         for (i,n) in exp.iter().enumerate() {
             match n {
                 &IR::Sym(ref s) => {
-                    if s == &"next:select" {
+                    if s == &"select" {
                         select_idx = Some(i);
                         break
                     }
@@ -103,27 +103,18 @@ impl Next {
             if let Some(tag) = exp.pop() {
                 match tag {
                     IR::Sym(tag) => {
-                        let mut next_tag = tag.split_terminator(':');
-                        let is_next = next_tag.next() == Some("next");
-                        
-                        if is_next {
-                            let next_tag = next_tag.next();
-                            match next_tag {
-                                Some("now") => { next = Next::Now(node.into()) },
-                                Some("await") => { next = Next::Await(node.into()) },
-                                Some("restart") => { next = Next::Restart(Some(node.into())) },
-                                Some("call") => { next = Next::Call(node.into()) },
-                                _ => { return Err("Invalid Next Type Found") },
+                            let tag: &str = &tag;
+                            match tag {
+                                "now" => { next = Next::Now(node.into()) },
+                                "await" => { next = Next::Await(node.into()) },
+                                "restart" => { next = Next::Restart(Some(node.into())) },
+                                "call" => { next = Next::Call(node.into()) },
+                                _ => { 
+                                    exp.push(IR::Sym(tag.to_owned()));
+                                    exp.push(node);
+                                    return Err("Invalid Next Type Found") 
+                                },
                             }
-                        }
-                        else if next_tag.next().is_some() {
-                            return Err("Unknown Tag encountered")
-                        }
-                        else {
-                            exp.push(IR::Sym(tag.to_owned()));
-                            exp.push(node);
-                            return Err("Invalid Tag type")
-                        }
                     },
                     _ => {
                         exp.push(tag);
@@ -132,15 +123,15 @@ impl Next {
                     }
                 }
             }
-            else { // NOTE: this are next commands without node names
+            else { // these are next commands without node names
                 match node {
                     IR::Sym(ref tag) => {
                         let tag: &str = &tag;
                         match tag {
-                            "next:back" => { next = Next::Back },
-                            "next:restart" => { next = Next::Restart(None) },
-                            "next:exit" => { next = Next::Exit },
-                            "next:clear" => { next = Next::Clear },
+                            "back" => { next = Next::Back },
+                            "restart" => { next = Next::Restart(None) },
+                            "exit" => { next = Next::Exit },
+                            "clear" => { next = Next::Clear },
                             _ => {
                                 exp.push(IR::Sym(tag.to_owned()));
                                 return Err("Invalid Tag type")
@@ -155,7 +146,7 @@ impl Next {
             }
         }
         else { return Err("No Next type found") }
-
+        
         Ok(next)
     }
 }
@@ -358,7 +349,17 @@ impl Src {
                     
                     Ok(Src::Or(v,next.ok()))
                 }
-                else if &sym.split_terminator(':').next() == &Some("next") {
+                else if sym == "call" || 
+                sym == "await" || 
+                sym == "back" || 
+                sym == "now" || 
+                sym == "exit" || 
+                sym == "clear" || 
+                sym == "restart" || 
+                sym == "select" ||
+                sym == "exit"
+                // TODO turn this into a Try Parse Next instead
+                {
                     exp.insert(0, IR::Sym(sym.to_owned()));
                     let next = Next::parse(&mut exp);
                     if let Ok(next) = next {

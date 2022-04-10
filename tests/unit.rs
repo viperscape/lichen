@@ -21,7 +21,7 @@ fn parse_block() {
     if unequipped \"you're looking for something?\"\n
 \n
     if some_comp \"welcome, \nlook around\"\n
-    next:now end\n
+    now end\n
 ;";
     
     let block = Parser::parse_blocks(src).expect("ERROR: Unable to parse source");
@@ -122,7 +122,7 @@ fn parse_qsym_comp_block() {
 fn validate_qsym_block() {
     let src =  "root\n
     @root.other_item \"thing\"\n
-    if root.other_item next:await store\n
+    if root.other_item await store\n
     ;";
     
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
@@ -141,7 +141,7 @@ fn validate_reflection_block() {
     hasnt !root.some_item\n
     hasnt-inv !hasnt\n
     comp:all root.other_item !hasnt-inv\n
-    if comp next:await store\n
+    if comp await store\n
     ;";
     
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
@@ -158,7 +158,7 @@ fn parse_if_vec_block() {
     if !some_item [\n
         \"you're looking for something?\"\n
         \"welcome, \nlook around\"\n
-        next:now store]\n
+        now store]\n
 ;";
     
     let block = Parser::parse_blocks(src).expect("ERROR: Unable to parse source");
@@ -198,7 +198,7 @@ fn parse_eval_str_block() {
 fn parse_compare_env_block() {
     let src = "root\n
     weight 0 < 1\n
-    if weight next:now store\n
+    if weight now store\n
 ;";
     let mut env = Parser::parse_blocks(src).expect("ERROR: Unable to parse source").into_env();
 
@@ -231,7 +231,7 @@ fn parse_return_varkind() {
 fn parse_follow_nodes() {
     let src = "root\n
     weight 0 < 1\n
-    if weight next:now store\n
+    if weight now store\n
 ;\n
 \n
 store\n
@@ -249,14 +249,14 @@ store\n
 #[test]
 fn parse_select_nodes() {
     let src = "root\n
-    next:select {\"Head to Store?\" store,\n
+    select {\"Head to Store?\" store,\n
                 \"Leave the town?\" exit-town}\n
 \n
     if !some_item [\"Some choices\"
-        next:select {\"Head to Store?\" store2,\n
+        select {\"Head to Store?\" store2,\n
                     \"Leave the town?\" exit-town2}]\n
 \n
-    next:select {\"Head to town?\" store3 bakery tanner,\n
+    select {\"Head to town?\" store3 bakery tanner,\n
                 5 hike,
                 \"Leave the town?\" exit-town3}\n
 \n
@@ -292,11 +292,11 @@ fn parse_select_nodes() {
 #[test]
 fn parse_next_back_restart() {
     let src = "root\n
-    next:call step2
-    next:restart\n
+    call step2
+    restart\n
 ;\n
 step2
-    next:back\n
+    back\n
     emit \"something\"\n
 ;\n";
 

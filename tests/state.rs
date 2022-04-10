@@ -132,7 +132,7 @@ fn save_state() {
     let src = "root\n
     emit root.coins\n
     @root.coins (inc) \"coins\" 1 2 3\n
-    next:await no-where\n
+    await no-where\n
     emit root.coins\n
 ;\n
 def root\n

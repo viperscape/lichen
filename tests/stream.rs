@@ -14,7 +14,7 @@ use lichen::eval::Evaluator;
 fn stream_parser() {
     let src = "root\n
     emit \"hi\"\n
-    next:now some_block\n
+    now some_block\n
 ;\n
 some_block\n
 \n
