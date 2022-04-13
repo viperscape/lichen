@@ -1,7 +1,13 @@
 root
     @player.weight 50
     @player.name "Io"
+    now input-test
     now town
+;
+
+input-test
+    @data.input (input) _
+    emit "data `data.input"
 ;
 
 store
@@ -19,8 +25,7 @@ store
 
     if !player.items.Dragonscale-Great-Sword [
        "Let me tell you about the rare Dragonscale Great Sword"
-       "Are you interested?"
-       await info-dragonscale]
+       call info-dragonscale]
 
     if player.Dragonscale-Great-Sword "You are quite the master, I see!"
 
@@ -28,6 +33,8 @@ store
 ;
 
 info-dragonscale
+    emit "Interested about sword?"
+
     emit ["There is a long history of Dragonscale"
          "It all started.."]
     @player.Dragonscale-Great-Sword new sword

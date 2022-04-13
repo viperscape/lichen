@@ -7,14 +7,34 @@ use lichen::parse::Parser;
 use lichen::var::Var;
 use lichen::eval::Evaluator;
 use lichen::source::Next;
+use lichen::fun::Fun;
 
 fn main() {
     let bytes = include_bytes!("contrived.ls");
     let mut src = String::from_utf8_lossy(bytes);
     let mut env = Parser::parse_blocks(src.to_mut()).expect("ERROR: Unable to parse source").into_env();
 
-    let mut ev = Evaluator::new(&mut env);
     
+
+    let input = Fun::new(move |_, _| {
+        println!("calling input");
+        let mut buffer = String::new();
+        io::stdin().read_line(&mut buffer).ok()?;
+        
+        return Some(Var::String(buffer))
+
+        /*for n in args.iter() {
+            if let Ok(v) = n.get_num(def) {
+                r += v;
+            }
+        }*/
+
+        
+    });
+    env.fun.insert("input".to_owned(), input);
+    
+    let mut ev = Evaluator::new(&mut env);
+
     while let Some((vars,next)) = ev.next() {
         for var in vars {
             match var {
@@ -26,19 +46,9 @@ fn main() {
             match next {
                 Next::Await(node) => {
                     println!("\nContinue to {:}\n", node);
-                    let mut line = String::new();
+                   // let mut line = String::new();
                     
-                    match io::stdin().read_line(&mut line) {
-                        Ok(_) => {
-                            match line.trim() {
-                                "y" | "Y" => {
-                                    ev.advance(node);
-                                },
-                                _ => {}
-                            }
-                        },
-                        Err(_) => panic!()
-                    }
+                    
                 },
                 Next::Select(selects) => {
                     println!("\nEnter in a destination");
